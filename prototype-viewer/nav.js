@@ -1,0 +1,42 @@
+// 由 sync_project.py 自动生成；不要手改。
+window.NAV_DATA = {
+  "projectName": "形影随拍后台 · Ant Design 原型查看器",
+  "lastSyncAt": "2026-10-13 16:44:07",
+  "tree": [
+    {
+      "id": "admin-pages",
+      "title": "后台页面模板",
+      "order": 1,
+      "children": [
+        {
+          "id": "admin-list",
+          "title": "订单列表",
+          "htmlPath": "pages/admin-list.html",
+          "mdPath": "desc/admin-list.md",
+          "templateType": "list",
+          "order": 1,
+          "children": [
+            {
+              "id": "admin-form",
+              "title": "新增推广方",
+              "htmlPath": "pages/admin-form.html",
+              "mdPath": "desc/admin-form.md",
+              "templateType": "form",
+              "order": 1,
+              "children": []
+            },
+            {
+              "id": "admin-detail",
+              "title": "线下对公结算详情",
+              "htmlPath": "pages/admin-detail.html",
+              "mdPath": "desc/admin-detail.md",
+              "templateType": "detail",
+              "order": 2,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};

@@ -1,0 +1,24 @@
+{
+  "sourceId": "xiaomifeng-2-2",
+  "viewer": {
+    "projectPath": "../../prototype-viewer"
+  },
+  "groups": [
+    {
+      "id": "orders",
+      "title": "订单管理",
+      "order": 1
+    }
+  ],
+  "pages": [
+    {
+      "id": "order-list",
+      "title": "订单列表",
+      "doc": "订单列表PRD.md",
+      "hash": "#/orders",
+      "mode": "screen",
+      "parent": "orders",
+      "order": 1
+    }
+  ]
+}

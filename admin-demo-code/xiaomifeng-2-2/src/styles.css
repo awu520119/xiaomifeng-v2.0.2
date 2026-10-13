@@ -1,0 +1,176 @@
+:root {
+  font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  color: #303338;
+  background: #f2f4f7;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 1024px;
+  min-height: 100%;
+  margin: 0;
+}
+
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-sider {
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+}
+
+.app-sider .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 16px 0;
+}
+
+.app-sider .ant-menu {
+  flex: 1;
+  border-inline-end: 0;
+}
+
+.app-sider .ant-menu-submenu-title,
+.app-sider .ant-menu-item {
+  width: 100%;
+  margin-inline: 0;
+}
+
+.brand {
+  height: 108px;
+  flex: 0 0 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #d9ebff;
+  background: #253545;
+  font-size: 22px;
+}
+
+.brand-name {
+  font-size: 22px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.ant-layout-sider-collapsed .brand {
+  height: 80px;
+  flex-basis: 80px;
+  margin-bottom: 16px;
+}
+
+.sider-trigger {
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.sider-trigger .ant-btn {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.app-workspace,
+.app-content {
+  min-width: 0;
+}
+
+.app-header {
+  height: 58px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f2f4f7;
+}
+
+.app-header h1.ant-typography {
+  margin: 0;
+  color: #303338;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.account {
+  color: #303338;
+}
+
+.app-content {
+  margin: 0 20px 20px;
+}
+
+.page-card {
+  min-height: calc(100vh - 78px);
+  padding: 16px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.query-form {
+  margin-bottom: 16px;
+  row-gap: 12px;
+}
+
+.query-form .ant-input,
+.query-form .ant-select {
+  width: 200px;
+}
+
+.page-card .ant-table-cell .ant-btn-link {
+  padding-inline: 0;
+}
+
+/* Keep the fixed action column visibly separated while the table scrolls. */
+.page-card .ant-table-cell-fix-right-first::after {
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.12);
+}
+
+.design-drawer .ant-drawer-header {
+  min-height: 56px;
+  padding: 16px 24px;
+  background: linear-gradient(0deg, #fff, #d8e6ff);
+}
+
+.design-drawer .ant-drawer-body {
+  padding: 24px;
+}
+
+.drawer-section-title {
+  margin-bottom: 16px;
+  padding-left: 8px;
+  border-left: 3px solid #2776ff;
+  font-weight: 500;
+}
+
+@media (max-width: 1200px) {
+  .app-content {
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+}

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<!--
+  template: detail.html
+  用途: PC 详情页模板（100vh 两段固定 + 状态头 + 描述分组 + Tabs）
+
+  特性：
+  - 布局：detail-header（固定）/ detail-body（flex:1，独立滚动）
+    → 窗口再矮，顶部「标题 / 编号 / 状态 / 编辑·删除·更多」也不会被滚出屏幕
+  - 状态头：返回 + 标题 + 编号 + 状态 Tag + 右侧操作组（编辑 / 删除 / 更多下拉）
+  - 概要指标条：4 个关键数字横向排列，快速扫读
+  - 描述区：两组 el-descriptions（基本信息 3 列 border / 业务信息 3 列 border）
+  - Tabs 三页签：
+    · 明细列表 → el-table（8 行示例，带小计合计行）
+    · 操作日志 → el-timeline（5 条，带类型着色）
+    · 附件     → 文件列表 + 大小 + 下载
+  - 所有可见文案默认中文（表格空态 / 弹窗文案由 zh-cn-locale.js 提供）
+
+  使用方式: 拷贝本文件到 pages/<id>.html，再修改：
+    - <title>        页面标题
+    - detailHeader   状态头的标题 / 编号 / 状态
+    - summaryItems   概要指标条
+    - baseInfo / bizInfo  两组描述项（改数组即可，不用动模板）
+    - detailRows     明细表格数据
+    - timeline       操作日志
+    - attachments    附件列表
+
+  注意：不要在 <div id="app"> 内部写 {{XXX}} 形式的占位符 —— 那是 Vue 的插值语法，
+        会被当作表达式求值并抛 "XXX is not defined"。页面标题改 <title> 与 detailHeader.title。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{PAGE_TITLE}}</title>
+  <link rel="stylesheet" href="../assets/scaffold-base.css" />
+  <link rel="stylesheet" href="../assets/element-plus.css" />
+  <script src="../assets/vue.global.prod.js"></script>
+  <script src="../assets/element-plus.full.min.js"></script>
+  <script src="../assets/icons-vue.iife.min.js"></script>
+  <script src="../assets/viewer-bridge.js"></script>
+  <!-- 中文语言包：element-plus.full.min.js 只打了英文，不引这个表格空态/弹窗会显示英文 -->
+  <script src="../assets/zh-cn-locale.js"></script>
+  <!-- scaffold 通用工具：registerIcons -->
+  <script src="../assets/scaffold-helpers.js"></script>
+  <style>
+    /* 整页布局：上下竖排；状态头固定，只让内容区滚动 */
+    #app {
+      padding: 12px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    /* 状态头：固定 */
+    .detail-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .detail-header .head-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .detail-header .back {
+      cursor: pointer;
+      color: #909399;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      padding-right: 10px;
+      border-right: 1px solid #ebeef5;
+    }
+    .detail-header .back:hover { color: #409eff; }
+    .detail-header .title { font-size: 16px; font-weight: 600; color: #303133; }
+    .detail-header .code { font-size: 13px; color: #909399; }
+    .detail-header .spacer { flex: 1; }
+    /* 概要指标条：4 个关键数字 */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ebeef5;
+    }
+    .summary-bar .cell { padding: 0 16px; border-right: 1px solid #f2f6fc; }
+    .summary-bar .cell:last-child { border-right: none; }
+    .summary-bar .cell:first-child { padding-left: 0; }
+    .summary-bar .label { font-size: 12px; color: #909399; }
+    .summary-bar .value { font-size: 20px; font-weight: 600; color: #303133; margin-top: 4px; line-height: 1.2; }
+    .summary-bar .value .unit { font-size: 12px; font-weight: 400; color: #909399; margin-left: 2px; }
+    /* 内容主体：flex:1 占满剩余高度，内部纵向滚动 */
+    .detail-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;   /* 给滚动条留位，避免内容贴边 */
+    }
+    /* 卡片 */
+    .detail-card {
+      background: #fff;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .detail-card > .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #303133;
+      margin: 0 0 16px;
+      padding-left: 8px;
+      border-left: 3px solid #409eff;
+      line-height: 16px;
+    }
+    /* Tabs 卡片内边距收一点，让表格铺满 */
+    .tab-card { padding: 8px 20px 16px; }
+    .tab-card .el-tabs__header { margin-bottom: 12px; }
+    /* 附件列表 */
+    .file-list { border: 1px solid #ebeef5; border-radius: 4px; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f2f6fc;
+      font-size: 13px;
+    }
+    .file-row:last-child { border-bottom: none; }
+    .file-row:hover { background: #fafcff; }
+    .file-row .name { color: #303133; }
+    .file-row .size { color: #909399; font-size: 12px; }
+    .file-row .spacer { flex: 1; }
+    /* 时间线里的次要文案 */
+    .log-meta { color: #909399; font-size: 12px; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- el-config-provider 提供中文 locale，覆盖表格空态 / 弹窗 等组件的默认英文文案 -->
+    <el-config-provider :locale="zhCnLocale">
+
+      <!-- 状态头：固定 -->
+      <div class="detail-header">
+        <div class="head-line">
+          <span class="back" @click="onBack">
+            <el-icon><ArrowLeft /></el-icon>返回
+          </span>
+          <span class="title">{{ detailHeader.title }}</span>
+          <span class="code">{{ detailHeader.code }}</span>
+          <el-tag :type="detailHeader.statusType" effect="light">{{ detailHeader.statusText }}</el-tag>
+          <span class="spacer"></span>
+          <el-button type="primary" :icon="Edit" @click="onEdit">编辑</el-button>
+          <el-button type="danger" :icon="Delete" plain @click="onDelete">删除</el-button>
+          <el-dropdown @command="onMoreCommand">
+            <el-button>
+              更多<el-icon style="margin-left:4px"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="copy">复制</el-dropdown-item>
+                <el-dropdown-item command="print">打印</el-dropdown-item>
+                <el-dropdown-item command="export">导出 PDF</el-dropdown-item>
+                <el-dropdown-item command="disable" divided>停用</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+        <!-- 概要指标条 -->
+        <div class="summary-bar">
+          <div class="cell" v-for="s in summaryItems" :key="s.label">
+            <div class="label">{{ s.label }}</div>
+            <div class="value">{{ s.value }}<span class="unit" v-if="s.unit">{{ s.unit }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 内容主体：独立滚动区 -->
+      <div class="detail-body">
+
+        <!-- 基本信息 -->
+        <div class="detail-card">
+          <h3 class="card-title">基本信息</h3>
+          <el-descriptions :column="3" border>
+            <el-descriptions-item v-for="it in baseInfo" :key="it.label" :label="it.label" :span="it.span || 1">
+              <el-tag v-if="it.tag" :type="it.tagType || 'info'" size="small">{{ it.value }}</el-tag>
+              <span v-else>{{ it.value }}</span>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- 业务信息 -->
+        <div class="detail-card">
+          <h3 class="card-title">业务信息</h3>
+          <el-descriptions :column="3" border>
+            <el-descriptions-item v-for="it in bizInfo" :key="it.label" :label="it.label" :span="it.span || 1">
+              <el-tag v-if="it.tag" :type="it.tagType || 'info'" size="small">{{ it.value }}</el-tag>
+              <span v-else>{{ it.value }}</span>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- Tabs：明细列表 / 操作日志 / 附件 -->
+        <div class="detail-card tab-card">
+          <el-tabs v-model="activeTab">
+
+            <el-tab-pane label="明细列表" name="rows">
+              <!-- 注意：el-table-column 必须用显式 </el-table-column> 闭合；Element Plus 2.8.8 +
+                   Vue 3.5 在自闭合写法下会把后续列错误地嵌套进前一列 -->
+              <el-table :data="detailRows" border stripe show-summary :summary-method="summaryMethod" style="width:100%">
+                <el-table-column type="index" label="序号" width="60"></el-table-column>
+                <el-table-column prop="name" label="明细名称" min-width="160" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="spec" label="规格" min-width="120" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="qty" label="数量" width="90" align="right"></el-table-column>
+                <el-table-column prop="price" label="单价" width="110" align="right" :formatter="(r) => money(r.price)"></el-table-column>
+                <el-table-column prop="total" label="小计" width="120" align="right" :formatter="(r) => money(r.total)"></el-table-column>
+                <el-table-column label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.statusType" size="small">{{ row.statusText }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="操作日志" name="logs">
+              <el-timeline style="padding-left:4px">
+                <el-timeline-item
+                  v-for="(log, i) in timeline"
+                  :key="i"
+                  :timestamp="log.time"
+                  :type="log.type"
+                  placement="top">
+                  <div>{{ log.action }}</div>
+                  <div class="log-meta">操作人：{{ log.operator }}<span v-if="log.remark"> · {{ log.remark }}</span></div>
+                </el-timeline-item>
+              </el-timeline>
+            </el-tab-pane>
+
+            <el-tab-pane label="附件" name="files">
+              <div class="file-list">
+                <div class="file-row" v-for="f in attachments" :key="f.name">
+                  <el-icon color="#909399"><Document /></el-icon>
+                  <span class="name">{{ f.name }}</span>
+                  <span class="size">{{ f.size }}</span>
+                  <span class="spacer"></span>
+                  <span class="size">{{ f.uploadedAt }}</span>
+                  <el-button link type="primary" @click="onDownload(f)">下载</el-button>
+                </div>
+              </div>
+            </el-tab-pane>
+
+          </el-tabs>
+        </div>
+
+      </div>
+
+    </el-config-provider>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive } = Vue;
+    const { ArrowLeft, ArrowDown, Edit, Delete, Document } = ElementPlusIconsVue;
+    const { registerIcons } = window.ScaffoldHelpers;
+    // 中文 locale：由 ../assets/zh-cn-locale.js 提供
+    const zhCnLocale = window.ZH_CN_LOCALE;
+
+    const app = createApp({
+      setup() {
+        /* ========== 状态头 ========== */
+        const detailHeader = reactive({
+          title: '示例名称',
+          code: 'NO.202607280001',
+          statusText: '已启用',
+          statusType: 'success',   // success / info / warning / danger
+        });
+
+        /* ========== 概要指标条 ========== */
+        const summaryItems = ref([
+          { label: '明细条数', value: 8, unit: '条' },
+          { label: '总数量', value: 156, unit: '件' },
+          { label: '总金额', value: '¥ 23,470.00' },
+          { label: '已完成占比', value: '50.0%' },
+        ]);
+
+        /* ========== 描述项：改数组即可，不用动模板 ========== */
+        const baseInfo = ref([
+          { label: '名称', value: '示例名称' },
+          { label: '编号', value: 'NO.202607280001' },
+          { label: '状态', value: '已启用', tag: true, tagType: 'success' },
+          { label: '类型', value: '类型 A' },
+          { label: '优先级', value: '中', tag: true, tagType: 'warning' },
+          { label: '数量', value: '156 件' },
+          { label: '创建人', value: '张三' },
+          { label: '创建时间', value: '2026-07-28 10:00:32' },
+          { label: '更新时间', value: '2026-07-30 15:24:07' },
+          { label: '备注', value: '示例备注信息，用于展示跨列的长文本描述项。', span: 3 },
+        ]);
+        const bizInfo = ref([
+          { label: '所属公司', value: '阿里巴巴' },
+          { label: '覆盖门店', value: '北京朝阳店, 上海徐汇店', span: 2 },
+          { label: '所属区域', value: '北京市 / 朝阳区' },
+          { label: '联系电话', value: '138 0000 0001' },
+          { label: '通知方式', value: '短信、站内信' },
+          { label: '生效日期', value: '2026-08-01' },
+          { label: '截止时间', value: '2026-12-31 23:59:59' },
+          { label: '业务标签', value: '高价值', tag: true, tagType: 'danger' },
+        ]);
+
+        /* ========== 明细表格 ========== */
+        const detailRows = ref([
+          { name: '明细项目 A', spec: '规格 20×30', qty: 24, price: 128.0, total: 3072.0, statusText: '已完成', statusType: 'success' },
+          { name: '明细项目 B', spec: '规格 15×15', qty: 12, price: 256.0, total: 3072.0, statusText: '已完成', statusType: 'success' },
+          { name: '明细项目 C', spec: '规格 40×60', qty: 30, price: 88.0, total: 2640.0, statusText: '进行中', statusType: 'warning' },
+          { name: '明细项目 D', spec: '规格 10×10', qty: 18, price: 199.0, total: 3582.0, statusText: '进行中', statusType: 'warning' },
+          { name: '明细项目 E', spec: '规格 25×25', qty: 20, price: 158.0, total: 3160.0, statusText: '已完成', statusType: 'success' },
+          { name: '明细项目 F', spec: '规格 30×45', qty: 16, price: 320.0, total: 5120.0, statusText: '待处理', statusType: 'info' },
+          { name: '明细项目 G', spec: '规格 12×18', qty: 22, price: 66.0, total: 1452.0, statusText: '已完成', statusType: 'success' },
+          { name: '明细项目 H', spec: '规格 50×50', qty: 14, price: 98.0, total: 1372.0, statusText: '已关闭', statusType: 'danger' },
+        ]);
+        // 金额格式化：单价 / 小计 / 合计 共用一个函数，保证三处格式一致
+        const money = (v) => '¥ ' + Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        // 合计行：数量列求和，小计列求和并格式化为金额
+        const summaryMethod = ({ columns, data }) => {
+          return columns.map((col, idx) => {
+            if (idx === 0) return '合计';
+            if (col.property === 'qty') return data.reduce((s, r) => s + r.qty, 0);
+            if (col.property === 'total') return money(data.reduce((s, r) => s + r.total, 0));
+            return '';
+          });
+        };
+
+        /* ========== 操作日志 ========== */
+        const timeline = ref([
+          { time: '2026-07-30 15:24:07', action: '修改了「备注」字段', operator: '李四', type: 'primary', remark: '内容由空改为示例备注信息' },
+          { time: '2026-07-29 09:12:44', action: '审核通过', operator: '王五', type: 'success' },
+          { time: '2026-07-28 18:03:10', action: '提交审核', operator: '张三', type: 'warning' },
+          { time: '2026-07-28 10:30:55', action: '上传附件 3 个', operator: '张三', type: 'info' },
+          { time: '2026-07-28 10:00:32', action: '创建记录', operator: '张三', type: 'primary' },
+        ]);
+
+        /* ========== 附件 ========== */
+        const attachments = ref([
+          { name: '合同扫描件.pdf', size: '2.4 MB', uploadedAt: '2026-07-28 10:30' },
+          { name: '现场照片-01.jpg', size: '1.1 MB', uploadedAt: '2026-07-28 10:30' },
+          { name: '验收单.xlsx', size: '318 KB', uploadedAt: '2026-07-28 10:30' },
+        ]);
+
+        const activeTab = ref('rows');
+
+        /* ========== 交互（原型演示：只弹提示，不做真实请求）==========
+           gotoNode 的 id 是中性占位符：拷贝到业务页后改成真实节点 id */
+        const onBack = () => gotoNode('xxx', () => ElMessage.info('请在查看器中打开以跳转'));
+        const onEdit = () => gotoNode('xxx', () => ElMessage.info('打开编辑表单'));
+        const onDelete = () => ElMessageBox.confirm('确认删除「' + detailHeader.title + '」？删除后不可恢复。', '提示', { type: 'warning' })
+          .then(() => ElMessage.success('已删除'))
+          .catch(() => {});
+        const onMoreCommand = (cmd) => {
+          const map = { copy: '已复制', print: '已调起打印', export: '已导出 PDF', disable: '已停用' };
+          ElMessage.success(map[cmd] || cmd);
+        };
+        const onDownload = (f) => ElMessage.success('开始下载 ' + f.name);
+
+        return {
+          detailHeader, summaryItems, baseInfo, bizInfo,
+          detailRows, summaryMethod, money, timeline, attachments, activeTab,
+          onBack, onEdit, onDelete, onMoreCommand, onDownload,
+          ArrowLeft, ArrowDown, Edit, Delete, Document,
+          zhCnLocale,
+        };
+      }
+    });
+    app.use(ElementPlus);
+    registerIcons(app, ['ArrowLeft', 'ArrowDown', 'Edit', 'Delete', 'Document'], ElementPlusIconsVue);
+    app.mount('#app');
+  </script>
+</body>
+</html>

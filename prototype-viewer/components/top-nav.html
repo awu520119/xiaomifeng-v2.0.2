@@ -1,0 +1,21 @@
+<!--
+  ⚠️ 本文件仅作参考片段，已被 templates/* 取代 ⚠️
+
+  component: top-nav.html
+  历史用途: 顶部导航栏片段（snippet）
+  当前状态: 不再使用。真正的写法见 templates/pc/list.html / templates/pc/form.html /
+            templates/pc/detail.html / templates/pc/dashboard.html 各自的 .toolbar /
+            .page-header / .detail-header。
+  移动端顶部导航：templates/mobile/list.html 的 van-nav-bar。
+-->
+<header class="top-nav">
+  <el-menu mode="horizontal" :default-active="active" @select="onSelect" background-color="#ffffff" text-color="#303133" active-text-color="#409eff">
+    <el-menu-item index="home">首页</el-menu-item>
+    <el-menu-item index="order">订单</el-menu-item>
+    <el-menu-item index="user">用户</el-menu-item>
+    <el-menu-item index="report">报表</el-menu-item>
+  </el-menu>
+</header>
+<style>
+  .top-nav { background: #fff; border-bottom: 1px solid #e4e7ed; }
+</style>

@@ -1,0 +1,99 @@
+/* desc-enhance.css — 描述区增强样式（代码块头部 + 复制图标 + 复制反馈 toast） */
+main.desc pre { position: relative; }
+
+/* ===== 代码块：头部行 + 悬浮复制图标 ===== */
+main.desc pre.desc-code {
+  padding: 0;
+  /* 上方留给 head 行 */
+  padding-top: 32px;
+  background: #f6f8fa;
+}
+
+main.desc .desc-code-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 12px;
+  background: #eef1f4;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom: 1px solid #e2e6eb;
+  font-size: 12px;
+  color: var(--text-secondary, #606266);
+  user-select: none;
+}
+
+main.desc .desc-lang {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  text-transform: lowercase;
+}
+
+main.desc .desc-copy-trigger {
+  /* 复制图标按钮：默认半透明，悬浮 pre 时清晰可见 */
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s ease, color .15s ease, background .15s ease;
+}
+main.desc pre.desc-code:hover .desc-copy-trigger,
+main.desc .desc-copy-trigger:focus-visible {
+  opacity: 1;
+}
+main.desc .desc-copy-trigger:hover {
+  background: #dde3ea;
+  color: var(--accent, #409eff);
+}
+
+/* 复制反馈 toast：浮在描述 iframe 视口顶部约 50px 居中（fixed，不随滚动跑） */
+main.desc .desc-copy-toast {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translate(-50%, -8px); /* 初始上移 8px，准备下落入场 */
+  background: #1f1f1f;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  padding: 10px 18px;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 9999;
+}
+main.desc .desc-copy-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+main.desc pre.desc-code > code {
+  display: block;
+  padding: 12px;
+  /* 头行顶起整个 pre 的内边距 */
+  margin: 0;
+  background: #f6f8fa;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* ===== 描述区布局 + TOC 样式：统一定义在 build_desc.py 的 _HTML_TEMPLATE，
+   本文件只保留 desc 增强层（代码块/复制/toast），避免双份事实源。 ===== */

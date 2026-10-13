@@ -1,0 +1,13 @@
+<!--
+  ⚠️ 本文件仅作参考片段，已被 templates/* 取代 ⚠️
+
+  component: breadcrumb.html
+  历史用途: 面包屑片段（snippet）
+  当前状态: 不再使用。scaffold 当前 4 个 PC 模板 + 4 个移动模板均无面包屑布局；如需要，
+  直接参考 Element Plus el-breadcrumb 官方文档写一段即可。
+-->
+<el-breadcrumb separator="/" class="breadcrumb">
+  <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+  <el-breadcrumb-item v-for="(item, i) in items" :key="i">{{ item }}</el-breadcrumb-item>
+</el-breadcrumb>
+<style>.breadcrumb{padding:8px 0;color:#606266;font-size:13px}</style>

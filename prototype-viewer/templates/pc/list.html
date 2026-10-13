@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<!--
+  template: list.html
+  用途: PC 列表页模板（12 个筛选项 + 工具栏 + 表格 + 分页）
+
+  特性：
+  - 12 个筛选项，覆盖 6 种类型：输入框搜索 / 下拉单选 / 下拉多选 / 日期范围 / 弹窗单选 / 弹窗多选；所有可见文案默认中文
+  - 前 4 项直接展示在主表单，剩余 8 项收起在右侧「更多筛选」抽屉中（带已选项数 badge）；抽屉内筛选项一行一个，单列网格
+  - 弹窗单选样例：选择公司；弹窗多选样例：选择门店
+  - 操作区：新增 / 导入 / 导出 横向并排
+  - 表格列：选择 / 序号 / 字段1..字段10 / 创建时间 / 创建人 / 操作（共 15 列；序号列表头文案为「序号」）
+  - 默认 100 条模拟数据，每页 20 条；创建时间精确到秒（YYYY-MM-DD HH:mm:ss）
+  - 上下滚动：仅数据区滚动，表头与分页组件固定
+  - 左右滚动：「选择 + 序号 + 字段1」固定在左（共 3 列），「操作」固定在右
+  - 中文文案：引 ../assets/zh-cn-locale.js + el-config-provider，四个 PC 模板共用同一份语言包
+
+  使用方式: 拷贝本文件到 pages/<id>.html，再修改：
+    - <title>          页面标题
+    - columns          表格列定义
+    - options          下拉选项数据
+    - allCompanies / allStores  弹窗选择器源数据
+    - initMock()       模拟数据构造（替换为真实接口）
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{PAGE_TITLE}}</title>
+  <link rel="stylesheet" href="../assets/scaffold-base.css" />
+  <link rel="stylesheet" href="../assets/element-plus.css" />
+  <script src="../assets/vue.global.prod.js"></script>
+  <script src="../assets/element-plus.full.min.js"></script>
+  <script src="../assets/icons-vue.iife.min.js"></script>
+  <script src="../assets/viewer-bridge.js"></script>
+  <!-- 中文语言包：element-plus.full.min.js 只打了英文，不引这个分页器会显示 Total / Go to -->
+  <script src="../assets/zh-cn-locale.js"></script>
+  <!-- scaffold 通用工具：stamp / datePickerPopperOptions / registerIcons -->
+  <script src="../assets/scaffold-helpers.js"></script>
+  <style>
+    /* 整页布局：上下竖排；filter / toolbar / 分页都固定，只让数据区滚动 */
+    #app {
+      padding: 12px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .filter-card {
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    /* 主筛选区：每行 4 列网格 */
+    .filter-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px 16px;
+      align-items: center;
+    }
+    .filter-row .el-form-item { margin-bottom: 0; }
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ebeef5;
+    }
+    .filter-actions .spacer { flex: 1; }
+    /* 操作区：横向一次摆放 新增 / 导入 / 导出 */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .toolbar .spacer { flex: 1; }
+    /* 表格 + 分页 卡片：flex:1 占满剩余高度，内部纵向 flex */
+    .table-card {
+      background: #fff;
+      padding: 12px;
+      border-radius: 4px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .table-card .el-table {
+      flex: 1;
+      min-height: 0;
+      /* 表头样式：与白色数据行拉开视觉层级。
+         --el-table-header-bg-color 是 element-plus 2.8.8 暴露的主题变量，
+         会同时作用于 thead 的 th 与固定列对应的 fixed 表头单元格。 */
+      --el-table-header-bg-color: #f0f2f5;
+    }
+    /* 表头文字：#333 加粗。.cell 是 element-plus 在 th 内部承载表头文字的内层 div，
+       直接覆盖可避开主题变量在不同子版本里的命名差异，最稳。 */
+    .table-card .el-table th.el-table__cell .cell {
+      color: #333333;
+      font-weight: 600;
+    }
+    .table-card .pagination-bar {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    /* 弹窗单选/多选（公司/门店）列表样式 */
+    .picker-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .picker-toolbar .el-input { flex: 1; }
+    .picker-list {
+      border: 1px solid #ebeef5;
+      border-radius: 4px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .picker-row {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s ease;
+    }
+    .picker-row:hover { background: #f5f7fa; }
+    .picker-row.is-checked { background: #ecf5ff; color: #409eff; }
+    /* 抽屉内筛选项：一行一个（单列网格） */
+    .drawer-filter-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px 0;
+    }
+    .drawer-filter-grid .el-form-item { margin-bottom: 0; }
+    .drawer-filter-grid .picker-trigger { cursor: pointer; }
+    /* 弹窗触发器右侧的图标（el-input 的 suffix 槽）：
+       不用 <el-icon> 包裹是实测发现 icon-vue 的 SVG 没 HTML 级别 width/height 时
+       在 flex 容器里渲染不出来（CSS 设 svg 尺寸也无效），所以这里直接内联 SVG */
+    .picker-suffix {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 100%;
+    }
+    .picker-suffix .picker-arrow,
+    .picker-suffix .picker-clear {
+      color: var(--el-text-color-placeholder);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* 与 el-select 的 .el-icon 一样：通过 CSS 控 1em 尺寸，跟随父级 14px font-size 得到 14×14。
+       注：.picker-arrow 就是 <svg> 本身（直接是图标节点），.picker-clear 是包裹 <svg> 的 <span> */
+    .picker-suffix .picker-arrow,
+    .picker-suffix .picker-clear svg {
+      width: 1em;
+      height: 1em;
+    }
+    .picker-suffix .picker-clear { cursor: pointer; display: none; }
+    .picker-suffix .picker-clear:hover { color: var(--el-text-color-regular); }
+    /* 选中后悬浮：显示清空按钮，隐藏下拉箭头（行为对齐 el-select 的 clearable） */
+    .picker-trigger.has-value:hover .picker-suffix .picker-arrow { display: none; }
+    .picker-trigger.has-value:hover .picker-suffix .picker-clear { display: inline-flex; }
+    /* 「更多筛选」按钮上的红色 badge */
+    .more-filter-badge {
+      display: inline-block;
+      background: #f56c6c;
+      color: #fff;
+      border-radius: 9px;
+      padding: 0 5px;
+      font-size: 11px;
+      line-height: 16px;
+      min-width: 16px;
+      height: 16px;
+      text-align: center;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 包裹 el-config-provider 提供中文 locale（覆盖默认 en 的分页 / 弹窗 / 日期 等组件文案） -->
+    <el-config-provider :locale="zhCnLocale">
+      <!-- 组件内容 -->
+    <!-- 主筛选区：前 4 项（输入搜索 / 下拉单选 / 下拉多选 / 日期范围） -->
+    <div class="filter-card">
+      <el-form :model="query" label-width="80px">
+        <div class="filter-row">
+          <el-form-item label="关键字">
+            <el-input v-model="query.keyword" placeholder="名称 / 编号" clearable />
+          </el-form-item>
+          <el-form-item label="订单状态">
+            <el-select v-model="query.status" placeholder="全部" clearable>
+              <el-option v-for="o in options.status" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="支付方式">
+            <el-select v-model="query.payMethods" multiple collapse-tags collapse-tags-tooltip placeholder="全部" clearable>
+              <el-option v-for="o in options.payMethod" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="下单日期">
+            <el-date-picker
+              v-model="query.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始"
+              end-placeholder="结束"
+              value-format="YYYY-MM-DD"
+              style="width:100%" />
+          </el-form-item>
+        </div>
+        <div class="filter-actions">
+          <el-button type="primary" @click="onSearch">查询</el-button>
+          <el-button @click="onReset">重置</el-button>
+          <el-button text type="primary" @click="moreFilterDrawer = true">
+            更多筛选
+            <span v-if="moreFilterCount > 0" class="more-filter-badge">{{ moreFilterCount }}</span>
+          </el-button>
+        </div>
+      </el-form>
+    </div>
+
+    <!-- 操作区：新增 / 导入 / 导出 横向并排 -->
+    <div class="toolbar">
+      <el-button type="primary" :icon="Plus" @click="onCreate">新增</el-button>
+      <el-button :icon="Upload" @click="onImport">导入</el-button>
+      <el-button :icon="Download" @click="onExport">导出</el-button>
+      <span class="spacer"></span>
+      <el-button :icon="Refresh" circle @click="loadData" />
+    </div>
+
+    <!-- 列表区 + 分页：表头与分页固定，仅数据区滚动 -->
+    <!-- 注意：el-table-column 必须用显式 </el-table-column> 闭合；Element Plus 2.8.8 + Vue 3.5
+         在自闭合 <el-table-column ... /> 写法下会错误地把后续列嵌套进前一列，导致每列变成一行 -->
+    <div class="table-card">
+      <el-table :data="pagedData" border stripe height="100%" style="width:100%">
+        <!-- 左固定：选择 + 序号 + 字段1（共 3 列随滚动钉在最左） -->
+        <el-table-column type="selection" width="48" fixed="left"></el-table-column>
+        <el-table-column type="index" label="序号" width="60" fixed="left"></el-table-column>
+        <el-table-column
+          v-for="c in fixedLeftColumns"
+          :key="c.prop"
+          :prop="c.prop"
+          :label="c.label"
+          :min-width="c.width"
+          show-overflow-tooltip
+          fixed="left"></el-table-column>
+        <!-- 中间滚动：其余数据列 -->
+        <el-table-column
+          v-for="c in scrollColumns"
+          :key="c.prop"
+          :prop="c.prop"
+          :label="c.label"
+          :min-width="c.width"
+          show-overflow-tooltip></el-table-column>
+        <el-table-column prop="createdAt" label="创建时间" width="170"></el-table-column>
+        <el-table-column prop="creator" label="创建人" width="100"></el-table-column>
+        <!-- 右固定：操作 -->
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="onView(row)">查看</el-button>
+            <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-bar">
+        <el-pagination
+          v-model:current-page="page.current"
+          v-model:page-size="page.size"
+          :total="page.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          background
+          @size-change="loadData"
+          @current-change="loadData" />
+      </div>
+    </div>
+
+    <!-- 更多筛选抽屉：剩余 8 个筛选项 -->
+    <el-drawer v-model="moreFilterDrawer" title="更多筛选" direction="rtl" size="480px">
+      <el-form :model="query" label-width="90px" style="padding: 0 16px;">
+        <div class="drawer-filter-grid">
+          <!-- 弹窗单选：选择公司（点击输入框打开弹窗，列表中选一个） -->
+          <el-form-item label="所属公司">
+            <el-input
+              v-model="query.companyName"
+              placeholder="点击选择公司"
+              readonly
+              :class="['picker-trigger', { 'has-value': !!query.companyId }]"
+              @click="openCompanyDialog">
+              <template #suffix>
+                <span class="picker-suffix">
+                  <span class="picker-clear" @click.stop="clearCompanySelection">
+                    <!-- 与 el-select 的 .el-select__clear 完全一致：圆圈 + × 双 path（浏览器提取自 element-plus 渲染后的 SVG） -->
+                    <svg viewBox="0 0 1024 1024" aria-hidden="true">
+                      <path fill="currentColor" d="m466.752 512-90.496-90.496a32 32 0 0 1 45.248-45.248L512 466.752l90.496-90.496a32 32 0 1 1 45.248 45.248L557.248 512l90.496 90.496a32 32 0 1 1-45.248 45.248L512 557.248l-90.496 90.496a32 32 0 0 1-45.248-45.248z"/>
+                      <path fill="currentColor" d="M512 896a384 384 0 1 0 0-768 384 384 0 0 0 0 768m0 64a448 448 0 1 1 0-896 448 448 0 0 1 0 896"/>
+                    </svg>
+                  </span>
+                  <!-- 箭头 path 与 el-select 的 .el-select__caret 完全一致：浏览器提取自 element-plus 渲染后的 SVG -->
+                  <svg class="picker-arrow" viewBox="0 0 1024 1024" aria-hidden="true">
+                    <path fill="currentColor" d="M831.872 340.864 512 652.672 192.128 340.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L489.664 714.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z"/>
+                  </svg>
+                </span>
+              </template>
+            </el-input>
+          </el-form-item>
+          <!-- 弹窗多选：选择门店 -->
+          <el-form-item label="所属门店">
+            <el-input
+              v-model="query.storeNames"
+              placeholder="点击选择门店（可多选）"
+              readonly
+              :class="['picker-trigger', { 'has-value': query.storeIds.length > 0 }]"
+              @click="openStoreDialog">
+              <template #suffix>
+                <span class="picker-suffix">
+                  <span class="picker-clear" @click.stop="clearStoreSelection">
+                    <!-- 与 el-select 的 .el-select__clear 完全一致：圆圈 + × 双 path -->
+                    <svg viewBox="0 0 1024 1024" aria-hidden="true">
+                      <path fill="currentColor" d="m466.752 512-90.496-90.496a32 32 0 0 1 45.248-45.248L512 466.752l90.496-90.496a32 32 0 1 1 45.248 45.248L557.248 512l90.496 90.496a32 32 0 1 1-45.248 45.248L512 557.248l-90.496 90.496a32 32 0 0 1-45.248-45.248z"/>
+                      <path fill="currentColor" d="M512 896a384 384 0 1 0 0-768 384 384 0 0 0 0 768m0 64a448 448 0 1 1 0-896 448 448 0 0 1 0 896"/>
+                    </svg>
+                  </span>
+                  <!-- 箭头 path 与 el-select 的 .el-select__caret 完全一致 -->
+                  <svg class="picker-arrow" viewBox="0 0 1024 1024" aria-hidden="true">
+                    <path fill="currentColor" d="M831.872 340.864 512 652.672 192.128 340.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L489.664 714.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z"/>
+                  </svg>
+                </span>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="订单编号">
+            <el-input v-model="query.orderNo" placeholder="请输入订单编号" clearable />
+          </el-form-item>
+          <el-form-item label="渠道来源">
+            <el-select v-model="query.channel" placeholder="全部" clearable>
+              <el-option v-for="o in options.channel" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="业务标签">
+            <el-select v-model="query.tags" multiple collapse-tags collapse-tags-tooltip placeholder="全部" clearable>
+              <el-option v-for="o in options.tag" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="创建日期">
+            <el-date-picker
+              v-model="query.createdRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始"
+              end-placeholder="结束"
+              value-format="YYYY-MM-DD"
+              :popper-options="datePickerPopperOptions"
+              style="width:100%" />
+          </el-form-item>
+          <el-form-item label="会员等级">
+            <el-select v-model="query.memberLevel" placeholder="全部" clearable>
+              <el-option v-for="o in options.memberLevel" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="配送方式">
+            <el-select v-model="query.delivery" placeholder="全部" clearable>
+              <el-option v-for="o in options.delivery" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </el-form-item>
+        </div>
+      </el-form>
+      <template #footer>
+        <div style="padding: 0 16px;">
+          <el-button @click="onDrawerReset">清空</el-button>
+          <el-button type="primary" @click="onDrawerConfirm">应用筛选</el-button>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 弹窗单选：选择公司 -->
+    <el-dialog v-model="companyDialog.visible" title="选择公司" width="560px">
+      <div class="picker-toolbar">
+        <el-input v-model="companyDialog.keyword" placeholder="搜索公司名称" clearable />
+      </div>
+      <div class="picker-list">
+        <div
+          v-for="item in filteredCompanies"
+          :key="item.id"
+          class="picker-row"
+          :class="{ 'is-checked': companyDialog.selected === item.id }"
+          @click="pickCompany(item)">
+          <el-icon v-if="companyDialog.selected === item.id"><Check /></el-icon>
+          <span v-else style="display:inline-block;width:16px"></span>
+          <span>{{ item.name }}</span>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="companyDialog.visible = false">取消</el-button>
+        <el-button type="primary" @click="confirmCompany">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 弹窗多选：选择门店 -->
+    <el-dialog v-model="storeDialog.visible" title="选择门店（可多选）" width="560px">
+      <div class="picker-toolbar">
+        <el-input v-model="storeDialog.keyword" placeholder="搜索门店名称" clearable />
+        <el-button @click="clearStore">清空</el-button>
+      </div>
+      <div class="picker-list">
+        <el-checkbox-group v-model="storeDialog.selected" style="width:100%">
+          <div
+            v-for="item in filteredStores"
+            :key="item.id"
+            class="picker-row">
+            <el-checkbox :value="item.id">{{ item.name }}</el-checkbox>
+          </div>
+        </el-checkbox-group>
+      </div>
+      <template #footer>
+        <el-button @click="storeDialog.visible = false">取消</el-button>
+        <el-button type="primary" @click="confirmStore">确定</el-button>
+      </template>
+    </el-dialog>
+    </el-config-provider>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, reactive, onMounted } = Vue;
+    const { Plus, Upload, Download, Refresh, Check } = ElementPlusIconsVue;
+    const { datePickerPopperOptions, registerIcons } = window.ScaffoldHelpers;
+    // 中文 locale：由 ../assets/zh-cn-locale.js 提供（覆盖 el-pagination / el-select /
+    // el-date-picker / el-table / el-messagebox 等全部组件的默认英文文案）
+    const zhCnLocale = window.ZH_CN_LOCALE;
+    const app = createApp({
+      setup() {
+        /* ========== 选项数据（可替换为真实接口数据）========== */
+        const options = {
+          status: [
+            { label: '待付款', value: 'pending' },
+            { label: '已付款', value: 'paid' },
+            { label: '已发货', value: 'shipped' },
+            { label: '已完成', value: 'done' },
+            { label: '已取消', value: 'cancel' },
+          ],
+          payMethod: [
+            { label: '微信', value: 'wx' },
+            { label: '支付宝', value: 'alipay' },
+            { label: '银行卡', value: 'bank' },
+            { label: '余额', value: 'balance' },
+          ],
+          channel: [
+            { label: '自然流量', value: 'organic' },
+            { label: '广告投放', value: 'ads' },
+            { label: '私域', value: 'private' },
+            { label: '分销', value: 'distribution' },
+          ],
+          tag: [
+            { label: '高价值', value: 'high' },
+            { label: '新客', value: 'new' },
+            { label: '老客', value: 'old' },
+            { label: '流失', value: 'lost' },
+          ],
+          memberLevel: [
+            { label: '普通', value: 'normal' },
+            { label: '银卡', value: 'silver' },
+            { label: '金卡', value: 'gold' },
+            { label: '钻石', value: 'diamond' },
+          ],
+          delivery: [
+            { label: '快递', value: 'express' },
+            { label: '同城配送', value: 'local' },
+            { label: '到店自提', value: 'pickup' },
+          ],
+        };
+
+        /* ========== 弹窗单选 / 多选 的源数据 ==========
+           PM 直接在示例页里改这份假数据；批量替换为真实接口数据时整段删掉即可。 */
+        const allCompanies = ref([
+          { id: 1, name: '阿里巴巴' },
+          { id: 2, name: '腾讯科技' },
+          { id: 3, name: '字节跳动' },
+          { id: 4, name: '美团' },
+          { id: 5, name: '京东' },
+          { id: 6, name: '百度' },
+          { id: 7, name: '拼多多' },
+          { id: 8, name: '网易' },
+          { id: 9, name: '小米' },
+          { id: 10, name: '华为' },
+        ]);
+        const allStores = ref([
+          { id: 1, name: '北京朝阳店' },
+          { id: 2, name: '上海徐汇店' },
+          { id: 3, name: '广州天河店' },
+          { id: 4, name: '深圳福田店' },
+          { id: 5, name: '杭州西湖店' },
+          { id: 6, name: '成都春熙店' },
+          { id: 7, name: '南京新街口店' },
+          { id: 8, name: '武汉光谷店' },
+          { id: 9, name: '西安钟楼店' },
+          { id: 10, name: '苏州工业园店' },
+          { id: 11, name: '天津滨海店' },
+          { id: 12, name: '重庆解放碑店' },
+        ]);
+
+        /* ========== 表格列定义（10 个数据列；字段1 左固定，其余滚动）========== */
+        const columns = [
+          { prop: 'field1', label: '字段1', width: 120, fixedLeft: true },
+          { prop: 'field2', label: '字段2', width: 120 },
+          { prop: 'field3', label: '字段3', width: 120 },
+          { prop: 'field4', label: '字段4', width: 120 },
+          { prop: 'field5', label: '字段5', width: 120 },
+          { prop: 'field6', label: '字段6', width: 120 },
+          { prop: 'field7', label: '字段7', width: 120 },
+          { prop: 'field8', label: '字段8', width: 120 },
+          { prop: 'field9', label: '字段9', width: 120 },
+          { prop: 'field10', label: '字段10', width: 120 },
+        ];
+        // 拆成「左固定」与「中间滚动」两段，分别交给两个 v-for 渲染
+        const fixedLeftColumns = columns.filter(c => c.fixedLeft);
+        const scrollColumns = columns.filter(c => !c.fixedLeft);
+
+        /* ========== 查询条件（12 个筛选项的 v-model）========== */
+        const initialQuery = () => ({
+          // 主表单（4 个）
+          keyword: '',
+          status: '',
+          payMethods: [],
+          dateRange: [],
+          // 抽屉（8 个）
+          companyId: null,
+          companyName: '',
+          storeIds: [],
+          storeNames: '',
+          orderNo: '',
+          channel: '',
+          tags: [],
+          createdRange: [],
+          memberLevel: '',
+          delivery: '',
+        });
+        const query = reactive(initialQuery());
+
+        /* ========== 更多筛选抽屉 ========== */
+        const moreFilterDrawer = ref(false);
+        const moreFilterCount = computed(() => {
+          let n = 0;
+          if (query.companyId) n++;
+          if (query.storeIds.length) n++;
+          if (query.orderNo) n++;
+          if (query.channel) n++;
+          if (query.tags.length) n++;
+          if (query.createdRange && query.createdRange.length) n++;
+          if (query.memberLevel) n++;
+          if (query.delivery) n++;
+          return n;
+        });
+        const onDrawerConfirm = () => {
+          moreFilterDrawer.value = false;
+          page.value.current = 1;
+          loadData();
+        };
+        const onDrawerReset = () => {
+          query.companyId = null;
+          query.companyName = '';
+          query.storeIds = [];
+          query.storeNames = '';
+          query.orderNo = '';
+          query.channel = '';
+          query.tags = [];
+          query.createdRange = [];
+          query.memberLevel = '';
+          query.delivery = '';
+        };
+
+        /* ========== 弹窗单选：公司 ========== */
+        const companyDialog = reactive({ visible: false, keyword: '', selected: null });
+        const filteredCompanies = computed(() => {
+          const kw = companyDialog.keyword.trim().toLowerCase();
+          if (!kw) return allCompanies.value;
+          return allCompanies.value.filter(c => c.name.toLowerCase().includes(kw));
+        });
+        const pickCompany = (item) => { companyDialog.selected = item.id; };
+        const openCompanyDialog = () => {
+          companyDialog.selected = query.companyId;
+          companyDialog.keyword = '';
+          companyDialog.visible = true;
+        };
+        const confirmCompany = () => {
+          if (companyDialog.selected != null) {
+            const c = allCompanies.value.find(x => x.id === companyDialog.selected);
+            if (c) { query.companyId = c.id; query.companyName = c.name; }
+          }
+          companyDialog.visible = false;
+        };
+        // 输入框右侧悬浮清空按钮：清掉已选公司
+        const clearCompanySelection = () => {
+          query.companyId = null;
+          query.companyName = '';
+        };
+
+        /* ========== 弹窗多选：门店 ========== */
+        const storeDialog = reactive({ visible: false, keyword: '', selected: [] });
+        const filteredStores = computed(() => {
+          const kw = storeDialog.keyword.trim().toLowerCase();
+          if (!kw) return allStores.value;
+          return allStores.value.filter(s => s.name.toLowerCase().includes(kw));
+        });
+        const clearStore = () => { storeDialog.selected = []; };
+        const openStoreDialog = () => {
+          storeDialog.selected = [...query.storeIds];
+          storeDialog.keyword = '';
+          storeDialog.visible = true;
+        };
+        const confirmStore = () => {
+          query.storeIds = [...storeDialog.selected];
+          query.storeNames = query.storeIds
+            .map(id => allStores.value.find(s => s.id === id)?.name || '')
+            .filter(Boolean)
+            .join(', ');
+          storeDialog.visible = false;
+        };
+        // 输入框右侧悬浮清空按钮：清掉已选门店
+        const clearStoreSelection = () => {
+          query.storeIds = [];
+          query.storeNames = '';
+        };
+
+        /* ========== 模拟数据（100 条）+ 分页（每页 20 条）========== */
+        const allData = ref([]);
+        const page = ref({ current: 1, size: 20, total: 0 });
+        const pagedData = computed(() => {
+          const start = (page.value.current - 1) * page.value.size;
+          return allData.value.slice(start, start + page.value.size);
+        });
+        const initMock = () => {
+          const statusArr = options.status.map(o => o.value);
+          const channelArr = options.channel.map(o => o.value);
+          const deliveryArr = options.delivery.map(o => o.value);
+          const memberArr = options.memberLevel.map(o => o.value);
+          const payArr = options.payMethod.map(o => o.value);
+          const tagArr = options.tag.map(o => o.value);
+          const data = [];
+          for (let i = 1; i <= 100; i++) {
+            const day = String((i % 30) + 1).padStart(2, '0');
+            const hh = String(i % 24).padStart(2, '0');
+            const mm = String(i % 60).padStart(2, '0');
+            const ss = String(((i * 7) % 60)).padStart(2, '0');   // 精确到秒
+            data.push({
+              id: i,
+              field1: '示例数据 ' + i,
+              field2: 'NO.' + String(i).padStart(4, '0'),
+              field3: '类型-' + (i % 5 + 1),
+              field4: '客户-' + (1000 + i),
+              field5: String(Math.floor(Math.random() * 10000)),
+              field6: ['北京', '上海', '广州', '深圳'][i % 4],
+              field7: '订单-' + (10000 + i),
+              field8: '备注信息 ' + i,
+              field9: i % 3 === 0 ? '高价值' : '普通',
+              field10: ['进行中', '已完成', '已关闭'][i % 3],
+              createdAt: `2026-07-${day} ${hh}:${mm}:${ss}`,
+              creator: ['张三', '李四', '王五', '赵六'][i % 4],
+            });
+          }
+          allData.value = data;
+        };
+        const loadData = () => { page.value.total = allData.value.length; };
+
+        /* ⚠ 原型定位说明：本模板的 12 个筛选项为交互演示占位 —— 查询 / 重置 / 应用筛选
+           仅重置页码，不执行真实过滤（视觉演示用，数据不变）。需要真实过滤时，
+           在 pagedData computed 里按 query 条件过滤 allData 即可。 */
+        const onSearch = () => { page.value.current = 1; loadData(); };
+        const onReset = () => {
+          Object.assign(query, initialQuery());
+          page.value.current = 1;
+          loadData();
+        };
+
+        // 短 API（ElMessage / ElMessageBox / gotoNode 由 viewer 自动桥接）
+        const onCreate = () => gotoNode('xxx', () => ElMessage.success('打开新增弹窗'));
+        const onImport = () => ElMessage.success('已触发导入');
+        const onExport = () => ElMessage.success('已触发导出');
+        const onView = (row) => ElMessage.info('查看 ' + row.field1);
+        const onEdit = (row) => ElMessage.info('编辑 ' + row.field1);
+        const onDelete = (row) => ElMessageBox.confirm('确认删除「' + row.field1 + '」？', '提示')
+          .then(() => {
+            allData.value = allData.value.filter(r => r !== row);
+            // 删光当前页后回退一页，避免停留在空白页
+            const maxPage = Math.max(1, Math.ceil(allData.value.length / page.value.size));
+            if (page.value.current > maxPage) page.value.current = maxPage;
+            loadData();
+            ElMessage.success('已删除');
+          })
+          .catch(() => {});
+
+        onMounted(() => { initMock(); loadData(); });
+
+        return {
+          options, columns, fixedLeftColumns, scrollColumns, query, page, pagedData,
+          datePickerPopperOptions,
+          moreFilterDrawer, moreFilterCount,
+          onDrawerConfirm, onDrawerReset,
+          companyDialog, filteredCompanies, pickCompany, openCompanyDialog, confirmCompany, clearCompanySelection,
+          storeDialog, filteredStores, clearStore, openStoreDialog, confirmStore, clearStoreSelection,
+          loadData, onSearch, onReset,
+          onCreate, onImport, onExport, onView, onEdit, onDelete,
+          Plus, Upload, Download, Refresh, Check,
+          zhCnLocale,
+        };
+      }
+    });
+    app.use(ElementPlus);
+    registerIcons(app, ['Plus', 'Upload', 'Download', 'Refresh', 'Check'], ElementPlusIconsVue);
+    app.mount('#app');
+  </script>
+</body>
+</html>

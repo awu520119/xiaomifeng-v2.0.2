@@ -1,0 +1,237 @@
+/* viewer.css — 三栏查看器样式
+ *
+ * 由 index.html 引入；用 `.viewer-` 前缀与业务页 / desc 页隔离。
+ * 改动请只改这一个文件，避免污染业务页 element-plus.css / vant.css 的全局样式。
+ *
+ * CSS 变量定义在 :root 而不是 .viewer scope 内：startDrag 用
+ * ``document.documentElement.style.setProperty('--left-width', ...)``
+ * 写到 <html>，如果默认值定义在 .viewer 上，var(--left-width) 会就近
+ * 取 .viewer 的 280px 而忽略 inline style，导致拖拽无效。
+ */
+:root {
+  --left-width: 280px;
+  --right-width: 600px;
+  /* TOC 显示时由 applyTocExtra() 写到 :root；0 = 仅文档，300 = 文档 + 大纲 */
+  --desc-toc-extra: 0px;
+  /* --viewer-* 与 desc iframe 内的同名 --bg / --text / --border 区分开。
+     desc iframe 端另有自己的 :root scope（独立 cascade），不会冲突。 */
+  --viewer-bg: #f5f7fa;
+  --viewer-panel: #ffffff;
+  --viewer-border: #e4e7ed;
+  --viewer-text: #303133;
+  --viewer-text-secondary: #606266;
+  --viewer-accent: #409eff;
+}
+.viewer, .viewer * { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+.viewer {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  color: var(--viewer-text); background: var(--viewer-bg);
+}
+
+/* === 移动端 phone frame 容器 ===
+   节点 device=mobile 时给 .iframe-wrap 加 .mobile 类。 */
+.viewer .iframe-wrap.mobile {
+  align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #f0f2f5 0%, #e6e8eb 100%);
+  padding: 24px;
+}
+.viewer .iframe-wrap.mobile .frame-inner {
+  flex: 0 0 auto;
+  width: 375px; height: 812px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .08);
+  overflow: hidden;
+  /* 矮窗口下 scale<1 时绕中心缩放，视觉保持居中（top center 会让内容整体上移、顶部被裁） */
+  transform-origin: center center;
+  display: flex; min-height: 0;
+}
+.viewer .frame-inner { flex: 1; display: flex; min-height: 0; min-width: 0; }
+.viewer .frame-inner iframe { flex: 1; border: 0; background: #ffffff; min-height: 0; width: 100%; height: 100%; display: block; }
+
+/* ===== 三栏布局：grid-template-columns 由 inline style 注入（gridCols computed）。
+   fallback 仅供 setup() 加载前的极短窗口期使用，避免布局塌缩。 ===== */
+.viewer .layout {
+  display: grid;
+  /* 外层永远等于视口大小：宽度 100vw + overflow hidden 裁掉任何不可压缩的溢出，
+     中栏用 minmax(0, 1fr) 允许被压缩，窄窗口下也不会撑出水平滚动条。 */
+  grid-template-columns: var(--left-width) 3px minmax(0, 1fr) 3px calc(var(--right-width) + var(--desc-toc-extra));
+  /* 第 2 行 minmax(0, 1fr)：iframe 内容超高时压缩行高而非撑开整页。 */
+  grid-template-rows: 48px minmax(0, 1fr);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+.viewer .topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center;
+  padding: 0 16px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--viewer-border);
+  gap: 12px;
+}
+.viewer .topbar .title { font-weight: 600; font-size: 15px; }
+.viewer .topbar .spacer { flex: 1; }
+.viewer .topbar .meta { color: var(--viewer-text-secondary); font-size: 12px; }
+.viewer .topbar-actions { display: flex; gap: 6px; align-items: center; }
+
+/* 线框图标按钮：默认主题色（当前面板显示），.active 灰色（当前面板隐藏）。 */
+.viewer .icon-btn {
+  background: #ffffff;
+  border: 1px solid var(--viewer-border);
+  color: var(--viewer-accent);
+  padding: 0;
+  width: 32px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.viewer .icon-btn:hover { border-color: var(--viewer-accent); }
+.viewer .icon-btn.active { color: var(--viewer-text-secondary); }
+.viewer .icon-btn.active:hover { color: var(--viewer-text-secondary); }
+.viewer .icon-btn svg { display: block; pointer-events: none; }
+.viewer .topbar .badge {
+  display: inline-block; padding: 0 6px; border-radius: 3px;
+  background: #ecf5ff; color: var(--viewer-accent); font-size: 11px; margin-left: 6px;
+}
+
+.viewer .panel { background: var(--viewer-panel); overflow: hidden; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.viewer .panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; font-size: 13px; color: var(--viewer-text-secondary);
+  border-bottom: 1px solid var(--viewer-border); background: #fafafa;
+  min-height: 39px; box-sizing: border-box;
+}
+.viewer .panel-header .actions { display: flex; gap: 4px; }
+.viewer .panel-header button {
+  background: transparent; border: 1px solid var(--viewer-border); color: var(--viewer-text-secondary);
+  padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.viewer .panel-header button:hover { color: var(--viewer-accent); border-color: var(--viewer-accent); }
+/* 右侧"显示/隐藏大纲"按钮 */
+.viewer .panel-header .desc-toc-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--viewer-accent); background: #ffffff;
+}
+.viewer .panel-header .desc-toc-toggle:hover { color: var(--viewer-accent); border-color: var(--viewer-accent); }
+.viewer .panel-header .desc-toc-toggle.active { color: var(--viewer-text-secondary); background: transparent; }
+.viewer .panel-header .desc-toc-toggle.active:hover { color: var(--viewer-text-secondary); border-color: var(--viewer-border); }
+.viewer .panel-header .desc-toc-toggle svg { display: block; pointer-events: none; }
+
+.viewer .left { grid-column: 1; grid-row: 2; }
+.viewer .divider {
+  grid-row: 2;
+  position: relative;
+  width: 3px; background: transparent;
+  cursor: col-resize;
+  touch-action: none;  /* 触屏上防止浏览器手势（滚动）抢占拖拽 */
+  transition: background-color .15s ease, box-shadow .15s ease;
+}
+/* 显式锁定分隔条所在的网格列 */
+.viewer .layout > div.divider:nth-child(3) { grid-column: 2; }
+.viewer .layout > div.divider:nth-child(5) { grid-column: 4; }
+.viewer .divider::before {
+  content: ''; position: absolute;
+  top: 0; bottom: 0; left: -5px; right: -5px;
+  /* 扩展 5px 热区（视觉 3px，可点 13px） */
+}
+.viewer .divider::after {
+  content: ''; position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  background: var(--viewer-border);
+  border-radius: 2px;
+  transition: background .15s ease, box-shadow .15s ease;
+}
+.viewer .divider:hover::after {
+  background: linear-gradient(180deg, #79bbff 0%, #409eff 100%);
+  box-shadow: 0 0 8px rgba(64, 158, 255, 0.45);
+}
+.viewer .divider.dragging::after {
+  background: linear-gradient(180deg, #66b1ff 0%, #3a8ee6 100%);
+  box-shadow: 0 0 12px rgba(64, 158, 255, 0.6);
+}
+.viewer .divider.dragging::before {
+  content: ''; position: fixed; inset: 0;
+  z-index: 9999;
+  cursor: col-resize;
+  background: transparent;
+}
+.viewer.viewer-dragging { cursor: col-resize; user-select: none; }
+.viewer.viewer-dragging * { cursor: col-resize !important; user-select: none !important; }
+.viewer .center { grid-column: 3; grid-row: 2; background: #f0f2f5; }
+.viewer .right { grid-column: 5; grid-row: 2; }
+
+/* 三栏折叠状态：仅控制 visibility，不影响 grid 列宽（grid 列宽由 inline style 驱动）。
+   但「面板隐藏」对应的「分隔条也要隐藏」仍需 class，因为分隔条本身在 DOM 里。 */
+.viewer .layout.left-collapsed .left { display: none; }
+.viewer .layout.right-collapsed .right { display: none; }
+.viewer .layout.right-collapsed .divider:nth-child(5) { display: none; }
+.viewer .layout.center-collapsed .center { display: none; }
+.viewer .layout.center-collapsed .divider:nth-child(5) { display: none; }
+.viewer .layout.left-collapsed .divider:nth-child(3) { display: none; }
+/* 组合折叠态已由上面的单状态规则覆盖（left/right/center 各自隐藏面板与分隔条），无需组合规则 */
+
+/* 左侧头部固定搜索栏：目录名模糊搜索 */
+.viewer .search-bar {
+  position: relative;
+  display: flex; align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--viewer-border);
+  background: #fafafa;
+  flex-shrink: 0;
+}
+.viewer .search-bar input {
+  flex: 1; height: 28px;
+  padding: 0 26px 0 8px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--viewer-text);
+  outline: none;
+  background: #ffffff;
+  transition: border-color .15s ease;
+}
+.viewer .search-bar input::placeholder { color: #c0c4cc; }
+.viewer .search-bar input:focus { border-color: var(--viewer-accent); }
+.viewer .search-bar .search-clear {
+  position: absolute;
+  right: 16px;
+  width: 16px; height: 16px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #909399;
+  cursor: pointer;
+  border-radius: 50%;
+  user-select: none;
+}
+.viewer .search-bar .search-clear:hover { color: var(--viewer-accent); background: #f0f2f5; }
+.viewer .tree-empty { padding: 20px 8px; text-align: center; color: #909399; font-size: 12px; }
+.viewer .tree { padding: 8px; overflow: auto; flex: 1; }
+.viewer .tree-node { user-select: none; }
+.viewer .tree-row {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px; border-radius: 4px;
+  cursor: pointer; font-size: 13px; color: var(--viewer-text);
+}
+.viewer .tree-row:hover { background: #f0f2f5; }
+.viewer .tree-row.active { background: #ecf5ff; color: var(--viewer-accent); font-weight: 500; }
+.viewer .tree-row .toggle { width: 16px; text-align: center; color: #606266; font-size: 13px; line-height: 1; }
+.viewer .tree-row .icon { width: 16px; color: #909399; font-size: 13px; line-height: 1; }
+.viewer .tree-row .icon.page { color: #409eff; }
+.viewer .tree-row .icon.folder { color: #e6a23c; }
+.viewer .tree-row .toggle.empty { color: transparent; }
+.viewer .tree-children { padding-left: 14px; border-left: 1px dashed transparent; }
+.viewer .tree-children.collapsed { display: none; }
+
+.viewer .iframe-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+/* center iframe 由 .frame-inner iframe 统一定义，这里不再重复 */
+
+.viewer .desc-body { padding: 0; overflow: hidden; flex: 1; display: flex; min-height: 0; }
+.viewer .desc-body iframe { flex: 1; border: 0; background: #ffffff; min-height: 0; }
+.viewer .desc-empty { padding: 24px; color: #909399; font-size: 13px; text-align: center; }
+/* .badge 统一用 .topbar .badge，这里不再重复 */

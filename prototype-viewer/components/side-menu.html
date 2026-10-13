@@ -1,0 +1,25 @@
+<!--
+  ⚠️ 本文件仅作参考片段，已被 templates/* 取代 ⚠️
+
+  component: side-menu.html
+  历史用途: 侧边菜单片段（snippet）
+  当前状态: 不再使用。scaffold 当前 4 个 PC 模板 + 4 个移动模板均无侧边菜单布局；如需要，
+  直接参考 Element Plus el-menu 官方文档写一段即可。
+-->
+<aside class="side-menu">
+  <el-menu :default-active="active" :default-openeds="openeds" @select="onSelect">
+    <el-sub-menu index="order">
+      <template #title><span>订单</span></template>
+      <el-menu-item index="order-list">订单列表</el-menu-item>
+      <el-menu-item index="order-detail">订单详情</el-menu-item>
+    </el-sub-menu>
+    <el-sub-menu index="user">
+      <template #title><span>用户</span></template>
+      <el-menu-item index="user-list">用户列表</el-menu-item>
+      <el-menu-item index="user-form">新建用户</el-menu-item>
+    </el-sub-menu>
+  </el-menu>
+</aside>
+<style>
+  .side-menu { width: 220px; background: #fff; border-right: 1px solid #e4e7ed; padding-top: 8px; }
+</style>

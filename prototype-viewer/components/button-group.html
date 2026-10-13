@@ -1,0 +1,13 @@
+<!--
+  ⚠️ 本文件仅作参考片段，已被 templates/* 取代 ⚠️
+
+  component: button-group.html
+  历史用途: 按钮组片段（snippet）
+  当前状态: 不再使用。按钮组直接写在每个模板的 .toolbar / .form-footer / .filter-actions 里。
+-->
+<el-button-group>
+  <el-button type="primary" @click="$emit('create')">新建</el-button>
+  <el-button type="success" @click="$emit('export')">导出</el-button>
+  <el-button type="warning" @click="$emit('import')">导入</el-button>
+  <el-button type="danger"  :disabled="!hasSelection" @click="$emit('batchDelete')">批量删除</el-button>
+</el-button-group>

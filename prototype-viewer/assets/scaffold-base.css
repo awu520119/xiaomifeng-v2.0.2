@@ -1,0 +1,106 @@
+/* scaffold-base.css — 全局基线 + design tokens
+ *
+ * 由 templates/pc/*.html、templates/mobile/*.html、pages/*.html 全部共用的样式：
+ *  - 字体族 / 默认字号 / body 背景
+ *  - * 通用的 box-sizing:border-box
+ *  - 窄滚动条（Webkit + Firefox 双实现）
+ *  - Element Plus / Vant 默认 box-sizing 兼容
+ *  - design tokens（颜色 / 圆角 / 间距 / 字号）CSS 变量
+ *  - .page / .page-scroll 移动端整页框架公共类
+ *
+ * 模板/业务页 <head> 里加一行 <link> 即可，模板内不再重复写。
+ * 改了全局字体、滚动条粗细、品牌色，只改这一个文件。
+ *
+ * 加载顺序：放在 element-plus.css / vant.css **之前**，让 reset 优先级低于框架。
+ */
+body {
+  margin: 0;
+  background: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  color: #303133;
+}
+/* 重置不一致的 box-sizing 让 padding / border 算在 width 内 —— Element Plus / Vant 都默认 box-sizing:border-box。
+   模板里手动加了 box-sizing:border-box 的话这里重复声明也无害。 */
+* { box-sizing: border-box; }
+
+/* === 全局滚动条：窄 + 悬浮才显示 ===
+   Webkit (Chrome/Edge/Safari)：固定 6px 宽，thumb 默认透明，悬浮可滚动区域时显色。
+   Firefox：scrollbar-width:thin + scrollbar-color 默认透明，悬浮显色。 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background .2s ease;
+}
+*:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .3); }
+*:hover::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, .5); }
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*:hover { scrollbar-color: rgba(0, 0, 0, .3) transparent; }
+
+/* === design tokens ===
+   PM 改品牌色 / 主题色只改这一处。所有模板用 var(--color-primary) 取色。 */
+:root {
+  /* 主题色 */
+  --color-primary: #1989fa;
+  --color-primary-light: #4fb2ff;
+  --color-success: #07c160;
+  --color-success-light: #4ec487;
+  --color-warning: #ff976a;
+  --color-warning-light: #ffd21e;
+  --color-danger: #ee0a24;
+  --color-danger-light: #ff5a6f;
+  /* 文字 */
+  --text-primary: #323233;
+  --text-regular: #646566;
+  --text-secondary: #969799;
+  --text-placeholder: #c8c9cc;
+  /* 背景 / 边框 */
+  --bg-page: #f7f8fa;
+  --bg-card: #ffffff;
+  --border-color: #ebedf0;
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  /* 字号 */
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-xxl: 20px;
+  --fs-display: 24px;
+  /* KPI 渐变卡配色（业务状态 → 主题色映射，PM 只换 var 值即可） */
+  --gradient-primary: linear-gradient(135deg, #1989fa 0%, #4fb2ff 100%);
+  --gradient-warning: linear-gradient(135deg, #ff976a 0%, #ffd21e 100%);
+  --gradient-success: linear-gradient(135deg, #07c160 0%, #4ec487 100%);
+  --gradient-danger:  linear-gradient(135deg, #ee0a24 0%, #ff5a6f 100%);
+  --gradient-default: linear-gradient(135deg, #969799 0%, #c8c9cc 100%);
+}
+
+/* === 移动端整页框架（templates/mobile/*.html 共用）===
+   模板里只写自身特有样式，整页结构靠 .page / .page-scroll 统一。 */
+#app.is-mobile {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-page);
+}
+.page { display: flex; flex-direction: column; flex: 1; min-height: 0; background: var(--bg-page); }
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-4);
+  -webkit-overflow-scrolling: touch;
+}
+.tabbar-wrap { position: sticky; bottom: 0; left: 0; right: 0; z-index: 10; }
