@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>订单列表</title>
+  <title>发放明细</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,20 +406,56 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="订单列表">订单列表</h1>
-<h2 id="页面目的">页面目的</h2>
-<p>帮助运营人员查询、筛选和处理景区拍摄订单。</p>
-<h2 id="交互说明">交互说明</h2>
-<p>输入订单编号或用户名、选择状态与拍摄点后点击查询；重置恢复默认条件。点击查看详情进入订单详情，导出数据触发下载演示。</p>
-<h2 id="业务规则">业务规则</h2>
-<p>默认按下单时间倒序；分页每页 20 条；订单状态分为待支付、待拍摄、拍摄中、已完成和已取消。</p>
-<h2 id="异常情况">异常情况</h2>
-<p>筛选无结果时表格展示空状态；导出失败给出错误提示；不可处理的订单操作置灰并保留原因说明。</p>
+<h1 id="优惠券发放明细">优惠券发放明细</h1>
+<p>版本：v1.1｜日期：2026-10-20</p>
+<p>运营查询持券与渠道码状态，并在本地原型中演示渠道码售出、兑换和体验次数核销。</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>提出人</th>
+<th>变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.1</td>
+<td>2026-10-20</td>
+<td>—</td>
+<td>增加渠道码售出/兑换与体验次数核销演示，展示来源和部分使用状态</td>
+</tr>
+<tr>
+<td>v1.0</td>
+<td>—</td>
+<td>—</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<h2 id="页面目标">页面目标</h2>
+<p>让运营和客服能够跨优惠券查询用户持券、第三方兑换码及核销状态；也支持从某张优惠券详情带条件进入此页。持券和未兑换码分属两个页签，不混计数量。</p>
+<h2 id="查询与展示">查询与展示</h2>
+<ul>
+<li><strong>持券记录</strong>：按优惠券名称/券码、持券用户手机号和状态筛选；展示权益、状态、用户、来源、已用/总次数、券码、最近核销订单、发放时间和有效期截止，可查看逐次核销记录。</li>
+<li><strong>第三方兑换码</strong>：按优惠券名称/兑换码/批次号、渠道和状态筛选；展示渠道、批次、状态、生成及售出时间、兑换用户、兑换时间和权益截止时间。</li>
+<li>从优惠券详情跳转时，自动按当前优惠券和对应页签筛选；可清除券筛选查看全部记录。</li>
+</ul>
+<h2 id="状态与操作">状态与操作</h2>
+<ul>
+<li>第三方兑换码生成后为「未售出」；模拟渠道售出后为「待兑换」，再模拟用户兑换后为「已兑换」。兑换时记录用户和时间，生成关联持券记录，并按兑换时间加券规则 N 天计算权益截止时间。</li>
+<li>「未售出」「待兑换」兑换码和「待使用」持券记录可作废；待兑换码作废前提示先确认渠道退款。作废不返还发放额度。</li>
+<li>体验权益券的「待使用」或「部分使用」记录可模拟核销一次；校验适用拍摄点、主题、有效期、剩余次数和订单号不重复。剩余次数大于零时为「部分使用」，用完后为「已核销」。</li>
+<li>已过期、已作废和已核销的持券记录不能再次核销；价格券仅展示已有核销结果。</li>
+<li>停用优惠券不影响已发出的券和已导出的兑换码在有效期内继续使用。</li>
+</ul>
+<h2 id="本期边界">本期边界</h2>
+<p>使用本地 Mock 演示查询、筛选、批次追踪、作废、售出、兑换和体验核销；不连接真实美团/抖音接口或服务订单。模拟售出不代表已取得渠道销售凭据，价格券的真实订单用券不在本期原型中。</p>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#订单列表" data-toc-id="订单列表">订单列表</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面目的" data-toc-id="页面目的">页面目的</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#交互说明" data-toc-id="交互说明">交互说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#业务规则" data-toc-id="业务规则">业务规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#异常情况" data-toc-id="异常情况">异常情况</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券发放明细" data-toc-id="优惠券发放明细">优惠券发放明细</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面目标" data-toc-id="页面目标">页面目标</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#查询与展示" data-toc-id="查询与展示">查询与展示</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#状态与操作" data-toc-id="状态与操作">状态与操作</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#本期边界" data-toc-id="本期边界">本期边界</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

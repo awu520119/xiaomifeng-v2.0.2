@@ -5,19 +5,42 @@
   },
   "groups": [
     {
-      "id": "orders",
-      "title": "订单管理",
+      "id": "marketing",
+      "title": "营销管理",
       "order": 1
+    },
+    {
+      "id": "system",
+      "title": "系统管理",
+      "order": 2
     }
   ],
   "pages": [
     {
-      "id": "order-list",
-      "title": "订单列表",
-      "doc": "订单列表PRD.md",
-      "hash": "#/orders",
+      "id": "coupon-management",
+      "title": "优惠券管理",
+      "doc": "优惠券管理PRD.md",
+      "hash": "#/coupons",
       "mode": "screen",
-      "parent": "orders",
+      "parent": "marketing",
+      "order": 1
+    },
+    {
+      "id": "coupon-issue-records",
+      "title": "发放明细",
+      "doc": "优惠券发放明细PRD.md",
+      "hash": "#/coupon-issues",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 2
+    },
+    {
+      "id": "operation-logs",
+      "title": "操作日志",
+      "doc": "操作日志PRD.md",
+      "hash": "#/operation-logs",
+      "mode": "screen",
+      "parent": "system",
       "order": 1
     }
   ]

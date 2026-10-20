@@ -1,0 +1,49 @@
+{
+  "sourceId": "xiaomifeng-2-2",
+  "tree": [
+    {
+      "id": "xiaomifeng-2-2--marketing",
+      "title": "营销管理",
+      "order": 1,
+      "children": [
+        {
+          "id": "xiaomifeng-2-2--coupon-management",
+          "title": "优惠券管理",
+          "order": 1,
+          "templateType": "screen",
+          "routeHash": "#/coupons",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-management.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券管理PRD.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--coupon-issue-records",
+          "title": "发放明细",
+          "order": 2,
+          "templateType": "screen",
+          "routeHash": "#/coupon-issues",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-issue-records.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券发放明细PRD.md",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "xiaomifeng-2-2--system",
+      "title": "系统管理",
+      "order": 2,
+      "children": [
+        {
+          "id": "xiaomifeng-2-2--operation-logs",
+          "title": "操作日志",
+          "order": 1,
+          "templateType": "screen",
+          "routeHash": "#/operation-logs",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/operation-logs.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/操作日志PRD.md",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
