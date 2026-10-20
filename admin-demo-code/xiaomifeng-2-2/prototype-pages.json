@@ -18,7 +18,7 @@
   "pages": [
     {
       "id": "coupon-management",
-      "title": "优惠券管理",
+      "title": "优惠券列表",
       "doc": "优惠券管理PRD.md",
       "hash": "#/coupons",
       "mode": "screen",
@@ -27,7 +27,7 @@
     },
     {
       "id": "coupon-issue-records",
-      "title": "发放明细",
+      "title": "发放记录",
       "doc": "优惠券发放明细PRD.md",
       "hash": "#/coupon-issues",
       "mode": "screen",

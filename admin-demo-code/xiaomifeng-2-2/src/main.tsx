@@ -10,7 +10,7 @@ import './styles.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ConfigProvider locale={zhCN} theme={adminTheme}>
-      <AntApp>
+      <AntApp message={{ maxCount: 1 }}>
         <HashRouter>
           <App />
         </HashRouter>

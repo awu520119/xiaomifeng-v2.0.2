@@ -1,537 +1,147 @@
-import {
-  App,
-  Alert,
-  Button,
-  Descriptions,
-  Drawer,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Popconfirm,
-  QRCode,
-  Radio,
-  Select,
-  Space,
-  Tabs,
-  Table,
-  Tag,
-  Typography,
-} from 'antd';
-import type { TableColumnsType } from 'antd';
-import {
-  CopyOutlined,
-  DownloadOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  SendOutlined,
-} from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { App, Button, Checkbox, Collapse, DatePicker, Descriptions, Drawer, Form, Input, InputNumber, Modal, Popconfirm, QRCode, Radio, Select, Space, Table, Tag, Typography } from 'antd';
+import { CopyOutlined, DownloadOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { CouponCodeRecord, CouponIssueRecord, CouponKind, CouponStatus, CouponTemplate, CouponTemplateStatus } from '../mock/coupons';
-import { couponKinds, couponTotalUses, couponUsedTimes, effectiveCouponStatus, shootingPointOptions, themeOptions } from '../mock/coupons';
+import type { CouponClaimPlan, CouponIssueRecord, CouponKind, CouponStore, CouponTemplate, CouponUseRecord } from '../mock/coupons';
+import { canIssueCoupon, canVoidTicket, couponKinds, couponLocalTime, couponRuleText, createTicket, effectiveCouponStatus, maskPhone, parsePhones, phoneListError, priceDiscount, receiveLimitError, remainingQuota, shootingPointOptions, shootingProducts, themeOptions, uniqueCouponId, validateTicketUse } from '../mock/coupons';
+import { downloadCouponCodes, downloadQrCode, receiveUrl } from '../utils/couponExport';
 
-type CouponListPageProps = {
-  templates: CouponTemplate[];
-  setTemplates: Dispatch<SetStateAction<CouponTemplate[]>>;
-  issueRecords: CouponIssueRecord[];
-  setIssueRecords: Dispatch<SetStateAction<CouponIssueRecord[]>>;
-  couponCodeRecords: CouponCodeRecord[];
-  setCouponCodeRecords: Dispatch<SetStateAction<CouponCodeRecord[]>>;
-};
-
-type CouponFormValues = {
-  name: string;
-  category: 'price' | 'rights';
-  kind: CouponKind;
-  fixedAmount?: number;
-  threshold?: number;
-  discountAmount?: number;
-  discountRate?: number;
-  rightsCount?: number;
-  allThemes: boolean;
-  themes?: string[];
-  shootingPoints: string[];
-  validityDays: number;
-  totalLimit: number;
-  perUserLimit: number;
-  sponsor: string;
-};
-type SearchValues = { keyword?: string; shootingPoint?: string; status?: CouponTemplateStatus | '已发完' };
-
-const issueStates: CouponStatus[] = ['待使用', '部分使用', '已核销', '已作废', '已过期'];
-
-function benefitFromValues(values: CouponFormValues) {
-  switch (values.kind) {
-    case '特价券': return '1分钱';
-    case '满减券': return `满 ${values.threshold || 0} 减 ${values.discountAmount || 0} 元`;
-    case '折扣券': return `${values.discountRate || 0}折`;
-    case '抵扣券': return `抵扣 ${values.fixedAmount || 0} 元`;
-    case '体验权益券': return `${values.rightsCount || 1}次体验`;
-  }
-}
-
-function localDateTime(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-}
-
-function makeRecord(template: CouponTemplate, phone: string): CouponIssueRecord {
-  const now = new Date();
-  const expiresAt = new Date(now);
-  expiresAt.setDate(expiresAt.getDate() + template.validityDays);
-  const serial = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return {
-    id: `ISS${Date.now()}`,
-    couponId: template.id,
-    couponName: template.name,
-    couponKind: template.kind,
-    benefit: template.benefit,
-    status: '待使用',
-    phone: `${phone.slice(0, 3)}****${phone.slice(-4)}`,
-    phoneDigits: phone,
-    issuedAt: localDateTime(now),
-    expiresAt: localDateTime(expiresAt),
-    redeemCode: `CP-${serial}`,
-    source: '定向发放',
-    totalUses: template.kind === '体验权益券' ? Number.parseInt(template.benefit, 10) || 1 : 1,
-    usedTimes: 0,
-  };
-}
-
-function exportThirdPartyCodes(template: CouponTemplate, channel: string, quantity: number, batchNo: string) {
-  const prefix = channel === '美团' ? 'MT' : 'DY';
-  const rows = [
-    ['兑换码', '优惠券编号', '优惠券名称', '优惠内容', '销售渠道', '批次号', '有效天数'],
-    ...Array.from({ length: quantity }, (_, index) => [
-      `${prefix}-${template.id.slice(-4)}-${batchNo}-${String(index + 1).padStart(6, '0')}`,
-      template.id,
-      template.name,
-      template.benefit,
-      channel,
-      batchNo,
-      String(template.validityDays),
-    ]),
-  ];
-  const csv = `\uFEFF${rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n')}`;
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${template.name}-${channel}兑换码.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-export default function CouponListPage({ templates, setTemplates, issueRecords, setIssueRecords, couponCodeRecords, setCouponCodeRecords }: CouponListPageProps) {
-  const [couponForm] = Form.useForm<CouponFormValues>();
-  const [searchForm] = Form.useForm<SearchValues>();
-  const [phoneForm] = Form.useForm<{ phone: string }>();
-  const [codeForm] = Form.useForm<{ channel: string; quantity: number }>();
-  const [search, setSearch] = useState<SearchValues>({});
-  const [createOpen, setCreateOpen] = useState(false);
-  const [detailCoupon, setDetailCoupon] = useState<CouponTemplate | null>(null);
-  const [detailTab, setDetailTab] = useState('rules');
-  const [issueStatus, setIssueStatus] = useState<CouponStatus | undefined>();
-  const [issueCoupon, setIssueCoupon] = useState<CouponTemplate | null>(null);
-  const [codeCoupon, setCodeCoupon] = useState<CouponTemplate | null>(null);
-  const [createdCoupon, setCreatedCoupon] = useState<CouponTemplate | null>(null);
-  const [issuedSummary, setIssuedSummary] = useState<{ template: CouponTemplate; phone: string } | null>(null);
-  const [generatedBatch, setGeneratedBatch] = useState<{ template: CouponTemplate; batchNo: string; quantity: number } | null>(null);
-  const navigate = useNavigate();
+type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>> };
+type Values = { name: string; kind: CouponKind; productIds: string[]; rightsCount: number; minSpend: number; discountAmount: number; discountRate: number; shootingPoints: string[]; allThemes: boolean; themes: string[]; validity: [Dayjs, Dayjs]; totalLimit: number; perUserLimit: number; description?: string; remark?: string };
+type UseValues = { phone?: string; orderNo: string; productId: string; orderAmount?: number };
+export default function CouponListPage({ store, setStore }: Props) {
+  const [keyword, setKeyword] = useState(''); const [point, setPoint] = useState<string>();
+  const [createOpen, setCreateOpen] = useState(false); const [form] = Form.useForm<Values>();
+  const kind = Form.useWatch('kind', form) || '满减券'; const allThemes = Form.useWatch('allThemes', form) ?? true;
+  const [detailId, setDetailId] = useState<string | null>(null); const detail = store.templates.find((row) => row.id === detailId);
+  const [issuingId, setIssuingId] = useState<string | null>(null); const issuing = store.templates.find((row) => row.id === issuingId); const [phoneForm] = Form.useForm<{ phones: string }>();
+  const [qrCouponId, setQrCouponId] = useState<string | null>(null); const qrCoupon = store.templates.find((row) => row.id === qrCouponId);
+  const [qrForm] = Form.useForm<{ audience: 'specified' | 'all'; phones: string }>(); const audience = Form.useWatch('audience', qrForm) || 'specified';
+  const [plan, setPlan] = useState<CouponClaimPlan | null>(null); const [busy, setBusy] = useState(false);
+  const [expandedCouponIds, setExpandedCouponIds] = useState<string[]>([]);
+  const [genCouponId, setGenCouponId] = useState<string | null>(null); const [genForm] = Form.useForm<{ quantity: number }>();
+  const [useTicketId, setUseTicketId] = useState<string | null>(null); const useTicket = store.tickets.find((row) => row.id === useTicketId); const [useForm] = Form.useForm<UseValues>(); const orderAmount = Form.useWatch('orderAmount', useForm);
+  const [qrTicketId, setQrTicketId] = useState<string | null>(null); const qrTicket = store.tickets.find((row) => row.id === qrTicketId);
   const { message } = App.useApp();
-  const watchedKind = Form.useWatch('kind', couponForm) || '特价券';
-  const watchedCategory = Form.useWatch('category', couponForm) || 'price';
-  const watchedAllThemes = Form.useWatch('allThemes', couponForm) ?? true;
-
-  const detailRecords = useMemo(() => issueRecords.filter((record) => (
-    record.couponId === detailCoupon?.id && (!issueStatus || effectiveCouponStatus(record) === issueStatus)
-  )), [detailCoupon, issueRecords, issueStatus]);
-  const couponHolders = detailCoupon ? issueRecords.filter((record) => record.couponId === detailCoupon.id) : [];
-  const totalDetailRecords = couponHolders.length;
-  const usedHolderCount = couponHolders.filter((record) => couponUsedTimes(record) > 0).length;
-  const totalCouponCodes = detailCoupon ? couponCodeRecords.filter((record) => record.couponId === detailCoupon.id).length : 0;
-  const detailCodes = useMemo(() => couponCodeRecords.filter((record) => record.couponId === detailCoupon?.id), [couponCodeRecords, detailCoupon]);
-  const usedCount = (template: CouponTemplate) => issueRecords.filter((record) => record.couponId === template.id && !record.sourceCode).length
-    + couponCodeRecords.filter((record) => record.couponId === template.id).length;
-  const remainingCount = (template: CouponTemplate) => template.totalLimit === undefined ? Infinity : Math.max(0, template.totalLimit - usedCount(template));
-  const filteredTemplates = templates.filter((item) => {
-    const keyword = search.keyword?.trim().toLowerCase();
-    return (!keyword || item.name.toLowerCase().includes(keyword))
-      && (!search.shootingPoint || item.shootingPoints.includes(search.shootingPoint) || item.shootingPoints.includes('全部拍摄点'))
-      && (!search.status || (search.status === '已发完'
-        ? item.status !== '已停用' && remainingCount(item) < 1
-        : search.status === '已停用' ? item.status === '已停用' : item.status !== '已停用' && remainingCount(item) > 0));
-  });
-
-  const openCreate = () => {
-    couponForm.resetFields();
-    couponForm.setFieldsValue({
-      category: 'price',
-      kind: '特价券',
-      fixedAmount: 20,
-      threshold: 50,
-      discountAmount: 10,
-      discountRate: 8,
-      rightsCount: 1,
-      allThemes: true,
-      shootingPoints: ['全部拍摄点'],
-      validityDays: 1,
-      totalLimit: 1000,
-      perUserLimit: 1,
-      sponsor: '平台',
-    });
-    setCreateOpen(true);
+  const canIssue = (coupon: CouponTemplate) => canIssueCoupon(coupon, store.tickets);
+  const status = (coupon: CouponTemplate) => coupon.status === '已停用' ? '已停用' : Date.now() > new Date(coupon.endsAt.replace(' ', 'T')).getTime() ? '已失效' : remainingQuota(coupon, store.tickets) < 1 ? '已发完' : Date.now() < new Date(coupon.startsAt.replace(' ', 'T')).getTime() ? '未生效' : '生效中';
+  const closeIssue = () => { setIssuingId(null); phoneForm.resetFields(); };
+  const openCreate = () => { form.resetFields(); form.setFieldsValue({ kind: '满减券', productIds: [], rightsCount: 1, minSpend: 100, discountAmount: 20, discountRate: 8, shootingPoints: ['全部拍摄点'], allThemes: true, validity: [dayjs().startOf('day'), dayjs().add(30, 'day').endOf('day')], totalLimit: 100, perUserLimit: 1 }); setCreateOpen(true); };
+  const save = async () => {
+    const values = await form.validateFields().catch(() => null); if (!values) return;
+    const selected = shootingProducts.filter((row) => values.productIds?.includes(row.id));
+    const coupon: CouponTemplate = { id: uniqueCouponId('CP'), name: values.name.trim(), kind: values.kind, benefit: '',
+      startsAt: values.validity[0].format('YYYY-MM-DD HH:mm:ss'), endsAt: values.validity[1].format('YYYY-MM-DD HH:mm:ss'),
+      productIds: values.kind === '体验权益券' ? values.productIds : [], rightsCount: values.kind === '体验权益券' ? values.rightsCount : 1,
+      minSpend: values.kind === '体验权益券' ? 0 : values.minSpend, discountAmount: values.kind === '满减券' ? values.discountAmount : 0, discountRate: values.kind === '折扣券' ? values.discountRate : 10,
+      shootingPoints: values.kind === '体验权益券' ? [...new Set(selected.map((row) => row.shootingPoint))] : values.shootingPoints,
+      availableRange: values.kind === '体验权益券' ? [...new Set(selected.map((row) => row.theme))] : values.allThemes ? ['全部可用'] : values.themes,
+      totalLimit: values.totalLimit, perUserLimit: values.perUserLimit, sponsor: '平台', status: '启用', createdAt: couponLocalTime(), description: values.description, remark: values.remark };
+    coupon.benefit = couponRuleText(coupon); setStore((current) => ({ ...current, templates: [coupon, ...current.templates] })); setCreateOpen(false); message.success('创建成功');
   };
-
-  const closeIssueDrawer = () => {
-    setIssueCoupon(null);
-    phoneForm.resetFields();
-  };
-
-  const saveCoupon = async () => {
-    const values = await couponForm.validateFields();
-    const template: CouponTemplate = {
-      id: `CP${Date.now()}`,
-      name: values.name,
-      kind: values.kind,
-      benefit: benefitFromValues(values),
-      availableRange: values.allThemes ? ['全部可用'] : values.themes || [],
-      shootingPoints: values.shootingPoints,
-      validityDays: values.validityDays,
-      totalLimit: values.totalLimit,
-      perUserLimit: values.perUserLimit,
-      sponsor: values.sponsor,
-      status: '启用',
-      createdAt: localDateTime(new Date()),
-    };
-    setTemplates((current) => [template, ...current]);
-    setCreateOpen(false);
-    setCreatedCoupon(template);
-  };
-
-  const sendToPhone = async () => {
-    const values = await phoneForm.validateFields();
-    if (!issueCoupon) return;
-    const template = issueCoupon;
-    if (template.status === '已停用' || remainingCount(template) < 1) {
-      message.error('优惠券已停用或发放量已满');
-      return;
-    }
-    const userIssued = issueRecords.filter((record) => record.couponId === template.id && record.phoneDigits === values.phone).length;
-    if (template.perUserLimit !== undefined && userIssued >= template.perUserLimit) {
-      message.error(`该用户已达到每人限领 ${template.perUserLimit} 张`);
-      return;
-    }
-    setIssueRecords((current) => [makeRecord(template, values.phone), ...current]);
-    phoneForm.resetFields();
-    setIssueCoupon(null);
-    setIssuedSummary({ template, phone: `${values.phone.slice(0, 3)}****${values.phone.slice(-4)}` });
-  };
-
-  const changeCouponStatus = (template: CouponTemplate, status: CouponTemplateStatus) => {
-    setTemplates((current) => current.map((item) => item.id === template.id ? { ...item, status } : item));
-    setDetailCoupon((current) => current?.id === template.id ? { ...current, status } : current);
-    message.success(status === '启用' ? '优惠券已启用' : '优惠券已停用');
-  };
-
-  const voidRecord = (record: CouponIssueRecord) => {
-    if (effectiveCouponStatus(record) !== '待使用') return;
-    setIssueRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: '已作废' } : item));
-    message.success('持券记录已作废');
-  };
-
-  const makeCodes = async () => {
-    const values = await codeForm.validateFields();
-    if (!codeCoupon) return;
-    if (codeCoupon.status === '已停用' || values.quantity > remainingCount(codeCoupon)) {
-      message.error('优惠券已停用或剩余发放量不足');
-      return;
-    }
-    const now = new Date();
-    const batchNo = `CB${now.getTime().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    const batchRecords: CouponCodeRecord[] = Array.from({ length: values.quantity }, (_, index) => {
-      const code = `${values.channel === '美团' ? 'MT' : 'DY'}-${codeCoupon.id.slice(-4)}-${batchNo}-${String(index + 1).padStart(6, '0')}`;
-      return {
-        id: `${batchNo}-${index + 1}`,
-        couponId: codeCoupon.id,
-        couponName: codeCoupon.name,
-        couponKind: codeCoupon.kind,
-        benefit: codeCoupon.benefit,
-        status: '未售出',
-        code,
-        generatedAt: localDateTime(now),
-        channel: values.channel,
-        batchNo,
-        validityDays: codeCoupon.validityDays,
-      };
-    });
-    setCouponCodeRecords((current) => [...batchRecords, ...current]);
-    exportThirdPartyCodes(codeCoupon, values.channel, values.quantity, batchNo);
-    setCodeCoupon(null);
-    setGeneratedBatch({ template: codeCoupon, batchNo, quantity: values.quantity });
-  };
-
-  const copyLink = async (template: CouponTemplate) => {
-    const link = `https://m.xingying.cn/coupon/${template.id}`;
+  const send = async () => {
+    if (busy) return; setBusy(true);
     try {
-      await navigator.clipboard.writeText(link);
-      message.success('领取链接已复制');
-    } catch {
-      message.info(`领取链接：${link}`);
-    }
+      const values = await phoneForm.validateFields().catch(() => null); if (!values || !issuing) return;
+      const phones = parsePhones(values.phones); const error = phoneListError(phones); if (error) { phoneForm.setFields([{ name: 'phones', errors: [error] }]); return; }
+      if (!canIssue(issuing) || phones.length > remainingQuota(issuing, store.tickets)) { message.error('该券已停用、失效或剩余名额不足'); return; }
+      const limit = phones.map((phone) => receiveLimitError(issuing, phone, store.tickets)).find(Boolean); if (limit) { message.error(limit); return; }
+      const tickets = phones.map((phone) => createTicket(issuing, '定向发放', phone));
+      setStore((current) => ({ ...current, tickets: [...tickets, ...current.tickets] })); const couponId = issuing.id; closeIssue(); setExpandedCouponIds((ids) => ids.includes(couponId) ? ids : [...ids, couponId]); message.success(`已发放 ${tickets.length} 张`);
+    } finally { setBusy(false); }
   };
-
-  const openIssueDetails = (template: CouponTemplate) => {
-    navigate(`/coupon-issues?couponId=${encodeURIComponent(template.id)}&couponName=${encodeURIComponent(template.name)}&view=holders`);
+  const createPlan = async () => {
+    const values = await qrForm.validateFields().catch(() => null); if (!values || !qrCoupon) return;
+    if (!canIssue(qrCoupon)) { message.error('该券当前不能继续领取'); return; }
+    const phones = values.audience === 'specified' ? parsePhones(values.phones) : []; const error = values.audience === 'specified' ? phoneListError(phones) : undefined;
+    if (error) { qrForm.setFields([{ name: 'phones', errors: [error] }]); return; }
+    const next: CouponClaimPlan = { id: uniqueCouponId('QR'), couponId: qrCoupon.id, allowedPhones: phones, createdAt: couponLocalTime() };
+    setStore((current) => ({ ...current, plans: [next, ...current.plans] })); setPlan(next); message.success('二维码已生成');
   };
-
-  const openCodeDetails = (template: CouponTemplate) => {
-    navigate(`/coupon-issues?couponId=${encodeURIComponent(template.id)}&couponName=${encodeURIComponent(template.name)}&view=codes`);
+  const generateCodes = async (coupon: CouponTemplate) => {
+    if (busy) return; setBusy(true);
+    try { const values = await genForm.validateFields().catch(() => null); if (!values) return;
+      if (!canIssueCoupon(coupon, store.tickets) || values.quantity > remainingQuota(coupon, store.tickets)) { message.error('剩余可发数量不足'); return; }
+      const tickets = Array.from({ length: values.quantity }, () => createTicket(coupon, '券码兑换'));
+      setStore((current) => ({ ...current, tickets: [...tickets, ...current.tickets] })); downloadCouponCodes(tickets); setGenCouponId(null); setExpandedCouponIds((ids) => ids.includes(coupon.id) ? ids : [...ids, coupon.id]); message.success(`已生成 ${tickets.length} 个券码`);
+    } finally { setBusy(false); }
   };
-
-  const columns: TableColumnsType<CouponTemplate> = [
-    {
-      title: '优惠券名称', dataIndex: 'name', width: 190,
-      render: (name: string) => <Typography.Text strong>{name}</Typography.Text>,
-    },
-    { title: '券权益', key: 'benefit', width: 190, render: (_, record) => <Space direction="vertical" size={2}><Tag color={record.kind === '体验权益券' ? 'purple' : 'blue'}>{record.kind}</Tag><span>{record.benefit}</span></Space> },
-    {
-      title: '适用主题', dataIndex: 'availableRange', width: 200,
-      render: (values: string[]) => values.includes('全部可用') ? <Tag>全部可用</Tag> : <Space size={[0, 4]} wrap>{values.map((value) => <Tag key={value}>{value}</Tag>)}</Space>,
-    },
-    {
-      title: '适用拍摄点', dataIndex: 'shootingPoints', width: 155,
-      render: (values: string[]) => values.includes('全部拍摄点') ? '—' : values.join('、'),
-    },
-    { title: '有效期', dataIndex: 'validityDays', width: 125, render: (days: number) => `领取后${days}天` },
-    { title: '发放占用', key: 'quota', width: 120, render: (_, record) => `${usedCount(record)} / ${record.totalLimit ?? '不限'}` },
-    { title: '持券 / 已使用', key: 'usage', width: 120, render: (_, record) => { const holders = issueRecords.filter((item) => item.couponId === record.id); return `${holders.length} / ${holders.filter((item) => couponUsedTimes(item) > 0).length}`; } },
-    { title: '状态', key: 'status', width: 95, render: (_, record) => <Tag color={record.status === '已停用' ? 'default' : remainingCount(record) < 1 ? 'gold' : 'green'}>{record.status === '已停用' ? '已停用' : remainingCount(record) < 1 ? '已发完' : '启用'}</Tag> },
-    {
-      title: '操作', key: 'actions', width: 250, fixed: 'right',
-      render: (_, record) => <Space size={4} className="coupon-actions">
-        <Button type="link" onClick={() => { setDetailCoupon(record); setDetailTab('rules'); setIssueStatus(undefined); }}>详情</Button>
-        <Button type="link" disabled={record.status === '已停用' || remainingCount(record) < 1} onClick={() => setIssueCoupon(record)}>定向发券</Button>
-        {record.status === '已停用' ? <Button type="link" onClick={() => changeCouponStatus(record, '启用')}>启用</Button> : (
-          <Popconfirm title="停用这张优惠券？" description="停用后将关闭新的领取和定向发券；已发出的券及已导出的兑换码仍可在有效期内使用。" okText="停用" cancelText="取消" onConfirm={() => changeCouponStatus(record, '已停用')}>
-            <Button type="link" danger>停用</Button>
-          </Popconfirm>
-        )}
-      </Space>,
-    },
-  ];
-
-  return (
-    <section className="coupon-page admin-list-page">
-      <section className="admin-filter-card">
-        <div className="coupon-list-toolbar">
-          <Form<SearchValues> form={searchForm} layout="inline" onValuesChange={(_, values) => setSearch(values)}>
-            <Form.Item name="keyword"><Input allowClear prefix={<SearchOutlined />} placeholder="查询优惠券名称" /></Form.Item>
-            <Form.Item name="shootingPoint"><Select allowClear placeholder="拍摄点" options={shootingPointOptions.map((value) => ({ value, label: value }))} /></Form.Item>
-            <Form.Item name="status"><Select allowClear placeholder="优惠券状态" options={['启用', '已发完', '已停用'].map((value) => ({ value, label: value }))} /></Form.Item>
-            <Form.Item><Button type="link" icon={<ReloadOutlined />} onClick={() => { searchForm.resetFields(); setSearch({}); }}>重置</Button></Form.Item>
-          </Form>
-        </div>
-      </section>
-      <section className="coupon-table-card admin-list-card">
-        <div className="admin-list-heading">
-          <h2>优惠券管理</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建优惠券</Button>
-        </div>
-        <div className="coupon-workflow-guide" aria-label="操作流程"><span>操作流程</span><b>1 创建优惠券</b><i>›</i><b>2 选择发放方式</b><i>›</i><b>3 查询明细</b></div>
-        <Table<CouponTemplate>
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredTemplates}
-          scroll={{ x: 1450 }}
-          pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => `共 ${total} 条` }}
-          locale={{ emptyText: '暂无优惠券' }}
-        />
-      </section>
-
-      <Drawer
-        className="design-drawer coupon-edit-drawer"
-        title="新建优惠券"
-        width={720}
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        destroyOnHidden
-        footer={<Space><Button onClick={() => setCreateOpen(false)}>取消</Button><Button type="primary" onClick={saveCoupon}>保存</Button></Space>}
-      >
-        <Form<CouponFormValues> form={couponForm} layout="vertical" preserve={false}>
-          <section className="coupon-form-section">
-            <h3 className="coupon-form-section-title">基础信息</h3>
-          <Form.Item name="name" label="优惠券名称" rules={[{ required: true, message: '请输入优惠券名称' }]}><Input maxLength={50} showCount placeholder="请输入优惠券名称" /></Form.Item>
-          <Form.Item name="category" label="券类型" rules={[{ required: true }]}>
-            <Radio.Group
-              optionType="button"
-              buttonStyle="solid"
-              options={[{ value: 'price', label: '价格优惠' }, { value: 'rights', label: '体验权益' }]}
-              onChange={(event) => couponForm.setFieldValue('kind', event.target.value === 'rights' ? '体验权益券' : '特价券')}
-            />
-          </Form.Item>
-          {watchedCategory === 'price' && <Form.Item name="kind" label="优惠方式" rules={[{ required: true }]}><Select options={couponKinds.filter((kind) => kind !== '体验权益券').map((kind) => ({ value: kind, label: kind }))} /></Form.Item>}
-          <Form.Item label="优惠额度">
-            {watchedKind === '特价券' && <Input value="1分钱" disabled />}
-            {watchedKind === '满减券' && <Space.Compact block><Form.Item name="threshold" noStyle rules={[{ required: true, message: '请填写门槛金额' }]}><InputNumber min={0.01} precision={2} addonBefore="满" addonAfter="元" className="full-width" /></Form.Item><Form.Item name="discountAmount" noStyle rules={[{ required: true, message: '请填写减免金额' }, { validator: (_, value) => value === undefined || value < couponForm.getFieldValue('threshold') ? Promise.resolve() : Promise.reject(new Error('减免金额须小于使用门槛')) }]}><InputNumber min={0.01} precision={2} addonBefore="减" addonAfter="元" className="full-width" /></Form.Item></Space.Compact>}
-            {watchedKind === '折扣券' && <Form.Item name="discountRate" noStyle rules={[{ required: true, message: '请填写折扣' }]}><InputNumber min={1} max={9.9} step={0.1} addonAfter="折" className="full-width" /></Form.Item>}
-            {watchedKind === '抵扣券' && <Form.Item name="fixedAmount" noStyle rules={[{ required: true, message: '请填写抵扣金额' }]}><InputNumber min={0.01} precision={2} addonAfter="元" className="full-width" /></Form.Item>}
-            {watchedKind === '体验权益券' && <Form.Item name="rightsCount" noStyle rules={[{ required: true, message: '请填写体验次数' }]}><InputNumber min={1} precision={0} addonAfter="次体验" className="full-width" /></Form.Item>}
-          </Form.Item>
-          </section>
-          <section className="coupon-form-section">
-            <h3 className="coupon-form-section-title">适用范围</h3>
-          <Form.Item name="allThemes" label="适用主题">
-            <Radio.Group options={[{ label: '全部可用', value: true }, { label: '指定主题', value: false }]} />
-          </Form.Item>
-          {!watchedAllThemes && <Form.Item name="themes" label="选择主题" rules={[{ required: true, message: '请选择至少一个主题' }]}><Select mode="multiple" options={themeOptions.map((value) => ({ value, label: value }))} placeholder="请选择适用主题" /></Form.Item>}
-          <Form.Item name="shootingPoints" label="适用拍摄点" rules={[{ required: true, message: '请选择适用拍摄点' }]}><Select mode="multiple" options={[{ value: '全部拍摄点', label: '全部拍摄点' }, ...shootingPointOptions.map((value) => ({ value, label: value }))]} onChange={(values: string[]) => { if (values.includes('全部拍摄点')) couponForm.setFieldValue('shootingPoints', ['全部拍摄点']); }} placeholder="请选择拍摄点" /></Form.Item>
-          </section>
-          <section className="coupon-form-section">
-            <h3 className="coupon-form-section-title">有效期与成本</h3>
-            <div className="coupon-form-grid">
-              <Form.Item name="validityDays" label="有效天数" extra="从用户领取时开始计算，默认 1 天。" rules={[{ required: true, message: '请填写有效天数' }, { type: 'number', min: 1, message: '有效天数至少为 1 天' }]}><InputNumber min={1} precision={0} addonAfter="天" className="full-width" /></Form.Item>
-              <Form.Item name="sponsor" label="成本承担方" extra="默认由平台承担，用于后续成本归属。" rules={[{ required: true, message: '请选择成本承担方' }]}><Select options={['平台', '景区', '渠道'].map((value) => ({ value, label: value }))} /></Form.Item>
-            </div>
-          </section>
-          <section className="coupon-form-section">
-            <h3 className="coupon-form-section-title">发放控制</h3>
-            <div className="coupon-form-grid">
-              <Form.Item name="totalLimit" label="发放总量" extra="定向发券和生成第三方兑换码共同占用；作废后不返还。" rules={[{ required: true, message: '请填写发放总量' }, { type: 'number', min: 1, max: 100000, message: '请输入 1 至 100000 的整数' }]}><InputNumber min={1} max={100000} precision={0} addonAfter="张" className="full-width" /></Form.Item>
-              <Form.Item name="perUserLimit" label="每人限领" extra="按同一手机号累计发券，含已使用和已作废记录。" dependencies={['totalLimit']} rules={[{ required: true, message: '请填写每人限领数量' }, { type: 'number', min: 1, message: '至少为 1 张' }, { validator: (_, value) => value === undefined || value <= couponForm.getFieldValue('totalLimit') ? Promise.resolve() : Promise.reject(new Error('不能超过发放总量')) }]}><InputNumber min={1} precision={0} addonAfter="张" className="full-width" /></Form.Item>
-            </div>
-          </section>
-        </Form>
-      </Drawer>
-
-      <Drawer
-        className="coupon-detail-drawer"
-        title="优惠券详情"
-        width={900}
-        open={Boolean(detailCoupon)}
-        onClose={() => setDetailCoupon(null)}
-      >
-        {detailCoupon && <>
-          <div className="coupon-detail-summary">
-            <div><strong>{detailCoupon.name}</strong><span className="coupon-cell-subtitle">{detailCoupon.id}</span></div>
-            <Space size={8}><Tag color={detailCoupon.kind === '体验权益券' ? 'purple' : 'blue'}>{detailCoupon.kind}</Tag><Tag color={detailCoupon.status === '已停用' ? 'default' : remainingCount(detailCoupon) < 1 ? 'gold' : 'green'}>{detailCoupon.status === '已停用' ? '已停用' : remainingCount(detailCoupon) < 1 ? '已发完' : '启用'}</Tag></Space>
-          </div>
-          <Tabs activeKey={detailTab} onChange={setDetailTab} items={[
-            { key: 'rules', label: '券规则', children: <>
-              <div className="coupon-metrics">
-                <div><span>发放占用</span><strong>{usedCount(detailCoupon)}<small> / {detailCoupon.totalLimit ?? '不限'}</small></strong></div>
-                <div><span>已进入用户账户</span><strong>{totalDetailRecords}</strong></div>
-                <div><span>已使用持券</span><strong>{usedHolderCount}</strong></div>
-                <div><span>持券使用率</span><strong>{totalDetailRecords ? `${Math.round(usedHolderCount / totalDetailRecords * 100)}%` : '—'}</strong></div>
-              </div>
-              <section className="coupon-detail-section"><h3>基本规则</h3><Descriptions size="small" column={2} items={[
-                { key: 'name', label: '优惠券名称', children: detailCoupon.name },
-                { key: 'kind', label: '优惠券类型', children: detailCoupon.kind },
-                { key: 'benefit', label: '优惠额度', children: detailCoupon.benefit },
-                { key: 'range', label: '可用范围', children: detailCoupon.availableRange.join('、') },
-                { key: 'points', label: '适用拍摄点', children: detailCoupon.shootingPoints.join('、') },
-                { key: 'validity', label: '有效期', children: `领取后${detailCoupon.validityDays}天` },
-                { key: 'totalLimit', label: '发放总量', children: detailCoupon.totalLimit === undefined ? '不限（历史券）' : `${detailCoupon.totalLimit} 张` },
-                { key: 'usedCount', label: '已占用', children: `${usedCount(detailCoupon)} 张（剩余 ${detailCoupon.totalLimit === undefined ? '不限' : remainingCount(detailCoupon) + ' 张'}）` },
-                { key: 'perUserLimit', label: '每人限领', children: detailCoupon.perUserLimit === undefined ? '不限（历史券）' : `${detailCoupon.perUserLimit} 张` },
-                { key: 'sponsor', label: '成本承担方', children: detailCoupon.sponsor },
-                { key: 'createdAt', label: '创建时间', children: detailCoupon.createdAt },
-              ]} /></section>
-              <section className="coupon-detail-section"><h3>领取入口</h3>
-              <div className="coupon-detail-share">
-                {detailCoupon.status === '已停用' || remainingCount(detailCoupon) < 1 ? <div className="coupon-qr-disabled">{detailCoupon.status === '已停用' ? '优惠券已停用' : '发放量已满'}，领取入口不可用</div> : <QRCode value={`https://m.xingying.cn/coupon/${detailCoupon.id}`} size={112} />}
-                <div><Typography.Paragraph type="secondary">二维码和链接指向同一领取页面，可用于活动推广。</Typography.Paragraph><Space wrap><Button icon={<CopyOutlined />} disabled={detailCoupon.status === '已停用' || remainingCount(detailCoupon) < 1} onClick={() => copyLink(detailCoupon)}>复制领取链接</Button>{detailCoupon.kind === '体验权益券' && <Button icon={<DownloadOutlined />} disabled={detailCoupon.status === '已停用' || remainingCount(detailCoupon) < 1} onClick={() => { codeForm.setFieldsValue({ channel: '美团', quantity: Math.min(100, remainingCount(detailCoupon)) }); setCodeCoupon(detailCoupon); }}>导出第三方兑换码</Button>}</Space></div>
-              </div>
-              </section>
-            </> },
-            { key: 'holders', label: `持券记录（${totalDetailRecords}）`, children: <>
-              <div className="coupon-record-query"><Select allowClear placeholder="全部状态" value={issueStatus} onChange={(value) => setIssueStatus(value)} options={issueStates.map((value) => ({ value, label: value }))} /><Button type="link" icon={<ReloadOutlined />} onClick={() => setIssueStatus(undefined)}>重置</Button><Button type="link" onClick={() => openIssueDetails(detailCoupon)}>查看全部持券记录</Button></div>
-              <Table<CouponIssueRecord>
-                rowKey="id"
-                size="small"
-                scroll={{ x: 980 }}
-                dataSource={detailRecords}
-                pagination={{ pageSize: 8, showTotal: (total) => `共 ${total} 条` }}
-                locale={{ emptyText: '暂无持券记录' }}
-                columns={[
-                  { title: '兑换码', dataIndex: 'redeemCode', width: 170 },
-                  { title: '持券用户', dataIndex: 'phone', width: 120 },
-                  { title: '状态', width: 95, render: (_, record) => { const status = effectiveCouponStatus(record); return <Tag color={status === '待使用' ? 'green' : status === '部分使用' ? 'cyan' : status === '已核销' ? 'blue' : 'default'}>{status}</Tag>; } },
-                  { title: '使用次数', width: 100, render: (_, record) => record.couponKind === '体验权益券' ? `${couponUsedTimes(record)} / ${couponTotalUses(record)}` : '—' },
-                  { title: '核销订单号', dataIndex: 'orderNo', width: 190, render: (value?: string) => value || '—' },
-                  { title: '发放时间', dataIndex: 'issuedAt', width: 165 },
-                  { title: '有效期截止', dataIndex: 'expiresAt', width: 165 },
-                  { title: '核销拍摄点', dataIndex: 'shootingPoint', width: 120, render: (value?: string) => value || '—' },
-                  { title: '操作', key: 'operation', fixed: 'right', width: 85, render: (_, record) => effectiveCouponStatus(record) === '待使用' ? <Popconfirm title="作废这张券？" okText="作废" cancelText="取消" onConfirm={() => voidRecord(record)}><Button type="link" danger>作废</Button></Popconfirm> : '—' },
-                ]}
-              />
-            </> },
-            ...(detailCoupon.kind === '体验权益券' ? [{ key: 'codes', label: `第三方兑换码（${totalCouponCodes}）`, children: <>
-              <div className="coupon-record-query"><Typography.Text type="secondary">渠道码售出后可兑换；兑换成功才开始计算体验有效期。</Typography.Text><Button type="link" onClick={() => openCodeDetails(detailCoupon)}>查看全部兑换码</Button></div>
-              <Table rowKey="id" size="small" scroll={{ x: 900 }} dataSource={detailCodes} pagination={{ pageSize: 6 }} locale={{ emptyText: '暂无第三方兑换码' }} columns={[
-                { title: '兑换码', dataIndex: 'code', width: 240 },
-                { title: '渠道 / 批次', width: 200, render: (_, record) => <>{record.channel}<div className="coupon-cell-subtitle">{record.batchNo}</div></> },
-                { title: '状态', dataIndex: 'status', width: 95, render: (status: string) => <Tag color={status === '待兑换' ? 'gold' : status === '已兑换' ? 'blue' : 'default'}>{status}</Tag> },
-                { title: '生成时间', dataIndex: 'generatedAt', width: 165 },
-                { title: '兑换用户', dataIndex: 'redeemedPhone', width: 120, render: (value?: string) => value || '—' },
-                { title: '权益截止', dataIndex: 'expiresAt', width: 165, render: (value: string | undefined, record) => value || `兑换后${record.validityDays}天` },
-              ]} />
-            </> }] : []),
-          ]} />
-        </>}
-      </Drawer>
-
-      <Modal title="优惠券创建成功" open={Boolean(createdCoupon)} onCancel={() => setCreatedCoupon(null)} footer={null}>
-        {createdCoupon && <div className="coupon-created-next-step">
-          <Alert type="success" showIcon message={createdCoupon.name} description={`${createdCoupon.kind} · ${createdCoupon.benefit} · 领取后${createdCoupon.validityDays}天有效`} />
-          <Typography.Paragraph>创建完成。你可以继续以下操作，也可以稍后从优惠券详情进入：</Typography.Paragraph>
-          <Space wrap>
-            <Button type="primary" onClick={() => { setIssueCoupon(createdCoupon); setCreatedCoupon(null); }}>定向发券</Button>
-            <Button onClick={() => { setDetailCoupon(createdCoupon); setDetailTab('rules'); setCreatedCoupon(null); }}>查看领取入口</Button>
-            {createdCoupon.kind === '体验权益券' && <Button onClick={() => { codeForm.setFieldsValue({ channel: '美团', quantity: 100 }); setCodeCoupon(createdCoupon); setCreatedCoupon(null); }}>导出第三方兑换码</Button>}
-          </Space>
-        </div>}
-      </Modal>
-
-      <Drawer
-        className="design-drawer coupon-phone-drawer"
-        title="定向发券"
-        width={520}
-        open={Boolean(issueCoupon)}
-        onClose={closeIssueDrawer}
-        footer={<Space><Button onClick={closeIssueDrawer}>取消</Button><Button type="primary" icon={<SendOutlined />} onClick={sendToPhone}>确认发券</Button></Space>}
-      >
-        {issueCoupon && <>
-          <div className="coupon-target-summary"><Tag color={issueCoupon.kind === '体验权益券' ? 'purple' : 'blue'}>{issueCoupon.kind}</Tag><Typography.Text strong>{issueCoupon.name}</Typography.Text><Typography.Text type="secondary">{issueCoupon.benefit} · 领取后{issueCoupon.validityDays}天有效</Typography.Text></div>
-          <Form form={phoneForm} layout="vertical"><Form.Item label="接收手机号" name="phone" rules={[{ required: true, message: '请输入手机号' }, { pattern: /^1\d{10}$/, message: '请输入有效的 11 位手机号' }]}><Input placeholder="请输入已注册用户手机号" maxLength={11} /></Form.Item></Form>
-          <Typography.Paragraph type="secondary">发券后会生成一条待使用的持券记录。</Typography.Paragraph>
-        </>}
-      </Drawer>
-
-      <Modal title="定向发券成功" open={Boolean(issuedSummary)} onCancel={() => setIssuedSummary(null)} footer={null}>
-        {issuedSummary && <div className="coupon-created-next-step">
-          <Alert type="success" showIcon message={`已发给 ${issuedSummary.phone}`} description={`${issuedSummary.template.name} · ${issuedSummary.template.benefit}`} />
-          <Space className="coupon-next-actions"><Button type="primary" onClick={() => { openIssueDetails(issuedSummary.template); setIssuedSummary(null); }}>查看持券记录</Button><Button onClick={() => setIssuedSummary(null)}>完成</Button></Space>
-        </div>}
-      </Modal>
-
-      <Modal title="生成第三方兑换码" open={Boolean(codeCoupon)} onCancel={() => setCodeCoupon(null)} onOk={makeCodes} okText="生成并下载">
-        {codeCoupon && <>
-          <Typography.Paragraph>{codeCoupon.name} · {codeCoupon.benefit}</Typography.Paragraph>
-          <Alert className="coupon-code-help" type="info" showIcon message="生成后登记为“未售出”；在发放明细可模拟渠道售出和用户兑换，兑换后才形成持券权益。" />
-          <Form form={codeForm} layout="vertical">
-            <Form.Item name="channel" label="销售渠道" rules={[{ required: true }]}><Select options={['美团', '抖音'].map((value) => ({ value, label: value }))} /></Form.Item>
-            <Form.Item name="quantity" label="兑换码数量" extra={`剩余可发放 ${codeCoupon.totalLimit === undefined ? '不限' : remainingCount(codeCoupon) + ' 张'}；生成后即占用额度，作废不返还，并下载 CSV。`} rules={[{ required: true }, { type: 'number', min: 1, max: 10000, message: '数量需在 1 至 10000 之间' }, { validator: (_, value) => value === undefined || value <= remainingCount(codeCoupon) ? Promise.resolve() : Promise.reject(new Error('超过剩余可发放数量')) }]}><InputNumber min={1} max={Math.min(10000, remainingCount(codeCoupon))} precision={0} className="full-width" /></Form.Item>
-          </Form>
-        </>}
-      </Modal>
-      <Modal title="兑换码已生成" open={Boolean(generatedBatch)} onCancel={() => setGeneratedBatch(null)} footer={null}>
-        {generatedBatch && <div className="coupon-created-next-step">
-          <Alert type="success" showIcon message={`已生成 ${generatedBatch.quantity} 个兑换码`} description={`批次号：${generatedBatch.batchNo}。CSV 已下载，兑换码也已登记到原型明细。`} />
-          <Space className="coupon-next-actions"><Button type="primary" onClick={() => { openCodeDetails(generatedBatch.template); setGeneratedBatch(null); }}>查看第三方兑换码</Button><Button onClick={() => setGeneratedBatch(null)}>完成</Button></Space>
-        </div>}
-      </Modal>
-    </section>
-  );
+  const redeemTicket = async () => {
+    if (busy) return; setBusy(true);
+    try { const values = await useForm.validateFields().catch(() => null); if (!values || !useTicket) return;
+      const current = store.tickets.find((row) => row.id === useTicket.id); if (!current) return;
+      const error = validateTicketUse(current, values, store.tickets); if (error) { message.error(error); return; }
+      const phone = current.phoneDigits || values.phone!; const product = shootingProducts.find((row) => row.id === values.productId)!;
+      const discount = current.couponKind === '体验权益券' ? undefined : priceDiscount(current, values.orderAmount!);
+      const usage: CouponUseRecord = { orderNo: values.orderNo.trim(), productId: product.id, productName: product.name, theme: product.theme, shootingPoint: product.shootingPoint, usedAt: couponLocalTime(), orderAmount: values.orderAmount, discountAmount: discount, payAmount: discount === undefined ? undefined : Math.round((values.orderAmount! - discount) * 100) / 100 };
+      setStore((currentStore) => ({ ...currentStore, tickets: currentStore.tickets.map((row) => row.id === current.id ? { ...row, phoneDigits: phone, phone: maskPhone(phone), issuedAt: row.issuedAt || couponLocalTime(), usedTimes: row.usedTimes + 1, status: row.usedTimes + 1 === row.totalUses ? '已核销' : '待使用', orderNo: usage.orderNo, shootingPoint: usage.shootingPoint, usageHistory: [...row.usageHistory, usage] } : row) }));
+      setUseTicketId(null); useForm.resetFields(); message.success('核销成功');
+    } finally { setBusy(false); }
+  };
+  const voidCode = (ticket: CouponIssueRecord) => { if (!canVoidTicket(ticket)) return; setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === ticket.id ? { ...row, status: '已作废' } : row) })); message.success('已作废'); };
+  const rows = store.templates.filter((row) => (!keyword.trim() || row.name.includes(keyword.trim())) && (!point || row.shootingPoints.includes(point) || row.shootingPoints.includes('全部拍摄点')));
+  const products = (ids: string[]) => shootingProducts.filter((row) => ids.includes(row.id)).map((row) => row.name).join('、');
+  return <section className="coupon-page reference-coupon-page"><section className="coupon-table-card reference-coupon-card">
+    <div className="reference-toolbar"><div className="reference-filters"><Input.Search value={keyword} onChange={(event) => setKeyword(event.target.value)} enterButton allowClear placeholder="搜索优惠券名称" style={{ width: 250 }} /><Select value={point} onChange={setPoint} allowClear placeholder="拍摄点" options={shootingPointOptions.map((value) => ({ value, label: value }))} style={{ width: 170 }} /><Button type="link" icon={<ReloadOutlined />} onClick={() => { setKeyword(''); setPoint(undefined); }}>重置</Button></div><Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建优惠券</Button></div>
+    <Table<CouponTemplate> rowKey="id" dataSource={rows} scroll={{ x: 1110 }} expandable={{ showExpandColumn: false, expandIcon: () => null, expandedRowKeys: expandedCouponIds, onExpand: (open, row) => setExpandedCouponIds((ids) => open ? [...new Set([...ids, row.id])] : ids.filter((id) => id !== row.id)), expandedRowRender: (coupon) => {
+      const codes = store.tickets.filter((ticket) => ticket.couponId === coupon.id).sort((a, b) => b.generatedAt.localeCompare(a.generatedAt));
+      return <div className="coupon-inline-codes"><div className="coupon-inline-toolbar"><Typography.Text strong>券码（{codes.length}）</Typography.Text><Button type="primary" size="small" disabled={!canIssue(coupon)} onClick={() => { genForm.resetFields(); genForm.setFieldsValue({ quantity: 1 }); setGenCouponId(coupon.id); }}>生成券码</Button></div><Table<CouponIssueRecord> size="small" rowKey="id" dataSource={codes} pagination={{ pageSize: 5, size: 'small', showTotal: (n) => `共 ${n} 张` }} locale={{ emptyText: '暂无券码' }} columns={[
+        { title: '唯一券号', dataIndex: 'redeemCode', width: 220, render: (code: string) => <Typography.Text copyable>{code}</Typography.Text> },
+        { title: '状态', width: 90, render: (_, row) => <Tag>{effectiveCouponStatus(row)}</Tag> },
+        { title: '持券用户', width: 120, render: (_, row) => row.phone || '未领取' },
+        { title: '使用情况', width: 120, render: (_, row) => row.couponKind === '体验权益券' ? `${row.usedTimes}/${row.totalUses} 次` : row.usedTimes ? '已使用' : '未使用' },
+        { title: '生效日期', dataIndex: 'startsAt', width: 155 }, { title: '失效日期', dataIndex: 'expiresAt', width: 155 },
+        { title: '操作', width: 190, render: (_, row) => <Space size={0}>{['未领取', '待使用'].includes(effectiveCouponStatus(row)) && <Button type="link" size="small" onClick={() => { useForm.resetFields(); setUseTicketId(row.id); }}>核销</Button>}{!row.phoneDigits && !['已作废', '已过期'].includes(effectiveCouponStatus(row)) && <Button type="link" size="small" onClick={() => setQrTicketId(row.id)}>二维码</Button>}{canVoidTicket(row) && <Popconfirm title={row.usedTimes ? '作废剩余权益？' : '作废这张券？'} okText="作废" cancelText="取消" onConfirm={() => voidCode(row)}><Button type="link" size="small" danger>作废</Button></Popconfirm>}</Space> },
+      ]} /></div>;
+    } }} pagination={{ pageSize: 20, showSizeChanger: true, showQuickJumper: true, showTotal: (total) => `共 ${total} 条` }} columns={[
+      { title: '序号', width: 45, render: (_, __, index) => index + 1 }, { title: '优惠券名称', width: 145, render: (_, row) => <Button type="link" className="coupon-name-link" onClick={() => setDetailId(row.id)}>{row.name}</Button> },
+      { title: '类型', width: 80, render: (_, row) => <Tag color={row.kind === '体验权益券' ? 'blue' : 'purple'}>{row.kind === '体验权益券' ? '体验券' : row.kind}</Tag> },
+      { title: '优惠内容', dataIndex: 'benefit', width: 145 }, { title: '可兑换商品 / 适用范围', width: 190, render: (_, row) => <><Typography.Text ellipsis={{ tooltip: true }} style={{ maxWidth: 175 }}>{row.kind === '体验权益券' ? products(row.productIds) : row.shootingPoints.join('、')}</Typography.Text>{row.kind !== '体验权益券' && <div className="coupon-cell-subtitle">{row.availableRange.join('、')}</div>}</> },
+      { title: '生效日期', width: 125, render: (_, row) => <>{row.startsAt.slice(0, 10)}<div className="coupon-cell-subtitle">{row.startsAt.slice(11)}</div></> },
+      { title: '失效日期', width: 125, render: (_, row) => <>{row.endsAt.slice(0, 10)}<div className="coupon-cell-subtitle">{row.endsAt.slice(11)}</div></> },
+      { title: '操作', width: 255, fixed: 'right', render: (_, row) => <Space size={0}><Button type="link" disabled={!canIssue(row)} onClick={() => { phoneForm.resetFields(); setIssuingId(row.id); }}>定向发券</Button><Button type="link" onClick={() => setExpandedCouponIds((ids) => ids.includes(row.id) ? ids.filter((id) => id !== row.id) : [...ids, row.id])}>{expandedCouponIds.includes(row.id) ? '收起券码' : `券码（${store.tickets.filter((ticket) => ticket.couponId === row.id).length}）`}</Button><Button type="link" disabled={!canIssue(row)} onClick={() => { qrForm.resetFields(); setPlan(null); setQrCouponId(row.id); }}>领取二维码</Button></Space> },
+    ]} />
+  </section>
+  <Drawer title="新建优惠券" width={720} open={createOpen} onClose={() => setCreateOpen(false)} destroyOnHidden className="design-drawer reference-create-drawer" footer={<Space><Button onClick={() => setCreateOpen(false)}>取消</Button><Button type="primary" onClick={save}>保存</Button></Space>}>
+    <Form form={form} layout="vertical" preserve={false}>
+      <Form.Item name="name" label="优惠券名称" rules={[{ required: true, whitespace: true, message: '请输入优惠券名称' }]}><Input maxLength={50} showCount /></Form.Item>
+      <Form.Item name="kind" label="优惠券类型" rules={[{ required: true }]}><Radio.Group optionType="button" buttonStyle="solid" options={couponKinds.map((value) => ({ value, label: value === '体验权益券' ? '体验券' : value }))} /></Form.Item>
+      {kind === '体验权益券' ? <>
+        <Form.Item name="productIds" label="可兑换商品 / 主题体验" rules={[{ required: true, type: 'array', min: 1, message: '请选择至少一个可兑换的主题体验' }]}><Checkbox.Group className="coupon-product-options" options={shootingProducts.map((row) => ({ value: row.id, label: row.name }))} /></Form.Item>
+        <Form.Item name="rightsCount" label="可兑换次数" rules={[{ required: true, message: '请输入次数' }, { type: 'number', min: 1 }]}><InputNumber min={1} precision={0} addonAfter="次" /></Form.Item>
+      </> : <>
+        <Form.Item name="minSpend" label="使用条件：订单满多少元" rules={[{ required: true, message: '请输入使用门槛' }, { type: 'number', min: kind === '满减券' ? 0.01 : 0 }]}><InputNumber min={kind === '满减券' ? 0.01 : 0} precision={2} addonAfter="元" /></Form.Item>
+        {kind === '满减券' ? <Form.Item name="discountAmount" label="减免金额" dependencies={['minSpend']} rules={[{ required: true, message: '请输入减免金额' }, { validator: (_, value) => value === undefined || value > 0 && value < form.getFieldValue('minSpend') ? Promise.resolve() : Promise.reject(new Error('减免金额须大于0且小于使用门槛')) }]}><InputNumber min={0.01} precision={2} addonAfter="元" /></Form.Item> : <Form.Item name="discountRate" label="折扣" rules={[{ required: true, message: '请输入折扣' }]}><InputNumber min={0.1} max={9.9} precision={1} addonAfter="折" /></Form.Item>}
+        <Form.Item name="shootingPoints" label="适用拍摄点" rules={[{ required: true, type: 'array', min: 1 }]}><Select mode="multiple" options={['全部拍摄点', ...shootingPointOptions].map((value) => ({ value, label: value }))} onChange={(values: string[]) => { if (values.includes('全部拍摄点')) form.setFieldValue('shootingPoints', values.at(-1) === '全部拍摄点' ? ['全部拍摄点'] : values.filter((value) => value !== '全部拍摄点')); }} /></Form.Item>
+        <Form.Item name="allThemes" label="适用主题"><Radio.Group options={[{ value: true, label: '全部可用' }, { value: false, label: '指定主题' }]} /></Form.Item>
+        {!allThemes && <Form.Item name="themes" label="选择主题" rules={[{ required: true, type: 'array', min: 1 }]}><Select mode="multiple" options={themeOptions.map((value) => ({ value, label: value }))} /></Form.Item>}
+      </>}
+      <Form.Item name="validity" label="生效日期 — 失效日期" rules={[{ required: true, message: '请选择完整的生效和失效时间' }, { validator: (_, value) => !value || value[1]?.isAfter(value[0]) ? Promise.resolve() : Promise.reject(new Error('失效时间须晚于生效时间')) }]}><DatePicker.RangePicker showTime format="YYYY-MM-DD HH:mm:ss" style={{ width: '100%' }} /></Form.Item>
+      <div className="coupon-form-grid"><Form.Item name="totalLimit" label="发放总量" rules={[{ required: true }, { type: 'number', min: 1, max: 100000 }]}><InputNumber min={1} max={100000} precision={0} addonAfter="张" /></Form.Item><Form.Item name="perUserLimit" label="每人限领" dependencies={['totalLimit']} rules={[{ required: true }, { validator: (_, value) => value > 0 && value <= form.getFieldValue('totalLimit') ? Promise.resolve() : Promise.reject(new Error('须为正整数且不超过总量')) }]}><InputNumber min={1} precision={0} addonAfter="张" /></Form.Item></div>
+      <Collapse ghost items={[{ key: 'extra', label: '更多设置（选填）', children: <><Form.Item name="description" label="使用说明"><Input.TextArea rows={2} maxLength={500} /></Form.Item><Form.Item name="remark" label="内部备注"><Input maxLength={300} /></Form.Item></> }]} />
+    </Form>
+  </Drawer>
+  <Drawer title="优惠券详情" width={720} open={Boolean(detail)} onClose={() => setDetailId(null)} className="coupon-detail-drawer">
+    {detail && <section className="coupon-detail-section"><h3>{detail.name}</h3><Descriptions column={1} size="small" items={[
+      { key: 'kind', label: '类型', children: detail.kind === '体验权益券' ? '体验券' : detail.kind }, { key: 'rule', label: '优惠内容', children: detail.benefit },
+      ...(detail.kind === '体验权益券' ? [{ key: 'products', label: '可兑换商品', children: products(detail.productIds) }] : []),
+      { key: 'point', label: '适用拍摄点', children: detail.shootingPoints.join('、') }, { key: 'theme', label: '适用主题', children: detail.availableRange.join('、') },
+      { key: 'start', label: '生效日期', children: detail.startsAt }, { key: 'end', label: '失效日期', children: detail.endsAt }, { key: 'status', label: '状态', children: status(detail) },
+      { key: 'quota', label: '剩余可发', children: `${remainingQuota(detail, store.tickets)} / ${detail.totalLimit} 张` }, { key: 'limit', label: '每人限领', children: `${detail.perUserLimit} 张` },
+    ]} /></section>}
+  </Drawer>
+  <Modal centered title={`定向发券 - ${issuing?.name || ''}`} open={Boolean(issuing)} onCancel={closeIssue} onOk={send} confirmLoading={busy} okText="发放" cancelText="取消" width={600} destroyOnHidden>
+    {issuing && <Form form={phoneForm} layout="vertical"><Form.Item name="phones" label="手机号" rules={[{ required: true, whitespace: true, message: '请输入手机号' }]}><Input.TextArea aria-label="接收用户手机号" rows={7} maxLength={1000} placeholder="多个手机号用换行、逗号或空格分隔" showCount onChange={() => phoneForm.setFields([{ name: 'phones', errors: [] }])} /></Form.Item><Typography.Text type="secondary">剩余可发 {remainingQuota(issuing, store.tickets)} 张</Typography.Text></Form>}
+  </Modal>
+  <Modal title={`扫码领取 - ${qrCoupon?.name || ''}`} width={600} open={Boolean(qrCoupon)} onCancel={() => { setQrCouponId(null); setPlan(null); }} footer={null} destroyOnHidden>
+    {qrCoupon && <><Form form={qrForm} layout="vertical" initialValues={{ audience: 'specified' }} onValuesChange={() => setPlan(null)}><Form.Item name="audience" label="谁可以扫码领取"><Radio.Group options={[{ value: 'specified', label: '指定手机号' }, { value: 'all', label: '所有登录用户' }]} /></Form.Item>{audience === 'specified' && <Form.Item name="phones" label="允许领取的手机号" rules={[{ required: true, whitespace: true, message: '请输入允许领取的手机号' }]}><Input.TextArea rows={3} placeholder="每行一个手机号，也可用逗号或空格分隔" /></Form.Item>}<Button type="primary" onClick={createPlan}>生成领取二维码</Button></Form>
+      {plan && <div className="coupon-qr-result"><div id="coupon-claim-qr"><QRCode value={receiveUrl(`planId=${encodeURIComponent(plan.id)}`)} size={180} /></div><Space wrap><Button icon={<DownloadOutlined />} onClick={() => { if (!downloadQrCode('coupon-claim-qr', `${qrCoupon.name}-领取二维码`)) message.error('二维码尚未就绪'); }}>下载二维码</Button><Button icon={<CopyOutlined />} onClick={async () => { try { await navigator.clipboard.writeText(receiveUrl(`planId=${plan.id}`)); message.success('链接已复制'); } catch { message.info(receiveUrl(`planId=${plan.id}`)); } }}>复制链接</Button></Space></div>}
+    </>}
+  </Modal>
+  <Modal title="生成券码" open={Boolean(genCouponId)} onCancel={() => setGenCouponId(null)} onOk={() => { const coupon = store.templates.find((row) => row.id === genCouponId); if (coupon) void generateCodes(coupon); }} confirmLoading={busy} okText="生成并下载" cancelText="取消" destroyOnHidden><Form form={genForm} layout="vertical"><Form.Item name="quantity" label="生成数量" rules={[{ required: true, message: '请输入数量' }, { type: 'number', min: 1, max: 10000 }]}><InputNumber min={1} max={10000} precision={0} addonAfter="张" style={{ width: 220 }} /></Form.Item>{genCouponId && <Typography.Text type="secondary">剩余可发 {remainingQuota(store.templates.find((row) => row.id === genCouponId)!, store.tickets)} 张</Typography.Text>}</Form></Modal>
+  <Modal title="手动核销" open={Boolean(useTicket)} onCancel={() => { setUseTicketId(null); useForm.resetFields(); }} onOk={redeemTicket} confirmLoading={busy} okText="确认核销" cancelText="取消" destroyOnHidden>{useTicket && <><Descriptions size="small" column={1} items={[{ key: 'code', label: '券号', children: useTicket.redeemCode }, { key: 'rule', label: '优惠内容', children: useTicket.benefit }]} /><Form key={useTicket.id} form={useForm} layout="vertical" preserve={false} initialValues={{ productId: shootingProducts.filter((row) => useTicket.productIds.includes(row.id)).length === 1 ? useTicket.productIds[0] : undefined }}>{!useTicket.phoneDigits && <Form.Item name="phone" label="用户手机号" rules={[{ required: true, message: '请输入手机号' }, { pattern: /^1\d{10}$/, message: '请输入11位手机号' }]}><Input maxLength={11} /></Form.Item>}{useTicket.phoneDigits && <Form.Item label="用户手机号">{useTicket.phone}</Form.Item>}<Form.Item name="orderNo" label="订单号" rules={[{ required: true, whitespace: true, message: '请输入订单号' }]}><Input maxLength={60} /></Form.Item><Form.Item name="productId" label={useTicket.couponKind === '体验权益券' ? '兑换商品 / 主题' : '订单商品 / 主题'} rules={[{ required: true, message: '请选择商品/主题' }]}><Select options={shootingProducts.filter((row) => useTicket.productIds.includes(row.id) || !useTicket.productIds.length).map((row) => ({ value: row.id, label: row.name }))} /></Form.Item>{useTicket.couponKind !== '体验权益券' && <><Form.Item name="orderAmount" label="订单原价" rules={[{ required: true, message: '请输入订单原价' }, { type: 'number', min: 0.01 }]}><InputNumber min={0.01} precision={2} addonAfter="元" /></Form.Item>{typeof orderAmount === 'number' && orderAmount >= useTicket.minSpend && orderAmount > 0 && <Typography.Text>本单优惠 {priceDiscount(useTicket, orderAmount).toFixed(2)} 元</Typography.Text>}</>}{useTicket.couponKind === '体验权益券' && <Typography.Text type="secondary">剩余 {useTicket.totalUses - useTicket.usedTimes} 次</Typography.Text>}</Form></>}</Modal>
+  <Modal title="券码二维码" open={Boolean(qrTicket)} onCancel={() => setQrTicketId(null)} footer={null} destroyOnHidden>{qrTicket && <div className="coupon-qr-result"><Typography.Text copyable>{qrTicket.redeemCode}</Typography.Text><div id="coupon-ticket-qr"><QRCode value={receiveUrl(`code=${encodeURIComponent(qrTicket.redeemCode)}`)} size={180} /></div><Button icon={<DownloadOutlined />} onClick={() => downloadQrCode('coupon-ticket-qr', `${qrTicket.redeemCode}-二维码`)}>下载二维码</Button></div>}</Modal>
+  </section>;
 }

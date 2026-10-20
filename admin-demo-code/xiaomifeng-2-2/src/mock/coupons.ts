@@ -1,126 +1,114 @@
 export type CouponKind = '特价券' | '满减券' | '折扣券' | '抵扣券' | '体验权益券';
 export type CouponTemplateStatus = '启用' | '已停用';
-export type CouponStatus = '待使用' | '部分使用' | '已核销' | '已作废' | '已过期';
-export type CouponCodeStatus = '未售出' | '待兑换' | '已兑换' | '已作废';
-
-export type CouponUseRecord = {
-  orderNo: string;
-  shootingPoint: string;
-  theme: string;
-  usedAt: string;
-};
-
+export type CouponStatus = '未领取' | '未生效' | '待使用' | '已核销' | '已作废' | '已过期';
+export type IssueSource = '定向发放' | '券码兑换' | '扫码领取';
+export type ShootingProduct = { id: string; name: string; shootingPoint: string; theme: string; price: number };
+export const shootingProducts: ShootingProduct[] = [
+  { id: 'SP001', name: '南长街 · 古韵照壁主题体验', shootingPoint: '南长街', theme: '古韵照壁', price: 59 },
+  { id: 'SP002', name: '南长街 · 白墙黛瓦主题体验', shootingPoint: '南长街', theme: '白墙黛瓦', price: 69 },
+  { id: 'SP003', name: '雁荡山 · 雁荡云端主题体验', shootingPoint: '雁荡山', theme: '雁荡云端', price: 89 },
+  { id: 'SP004', name: '雁荡山 · 飞檐走壁主题体验', shootingPoint: '雁荡山', theme: '飞檐走壁', price: 79 },
+  { id: 'SP005', name: '龙门古镇 · 孙权故里主题体验', shootingPoint: '龙门古镇', theme: '孙权故里', price: 59 },
+  { id: 'SP006', name: '藏西有风 · 拉萨入画主题体验', shootingPoint: '藏西有风', theme: '拉萨入画', price: 99 },
+];
+export const shootingPointOptions = [...new Set(shootingProducts.map((row) => row.shootingPoint))];
+export const themeOptions = [...new Set(shootingProducts.map((row) => row.theme))];
+export const couponKinds: CouponKind[] = ['满减券', '折扣券', '体验权益券'];
 export type CouponTemplate = {
-  id: string;
-  name: string;
-  kind: CouponKind;
-  benefit: string;
-  availableRange: string[];
-  shootingPoints: string[];
-  validityDays: number;
-  totalLimit?: number;
-  perUserLimit?: number;
-  sponsor: string;
-  status?: CouponTemplateStatus;
-  createdAt: string;
+  id: string; name: string; kind: CouponKind; benefit: string;
+  startsAt: string; endsAt: string; availableRange: string[]; shootingPoints: string[];
+  productIds: string[]; rightsCount: number; minSpend: number; discountAmount: number; discountRate: number;
+  totalLimit: number; perUserLimit: number; sponsor: string; status: CouponTemplateStatus;
+  description?: string; remark?: string; createdAt: string;
 };
-
+export type CouponUseRecord = {
+  orderNo: string; shootingPoint: string; theme: string; productId: string; productName: string; usedAt: string;
+  orderAmount?: number; discountAmount?: number; payAmount?: number;
+};
 export type CouponIssueRecord = {
-  id: string;
-  couponId: string;
-  couponName: string;
-  couponKind: CouponKind;
-  benefit: string;
-  status: CouponStatus;
-  phone: string;
-  phoneDigits?: string;
-  orderNo?: string;
-  issuedAt: string;
-  expiresAt: string;
-  redeemCode: string;
-  sourceCode?: string;
-  source?: '定向发放' | '活动领取' | '渠道兑换';
-  totalUses?: number;
-  usedTimes?: number;
-  usageHistory?: CouponUseRecord[];
-  shootingPoint?: string;
+  id: string; couponId: string; couponName: string; couponKind: CouponKind; benefit: string;
+  redeemCode: string; source: IssueSource; phone: string; phoneDigits?: string;
+  status: CouponStatus; generatedAt: string; issuedAt: string; startsAt: string; expiresAt: string;
+  productIds: string[]; shootingPoints: string[]; availableRange: string[];
+  minSpend: number; discountAmount: number; discountRate: number;
+  totalUses: number; usedTimes: number; usageHistory: CouponUseRecord[];
+  orderNo?: string; shootingPoint?: string; batchNo?: string; claimPlanId?: string;
 };
-
-export type CouponCodeRecord = {
-  id: string;
-  couponId: string;
-  couponName: string;
-  couponKind: CouponKind;
-  benefit: string;
-  code: string;
-  channel: string;
-  batchNo: string;
-  status: CouponCodeStatus;
-  generatedAt: string;
-  soldAt?: string;
-  validityDays: number;
-  redeemedAt?: string;
-  redeemedPhone?: string;
-  expiresAt?: string;
-};
-
-export const couponKinds: CouponKind[] = ['特价券', '满减券', '折扣券', '抵扣券', '体验权益券'];
-
-export const shootingPointOptions = ['藏西有风', '夕舍江畔', '龙门古镇', '雁荡山', '舒天阁', '闻堰老街', '南长街'];
-export const themeOptions = ['拉萨入画', '悠享时光', '观池碧波', '白墙黛瓦', '孙权故里', '古韵照壁', '飞檐走壁', '雁荡云端'];
-
-export function couponTotalUses(record: CouponIssueRecord) {
-  return record.totalUses ?? (record.couponKind === '体验权益券' ? Number.parseInt(record.benefit, 10) || 1 : 1);
-}
-
-export function couponUsedTimes(record: CouponIssueRecord) {
-  return record.usedTimes ?? (record.status === '已核销' ? couponTotalUses(record) : 0);
-}
-
-export function effectiveCouponStatus(record: CouponIssueRecord): CouponStatus {
-  if ((record.status === '待使用' || record.status === '部分使用') && new Date(record.expiresAt.replace(' ', 'T')).getTime() <= Date.now()) return '已过期';
-  return record.status;
-}
-
-function relativeDateTime(days: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
+export type CouponClaimPlan = { id: string; couponId: string; allowedPhones: string[]; createdAt: string };
+export type CouponStore = { version: 3; templates: CouponTemplate[]; tickets: CouponIssueRecord[]; plans: CouponClaimPlan[] };
+export const couponStoreKey = 'xingying-coupon-demo-v3';
+export function couponLocalTime(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
-
+export function dateTimeOffset(days: number) { const date = new Date(); date.setDate(date.getDate() + days); return couponLocalTime(date); }
+export function uniqueCouponId(prefix = 'CN') { return `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${Array.from(crypto.getRandomValues(new Uint32Array(3)), (value) => value.toString(16).padStart(8, '0')).join('').toUpperCase()}`; }
+export function maskPhone(phone: string) { return `${phone.slice(0, 3)}****${phone.slice(-4)}`; }
+export function parsePhones(value: string) { return value.split(/[\s,，;；]+/).map((row) => row.trim()).filter(Boolean); }
+export function phoneListError(phones: string[]) {
+  if (!phones.length) return '请输入手机号';
+  if (phones.some((phone) => !/^1\d{10}$/.test(phone))) return '手机号须为11位数字，请检查后重试';
+  if (new Set(phones).size !== phones.length) return '有重复手机号，请去重后重试';
+  return undefined;
+}
+export function couponRuleText(coupon: Pick<CouponTemplate, 'kind' | 'minSpend' | 'discountAmount' | 'discountRate' | 'rightsCount'>) {
+  if (coupon.kind === '体验权益券') return `指定主题体验 ${coupon.rightsCount} 次`;
+  if (coupon.kind === '满减券') return `满 ${coupon.minSpend} 元减 ${coupon.discountAmount} 元`;
+  return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}享 ${coupon.discountRate} 折`;
+}
+export function couponTotalUses(record: CouponIssueRecord) { return record.totalUses; }
+export function couponUsedTimes(record: CouponIssueRecord) { return record.usedTimes; }
+export function effectiveCouponStatus(record: CouponIssueRecord): CouponStatus {
+  if (record.status === '已作废' || record.usedTimes >= record.totalUses) return record.status === '已作废' ? '已作废' : '已核销';
+  if (Date.now() > new Date(record.expiresAt.replace(' ', 'T')).getTime()) return '已过期';
+  if (Date.now() < new Date(record.startsAt.replace(' ', 'T')).getTime()) return '未生效';
+  return record.phoneDigits ? '待使用' : '未领取';
+}
+export function canVoidTicket(record: CouponIssueRecord) { return record.status !== '已作废' && record.usedTimes < record.totalUses; }
+export function couponQuotaUsed(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return tickets.filter((row) => row.couponId === coupon.id).length; }
+export function remainingQuota(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return Math.max(0, coupon.totalLimit - couponQuotaUsed(coupon, tickets)); }
+export function canIssueCoupon(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return coupon.status !== '已停用' && Date.now() <= new Date(coupon.endsAt.replace(' ', 'T')).getTime() && remainingQuota(coupon, tickets) > 0; }
+export function receiveLimitError(coupon: CouponTemplate, phone: string, tickets: CouponIssueRecord[]) {
+  return tickets.filter((row) => row.couponId === coupon.id && row.phoneDigits === phone).length >= coupon.perUserLimit ? `该用户已达到每人 ${coupon.perUserLimit} 张的限领上限` : undefined;
+}
+export function createTicket(coupon: CouponTemplate, source: IssueSource, phone?: string): CouponIssueRecord {
+  const code = uniqueCouponId();
+  return { id: code, couponId: coupon.id, couponName: coupon.name, couponKind: coupon.kind, benefit: coupon.benefit, redeemCode: code,
+    source, phone: phone ? maskPhone(phone) : '', phoneDigits: phone, status: phone ? '待使用' : '未领取', generatedAt: couponLocalTime(), issuedAt: phone ? couponLocalTime() : '',
+    startsAt: coupon.startsAt, expiresAt: coupon.endsAt, productIds: [...coupon.productIds], shootingPoints: [...coupon.shootingPoints], availableRange: [...coupon.availableRange],
+    minSpend: coupon.minSpend, discountAmount: coupon.discountAmount, discountRate: coupon.discountRate, totalUses: coupon.kind === '体验权益券' ? coupon.rightsCount : 1, usedTimes: 0, usageHistory: [] };
+}
+export function ticketProducts(ticket: Pick<CouponIssueRecord, 'productIds' | 'shootingPoints' | 'availableRange'>) {
+  return shootingProducts.filter((row) => (!ticket.productIds.length || ticket.productIds.includes(row.id))
+    && (ticket.shootingPoints.includes('全部拍摄点') || ticket.shootingPoints.includes(row.shootingPoint))
+    && (ticket.availableRange.includes('全部可用') || ticket.availableRange.includes(row.theme)));
+}
+export function priceDiscount(ticket: CouponIssueRecord, amount: number) {
+  return Math.round(Math.min(amount, ticket.couponKind === '满减券' ? ticket.discountAmount : amount * (1 - ticket.discountRate / 10)) * 100) / 100;
+}
+export function validateTicketUse(ticket: CouponIssueRecord, values: { orderNo: string; productId: string; orderAmount?: number }, allTickets: CouponIssueRecord[]) {
+  const status = effectiveCouponStatus(ticket);
+  if (['已作废', '已核销', '已过期', '未生效'].includes(status)) return `该券${status}，不能核销`;
+  if (!ticketProducts(ticket).some((row) => row.id === values.productId)) return '该商品/主题不在券的适用范围内';
+  if (!values.orderNo.trim()) return '请输入订单号';
+  if (allTickets.some((row) => row.usageHistory.some((use) => use.orderNo === values.orderNo.trim()))) return '该订单已核销，不能重复使用';
+  if (ticket.couponKind !== '体验权益券' && (values.orderAmount === undefined || !Number.isFinite(values.orderAmount) || values.orderAmount < ticket.minSpend || values.orderAmount <= 0)) return `订单金额须大于0且满足满 ${ticket.minSpend} 元的使用条件`;
+  return undefined;
+}
+const defaultCoupon = { startsAt: dateTimeOffset(-5), endsAt: dateTimeOffset(30), totalLimit: 100, perUserLimit: 2, sponsor: '平台', status: '启用' as const, createdAt: dateTimeOffset(-6), minSpend: 0, discountAmount: 0, discountRate: 10, rightsCount: 1, productIds: [] as string[], availableRange: ['全部可用'], shootingPoints: ['全部拍摄点'] };
 export const initialCouponTemplates: CouponTemplate[] = [
-  { id: 'CP2026101501', name: '藏西有风', kind: '特价券', benefit: '1分钱', availableRange: ['拉萨入画'], shootingPoints: ['藏西有风'], validityDays: 1, sponsor: '平台', createdAt: '2026-10-15 17:23:23' },
-  { id: 'CP2026101502', name: '夕舍江畔', kind: '特价券', benefit: '1分钱', availableRange: ['悠享时光'], shootingPoints: ['夕舍江畔'], validityDays: 1, sponsor: '景区', createdAt: '2026-10-15 16:41:33' },
-  { id: 'CP2026100301', name: '龙门测试', kind: '特价券', benefit: '1分钱', availableRange: ['观池碧波', '白墙黛瓦'], shootingPoints: ['龙门古镇'], validityDays: 1, sponsor: '景区', createdAt: '2026-10-03 10:28:56' },
-  { id: 'CP2026092501', name: '龙门全场体验', kind: '体验权益券', benefit: '1次体验', availableRange: ['全部可用'], shootingPoints: ['龙门古镇'], validityDays: 1, sponsor: '平台', createdAt: '2026-09-25 10:58:21' },
-  { id: 'CP2026092502', name: '龙门古韵体验', kind: '体验权益券', benefit: '1次体验', availableRange: ['孙权故里', '古韵照壁'], shootingPoints: ['龙门古镇'], validityDays: 1, sponsor: '景区', createdAt: '2026-09-25 10:51:10' },
-  { id: 'CP2026092401', name: '雁荡山双主题体验', kind: '体验权益券', benefit: '2次体验', availableRange: ['飞檐走壁', '雁荡云端'], shootingPoints: ['雁荡山'], validityDays: 3, sponsor: '平台', createdAt: '2026-09-24 10:59:08' },
-  { id: 'CP2026092402', name: '舒天阁体验券', kind: '体验权益券', benefit: '1次体验', availableRange: ['登舒天阁', '揽太湖风光'], shootingPoints: ['舒天阁'], validityDays: 1, sponsor: '景区', createdAt: '2026-09-24 10:55:05' },
-  { id: 'CP2026091601', name: '闻堰老街多主题券', kind: '体验权益券', benefit: '3次体验', availableRange: ['悠享时光', '码头寻味', '水岸律动'], shootingPoints: ['闻堰老街'], validityDays: 3, sponsor: '渠道', createdAt: '2026-09-16 10:57:26' },
-  { id: 'CP2026091001', name: '南长街运营体验券', kind: '体验权益券', benefit: '1次体验', availableRange: ['全部可用'], shootingPoints: ['南长街'], validityDays: 8, totalLimit: 1000, perUserLimit: 10, sponsor: '平台', createdAt: '2026-09-10 09:12:18' },
-  { id: 'CP2026082101', name: '夏日满减券', kind: '满减券', benefit: '满 50 减 10 元', availableRange: ['全部可用'], shootingPoints: ['全部拍摄点'], validityDays: 7, totalLimit: 100, perUserLimit: 1, sponsor: '景区', createdAt: '2026-08-21 13:20:00' },
-  { id: 'CP2026081501', name: '新客折扣券', kind: '折扣券', benefit: '8折', availableRange: ['拉萨入画', '悠享时光'], shootingPoints: ['全部拍摄点'], validityDays: 3, sponsor: '平台', createdAt: '2026-08-15 11:08:30' },
+  { ...defaultCoupon, id: 'CP-EXPERIENCE', name: '南长街双次主题体验券', kind: '体验权益券', rightsCount: 2, productIds: ['SP001', 'SP002'], availableRange: ['古韵照壁', '白墙黛瓦'], shootingPoints: ['南长街'], benefit: '指定主题体验 2 次' },
+  { ...defaultCoupon, id: 'CP-DISCOUNT', name: '拍摄满100元享8折', kind: '折扣券', minSpend: 100, discountRate: 8, benefit: '满 100 元享 8 折' },
+  { ...defaultCoupon, id: 'CP-REDUCTION', name: '拍摄满100减20', kind: '满减券', minSpend: 100, discountAmount: 20, benefit: '满 100 元减 20 元' },
 ];
-
-export const initialIssueRecords: CouponIssueRecord[] = [
-  { id: 'ISS20261016001', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '已核销', phone: '188****3225', phoneDigits: '18812343225', orderNo: '202610161437565156291', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000001', shootingPoint: '南长街' },
-  { id: 'ISS20261016002', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '已核销', phone: '188****3225', phoneDigits: '18812343225', orderNo: '202610161438575156192', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000002', shootingPoint: '南长街' },
-  { id: 'ISS20261016003', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '已核销', phone: '188****3225', phoneDigits: '18812343225', orderNo: '202610161446175153905', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000003', shootingPoint: '南长街' },
-  { id: 'ISS20261016004', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '待使用', phone: '188****3225', phoneDigits: '18812343225', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000004' },
-  { id: 'ISS20261016005', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '待使用', phone: '176****0016', phoneDigits: '17612340016', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000005' },
-  { id: 'ISS20261016006', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', status: '已作废', phone: '176****0016', phoneDigits: '17612340016', issuedAt: '2026-10-16 14:34:18', expiresAt: '2026-10-24 14:34:18', redeemCode: 'NCJ-000006' },
-  { id: 'ISS20261015001', couponId: 'CP2026101501', couponName: '藏西有风', couponKind: '特价券', benefit: '1分钱', status: '已过期', phone: '139****5094', phoneDigits: '13912345094', issuedAt: '2026-10-15 10:12:00', expiresAt: '2026-10-16 10:12:00', redeemCode: 'ZX-000001' },
-  { id: 'ISS20261014001', couponId: 'CP2026082101', couponName: '夏日满减券', couponKind: '满减券', benefit: '满 50 减 10 元', status: '待使用', phone: '186****3061', phoneDigits: '18612343061', issuedAt: '2026-10-14 18:20:00', expiresAt: '2026-10-21 18:20:00', redeemCode: 'MJ-000001' },
-  { id: 'ISS20261013001', couponId: 'CP2026081501', couponName: '新客折扣券', couponKind: '折扣券', benefit: '8折', status: '已核销', phone: '177****8832', phoneDigits: '17712348832', orderNo: '20261013103300211', issuedAt: '2026-10-13 10:33:00', expiresAt: '2026-10-16 10:33:00', redeemCode: 'ZK-000001', shootingPoint: '闻堰老街' },
-  { id: 'ISS20261012001', couponId: 'CP2026092401', couponName: '雁荡山双主题体验', couponKind: '体验权益券', benefit: '2次体验', status: '待使用', phone: '158****7820', phoneDigits: '15812347820', issuedAt: '2026-10-12 12:10:00', expiresAt: '2026-10-15 12:10:00', redeemCode: 'YT-000001' },
-  { id: 'ISS20261011001', couponId: 'CP2026092502', couponName: '龙门古韵体验', couponKind: '体验权益券', benefit: '1次体验', status: '已作废', phone: '133****5903', phoneDigits: '13312345903', issuedAt: '2026-10-11 17:52:00', expiresAt: '2026-10-12 17:52:00', redeemCode: 'LM-000001' },
-  { id: 'ISS20261010001', couponId: 'CP2026092402', couponName: '舒天阁体验券', couponKind: '体验权益券', benefit: '1次体验', status: '已核销', phone: '185****4217', phoneDigits: '18512344217', orderNo: '20261010143008881', issuedAt: '2026-10-10 09:30:00', expiresAt: '2026-10-11 09:30:00', redeemCode: 'STG-000001', shootingPoint: '舒天阁' },
-  { id: 'ISS-DEMO-PARTIAL', couponId: 'CP2026092401', couponName: '雁荡山双主题体验', couponKind: '体验权益券', benefit: '2次体验', status: '部分使用', phone: '158****7820', phoneDigits: '15812347820', issuedAt: relativeDateTime(-1), expiresAt: relativeDateTime(2), redeemCode: 'YT-DEMO-002', totalUses: 2, usedTimes: 1, usageHistory: [{ orderNo: 'DEMO-ORDER-001', shootingPoint: '雁荡山', theme: '飞檐走壁', usedAt: relativeDateTime(-1) }], source: '定向发放' },
-];
-
-export const initialCouponCodeRecords: CouponCodeRecord[] = [
-  { id: 'CODE-001', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', code: 'MT-1001-CB2026A001-000001', channel: '美团', batchNo: 'CB2026A001', status: '待兑换', generatedAt: '2026-10-10 10:00:00', soldAt: '2026-10-19 12:00:00', validityDays: 8 },
-  { id: 'CODE-002', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', code: 'MT-1001-CB2026A001-000002', channel: '美团', batchNo: 'CB2026A001', status: '已兑换', generatedAt: '2026-10-10 10:00:00', validityDays: 8, redeemedAt: '2026-10-12 14:20:00', redeemedPhone: '188****3225', expiresAt: '2026-10-20 14:20:00' },
-  { id: 'CODE-003', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', code: 'DY-1001-CB2026B001-000001', channel: '抖音', batchNo: 'CB2026B001', status: '已作废', generatedAt: '2026-10-11 09:30:00', validityDays: 8 },
-  { id: 'CODE-004', couponId: 'CP2026091001', couponName: '南长街运营体验券', couponKind: '体验权益券', benefit: '1次体验', code: 'DY-1001-CB2026B001-000002', channel: '抖音', batchNo: 'CB2026B001', status: '未售出', generatedAt: '2026-10-11 09:30:00', validityDays: 8 },
-];
+const samplePartial = createTicket(initialCouponTemplates[0], '定向发放', '13800000001');
+samplePartial.id = samplePartial.redeemCode = 'CN-DEMO-EXPERIENCE-001';
+samplePartial.usedTimes = 1;
+samplePartial.usageHistory = [{ orderNo: 'DEMO-ORDER-001', shootingPoint: '南长街', theme: '古韵照壁', productId: 'SP001', productName: shootingProducts[0].name, usedAt: dateTimeOffset(-1) }];
+const sampleCode = createTicket(initialCouponTemplates[0], '券码兑换');
+sampleCode.id = sampleCode.redeemCode = 'CN-DEMO-EXPERIENCE-002';
+const sampleDiscount = createTicket(initialCouponTemplates[1], '定向发放', '13800000002');
+sampleDiscount.id = sampleDiscount.redeemCode = 'CN-DEMO-DISCOUNT-001';
+const sampleReduction = createTicket(initialCouponTemplates[2], '定向发放', '13800000003');
+sampleReduction.id = sampleReduction.redeemCode = 'CN-DEMO-REDUCTION-001';
+export const initialIssueRecords = [samplePartial, sampleCode, sampleDiscount, sampleReduction];
+export const initialCouponStore: CouponStore = { version: 3, templates: initialCouponTemplates, tickets: initialIssueRecords, plans: [] };

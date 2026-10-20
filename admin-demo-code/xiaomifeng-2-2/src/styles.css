@@ -555,3 +555,42 @@ body,
     margin-left: 12px;
   }
 }
+
+.coupon-name-link { padding: 0; height: auto; white-space: normal; text-align: left; font-weight: 500; }
+.coupon-detail-drawer .ant-drawer-footer { display: flex; justify-content: flex-end; }
+.coupon-filter-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 沿用现有后台：单白卡筛选与表格、右侧新建抽屉、居中定向发券弹窗。 */
+.reference-coupon-page { min-height: calc(100vh - 78px); display: flex; flex-direction: column; }
+.reference-coupon-card { flex: 1; min-width: 0; padding: 16px 20px 20px; border-radius: 4px; background: #fff; }
+.reference-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; min-height: 40px; margin-bottom: 20px; }
+.reference-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.reference-record-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
+.reference-coupon-card .ant-table-cell { vertical-align: middle; overflow-wrap: anywhere; }
+.reference-coupon-card .ant-table-tbody > tr > td { padding-top: 16px; padding-bottom: 16px; }
+.reference-create-drawer .coupon-form-section { margin-bottom: 20px; padding-bottom: 0; border-bottom: 0; }
+.reference-create-drawer .ant-form-item { margin-bottom: 20px; }
+.reference-modal-explain { color: #696c70; line-height: 24px; margin-bottom: 20px; }
+.reference-channel-card .reference-toolbar { align-items: flex-start; }
+.reference-channel-note { color: #696c70; margin: 0 0 16px; line-height: 22px; }
+.reference-channel-code { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
+.reference-create-drawer .ant-drawer-header-title { flex-direction: row-reverse; }
+.reference-create-drawer .ant-drawer-close { margin-inline-end: 0; margin-inline-start: 12px; }
+
+.coupon-qr-result { margin-top: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.coupon-qr-result .ant-typography { margin-bottom: 0; }
+.coupon-inline-codes { padding: 12px 16px; background: #fafafa; }
+.coupon-inline-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.coupon-inline-codes .ant-table-wrapper { background: #fff; }
+.coupon-receive-page { min-height: 100vh; padding: 32px 16px; background: #f2f4f7; display: flex; align-items: flex-start; justify-content: center; }
+.coupon-receive-card { width: 520px; max-width: 100%; padding: 24px; border-radius: 4px; background: #fff; }
+.coupon-receive-card .ant-typography { overflow-wrap: anywhere; }
+.coupon-receive-info { padding: 16px; margin: 20px 0; background: #fafafa; border: 1px solid #e9ebf0; }
+.coupon-receive-info p { margin: 8px 0 0; line-height: 24px; }
+.coupon-receive-back { display: block; margin: 20px auto 0; }
+html:has(.coupon-receive-page), body:has(.coupon-receive-page), #root:has(.coupon-receive-page) { min-width: 0; }
+
+.coupon-receive-card .ant-descriptions-item-content { overflow-wrap: anywhere; word-break: break-word; }
+
+.coupon-product-options { display: flex; flex-direction: column; gap: 10px; }
