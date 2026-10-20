@@ -70,7 +70,8 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
   };
   const closeRedeem = () => { setRedeemingCode(null); redeemForm.resetFields(); };
   const redeemCode = async () => {
-    const values = await redeemForm.validateFields();
+    const values = await redeemForm.validateFields().catch(() => null);
+    if (!values) return;
     if (!redeemingCode) return;
     const currentCode = couponCodeRecords.find((record) => record.id === redeemingCode.id);
     if (currentCode?.status !== '待兑换') { message.error('该码当前不可兑换'); return; }
@@ -109,7 +110,8 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
   };
   const closeUse = () => { setUsingRecord(null); useForm.resetFields(); };
   const useRight = async () => {
-    const values = await useForm.validateFields();
+    const values = await useForm.validateFields().catch(() => null);
+    if (!values) return;
     if (!usingRecord) return;
     const latest = issueRecords.find((record) => record.id === usingRecord.id);
     const template = templates.find((item) => item.id === usingRecord.couponId);
@@ -149,7 +151,7 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
       {record.couponKind === '体验权益券' && ['待使用', '部分使用'].includes(effectiveCouponStatus(record)) && <Button type="link" onClick={() => openUse(record)}>模拟核销</Button>}
       {couponUsedTimes(record) > 0 && <Button type="link" onClick={() => setHistoryRecord(record)}>核销记录</Button>}
       {effectiveCouponStatus(record) === '待使用' && <Popconfirm title="作废这张券？" description="作废后无法恢复，也不能继续使用。" okText="确认作废" cancelText="取消" onConfirm={() => voidHolder(record)}><Button type="link" danger>作废</Button></Popconfirm>}
-      {effectiveCouponStatus(record) !== '待使用' && record.couponKind !== '体验权益券' && couponUsedTimes(record) === 0 && '—'}
+      {effectiveCouponStatus(record) !== '待使用' && couponUsedTimes(record) === 0 && '—'}
     </Space> },
   ];
   const codeColumns: TableColumnsType<CouponCodeRecord> = [
@@ -199,10 +201,10 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
           { key: 'codes', label: `第三方兑换码（${couponId ? couponCodeRecords.filter((r) => r.couponId === couponId).length : couponCodeRecords.length}）` },
         ]} />
         {activeTab === 'holders' ? <>
-          <Alert className="coupon-workflow-guide" type="info" showIcon message="体验次数券可模拟逐次核销；部分使用后保留剩余次数。价格券仅展示已有核销结果。" />
+          <Alert className="coupon-workflow-guide" type="info" showIcon title="体验次数券可模拟逐次核销；部分使用后保留剩余次数。价格券仅展示已有核销结果。" />
           <Table<CouponIssueRecord> rowKey="id" columns={holderColumns} dataSource={holderRows} scroll={{ x: 1425 }} pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无持券记录' }} />
         </> : <>
-          <Alert className="coupon-workflow-guide" type="info" showIcon message="本地演示：生成兑换码 → 模拟渠道售出 → 模拟用户兑换；兑换成功后持券有效期才开始计算。" />
+          <Alert className="coupon-workflow-guide" type="info" showIcon title="本地演示：生成兑换码 → 模拟渠道售出 → 模拟用户兑换；兑换成功后持券有效期才开始计算。" />
           <Table<CouponCodeRecord> rowKey="id" columns={codeColumns} dataSource={codeRows} scroll={{ x: 1655 }} pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无第三方兑换码' }} />
         </>}
       </section>
@@ -215,7 +217,7 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
       </Modal>
       <Modal title="模拟体验权益核销" open={Boolean(usingRecord)} onCancel={closeUse} onOk={useRight} okText="确认核销" destroyOnHidden>
         {usingRecord && <>
-          <Alert className="coupon-code-help" type="info" showIcon message={`${usingRecord.couponName}：已用 ${couponUsedTimes(usingRecord)} 次，剩余 ${couponTotalUses(usingRecord) - couponUsedTimes(usingRecord)} 次；每个订单仅核销一次。`} />
+          <Alert className="coupon-code-help" type="info" showIcon title={`${usingRecord.couponName}：已用 ${couponUsedTimes(usingRecord)} 次，剩余 ${couponTotalUses(usingRecord) - couponUsedTimes(usingRecord)} 次；每个订单仅核销一次。`} />
           <Form key={usingRecord.id} form={useForm} layout="vertical" preserve={false} initialValues={{ shootingPoint: selectedTemplate?.shootingPoints.includes('全部拍摄点') ? undefined : selectedTemplate?.shootingPoints[0], theme: selectedTemplate?.availableRange.includes('全部可用') ? undefined : selectedTemplate?.availableRange[0] }}>
             <Form.Item name="orderNo" label="服务订单号" rules={[{ required: true, message: '请输入服务订单号' }]}><Input maxLength={40} placeholder="输入模拟服务订单号" /></Form.Item>
             <Form.Item name="shootingPoint" label="核销拍摄点" rules={[{ required: true, message: '请选择拍摄点' }]}><Select options={pointOptions.map((value) => ({ value, label: value }))} placeholder="选择适用拍摄点" /></Form.Item>
