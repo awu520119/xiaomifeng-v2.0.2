@@ -105,9 +105,6 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
   const pointOptions = selectedTemplate?.shootingPoints.includes('全部拍摄点') ? shootingPointOptions : selectedTemplate?.shootingPoints || [];
   const useThemeOptions = selectedTemplate?.availableRange.includes('全部可用') ? themeOptions : selectedTemplate?.availableRange || [];
   const openUse = (record: CouponIssueRecord) => {
-    const template = templates.find((item) => item.id === record.couponId);
-    useForm.resetFields();
-    useForm.setFieldsValue({ shootingPoint: template?.shootingPoints.includes('全部拍摄点') ? undefined : template?.shootingPoints[0], theme: template?.availableRange.includes('全部可用') ? undefined : template?.availableRange[0] });
     setUsingRecord(record);
   };
   const closeUse = () => { setUsingRecord(null); useForm.resetFields(); };
@@ -167,7 +164,7 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
     { title: '权益截止', dataIndex: 'expiresAt', width: 155, render: (value: string | undefined, record) => value || `兑换后${record.validityDays}天` },
     { title: '操作', key: 'operation', fixed: 'right', width: 165, render: (_, record) => <Space size={0}>
       {record.status === '未售出' && <Button type="link" onClick={() => markSold(record)}>模拟售出</Button>}
-      {record.status === '待兑换' && <Button type="link" onClick={() => { redeemForm.resetFields(); setRedeemingCode(record); }}>模拟兑换</Button>}
+      {record.status === '待兑换' && <Button type="link" onClick={() => setRedeemingCode(record)}>模拟兑换</Button>}
       {(record.status === '未售出' || record.status === '待兑换') && <Popconfirm title="作废该兑换码？" description={record.status === '待兑换' ? '请确认渠道已退款。作废后该码不能兑换。' : '作废后该码不能兑换，额度不返还。'} okText="确认作废" cancelText="取消" onConfirm={() => voidCode(record)}><Button type="link" danger>作废</Button></Popconfirm>}
       {(record.status === '已兑换' || record.status === '已作废') && '—'}
     </Space> },
@@ -219,7 +216,7 @@ export default function CouponIssueRecordsPage({ templates, issueRecords, setIss
       <Modal title="模拟体验权益核销" open={Boolean(usingRecord)} onCancel={closeUse} onOk={useRight} okText="确认核销" destroyOnHidden>
         {usingRecord && <>
           <Alert className="coupon-code-help" type="info" showIcon message={`${usingRecord.couponName}：已用 ${couponUsedTimes(usingRecord)} 次，剩余 ${couponTotalUses(usingRecord) - couponUsedTimes(usingRecord)} 次；每个订单仅核销一次。`} />
-          <Form form={useForm} layout="vertical">
+          <Form key={usingRecord.id} form={useForm} layout="vertical" preserve={false} initialValues={{ shootingPoint: selectedTemplate?.shootingPoints.includes('全部拍摄点') ? undefined : selectedTemplate?.shootingPoints[0], theme: selectedTemplate?.availableRange.includes('全部可用') ? undefined : selectedTemplate?.availableRange[0] }}>
             <Form.Item name="orderNo" label="服务订单号" rules={[{ required: true, message: '请输入服务订单号' }]}><Input maxLength={40} placeholder="输入模拟服务订单号" /></Form.Item>
             <Form.Item name="shootingPoint" label="核销拍摄点" rules={[{ required: true, message: '请选择拍摄点' }]}><Select options={pointOptions.map((value) => ({ value, label: value }))} placeholder="选择适用拍摄点" /></Form.Item>
             <Form.Item name="theme" label="拍摄主题" rules={[{ required: true, message: '请选择主题' }]}><Select options={useThemeOptions.map((value) => ({ value, label: value }))} placeholder="选择适用主题" /></Form.Item>
