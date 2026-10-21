@@ -7,7 +7,8 @@
     "dev": "vite",
     "check": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
-    "publish:viewer": "npm run build && node scripts/publish-to-viewer.mjs"
+    "publish:viewer": "npm run build && node scripts/publish-to-viewer.mjs",
+    "test:coupon": "node scripts/test-coupon-flow.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",

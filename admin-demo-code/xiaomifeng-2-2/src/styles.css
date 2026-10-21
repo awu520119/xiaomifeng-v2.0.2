@@ -122,7 +122,7 @@ body,
 }
 
 .app-content {
-  margin: 0 20px 20px;
+  margin: 0 16px 16px;
 }
 
 .coupon-page,
@@ -134,24 +134,55 @@ body,
   min-height: calc(100vh - 78px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.admin-filter-card,
-.admin-list-card {
+  gap: 16px;
+  padding: 16px;
   border-radius: 4px;
   background: #fff;
 }
 
+.admin-filter-card,
+.admin-list-card {
+  border-radius: 0;
+  background: transparent;
+}
+
+.issue-record-context {
+  margin: -4px 0 8px;
+}
+
 .admin-filter-card {
-  min-height: 64px;
-  padding: 12px 16px;
+  min-height: 40px;
+  padding: 0;
 }
 
 .admin-list-card {
   flex: 1;
   min-height: 0;
-  padding: 0 16px 16px;
+  padding: 0;
+}
+
+.admin-filter-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.admin-filter-controls {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-list-card .ant-table-thead > tr > th {
+  background: #f7f7f7;
+  color: #747a83;
+  font-weight: 500;
+}
+
+.admin-list-card .ant-table-tbody > tr > td {
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 .admin-list-heading {
@@ -594,3 +625,96 @@ html:has(.coupon-receive-page), body:has(.coupon-receive-page), #root:has(.coupo
 .coupon-receive-card .ant-descriptions-item-content { overflow-wrap: anywhere; word-break: break-word; }
 
 .coupon-product-options { display: flex; flex-direction: column; gap: 10px; }
+
+.coupon-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.coupon-mini-page {
+  min-height: 100vh;
+  padding: 28px 16px;
+  background: #f2f4f7;
+}
+
+.coupon-mini-card {
+  width: min(100%, 460px);
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.coupon-mini-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: -8px -8px 16px;
+}
+
+.coupon-mini-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.coupon-mini-summary {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  padding: 16px;
+  background: #f7f9fc;
+}
+
+.coupon-mini-summary > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.coupon-mini-summary strong {
+  color: #2776ff;
+  font-size: 20px;
+}
+
+@media (max-width: 600px) {
+  html, body, #root { min-width: 0; }
+  .coupon-mini-page, .coupon-receive-page { min-width: 0; }
+}
+html:has(.coupon-mini-page), body:has(.coupon-mini-page), #root:has(.coupon-mini-page) { min-width: 0; }
+
+.coupon-row-actions .ant-btn-link {
+  padding-inline: 4px;
+}
+
+.coupon-row-actions .ant-btn-icon-only {
+  margin-left: 4px;
+}
+
+.coupon-more-button,
+.coupon-more-button:hover {
+  color: #2776ff !important;
+}
+
+.coupon-more-button .anticon {
+  transform: rotate(90deg);
+}
+
+.coupon-issue-tabs .ant-tabs-nav {
+  margin-bottom: 12px;
+}
+
+.coupon-camera-start { display: flex; min-height: 120px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.coupon-camera-scanner { display: flex; flex-direction: column; gap: 12px; }
+.coupon-camera-scanner video { width: 100%; max-height: 360px; border-radius: 4px; background: #111; object-fit: cover; }
+
+.ant-drawer .ant-drawer-footer { display: flex; justify-content: flex-end; }
+.coupon-fieldset-readonly .ant-input[disabled],
+.coupon-fieldset-readonly .ant-input-number-disabled,
+.coupon-fieldset-readonly .ant-select-disabled .ant-select-selector,
+.coupon-fieldset-readonly .ant-picker-disabled {
+  color: rgba(0, 0, 0, .88);
+  background: #fafafa;
+  cursor: default;
+}

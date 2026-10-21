@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>发放明细</title>
+  <title>发放记录</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,56 +406,52 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="优惠券发放明细">优惠券发放明细</h1>
-<p>版本：v1.1｜日期：2026-10-20</p>
-<p>运营查询持券与渠道码状态，并在本地原型中演示渠道码售出、兑换和体验次数核销。</p>
+<h1 id="发放记录-PRD">发放记录 PRD</h1>
+<blockquote>
+<p>版本 v3.3 · 2026-10-21 · 本地 Mock 原型</p>
+</blockquote>
+<p>运营统一查询定向发放、公开领取及券码领取的到账记录，并作废尚可作废的券。</p>
+<h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
 <tr>
-<th>版本</th>
 <th>日期</th>
+<th>版本</th>
 <th>提出人</th>
 <th>变更</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>v1.1</td>
-<td>2026-10-20</td>
-<td>—</td>
-<td>增加渠道码售出/兑换与体验次数核销演示，展示来源和部分使用状态</td>
+<td>2026-10-21</td>
+<td>v3.3</td>
+<td>用户</td>
+<td>导航更名发放记录，精简为手机号、日期及状态筛选和指定列表字段</td>
 </tr>
 <tr>
-<td>v1.0</td>
-<td>—</td>
-<td>—</td>
-<td>初版</td>
+<td>2026-10-21</td>
+<td>v3.2</td>
+<td>用户</td>
+<td>确认自动备码、账户权益有效期及退款返券规则</td>
 </tr>
 </tbody>
 </table>
-<h2 id="页面目标">页面目标</h2>
-<p>让运营和客服能够跨优惠券查询用户持券、第三方兑换码及核销状态；也支持从某张优惠券详情带条件进入此页。持券和未兑换码分属两个页签，不混计数量。</p>
-<h2 id="查询与展示">查询与展示</h2>
-<ul>
-<li><strong>持券记录</strong>：按优惠券名称/券码、持券用户手机号和状态筛选；展示权益、状态、用户、来源、已用/总次数、券码、最近核销订单、发放时间和有效期截止，可查看逐次核销记录。</li>
-<li><strong>第三方兑换码</strong>：按优惠券名称/兑换码/批次号、渠道和状态筛选；展示渠道、批次、状态、生成及售出时间、兑换用户、兑换时间和权益截止时间。</li>
-<li>从优惠券详情跳转时，自动按当前优惠券和对应页签筛选；可清除券筛选查看全部记录。</li>
-</ul>
-<h2 id="状态与操作">状态与操作</h2>
-<ul>
-<li>第三方兑换码生成后为「未售出」；模拟渠道售出后为「待兑换」，再模拟用户兑换后为「已兑换」。兑换时记录用户和时间，生成关联持券记录，并按兑换时间加券规则 N 天计算权益截止时间。</li>
-<li>「未售出」「待兑换」兑换码和「待使用」持券记录可作废；待兑换码作废前提示先确认渠道退款。作废不返还发放额度。</li>
-<li>体验权益券的「待使用」或「部分使用」记录可模拟核销一次；校验适用拍摄点、主题、有效期、剩余次数和订单号不重复。剩余次数大于零时为「部分使用」，用完后为「已核销」。</li>
-<li>已过期、已作废和已核销的持券记录不能再次核销；价格券仅展示已有核销结果。</li>
-<li>停用优惠券不影响已发出的券和已导出的兑换码在有效期内继续使用。</li>
-</ul>
-<h2 id="本期边界">本期边界</h2>
-<p>使用本地 Mock 演示查询、筛选、批次追踪、作废、售出、兑换和体验核销；不连接真实美团/抖音接口或服务订单。模拟售出不代表已取得渠道销售凭据，价格券的真实订单用券不在本期原型中。</p>
+<h2 id="页面与查询">页面与查询</h2>
+<ol>
+<li><strong>范围</strong>：仅展示已绑定用户的实际券，包括满减券、折扣券及体验券；自动备码但尚未绑定的券不展示。不设置 Tab，不提供发券入口。</li>
+<li><strong>筛选</strong>：输入手机号查询、发放日期区间、状态；重置清空三项筛选，不提供发放方式筛选。</li>
+<li><strong>字段</strong>：券名称、券类型、状态、领取用户、关联订单号、发放方式、有效期、操作；发放方式展示定向发放、公开领取或券码领取。</li>
+<li><strong>订单关联</strong>：展示当前占用订单、使用订单或活动发券时填写的关联订单；未关联显示「—」。</li>
+<li><strong>状态</strong>：保留价格券待使用、待支付占用、已核销等状态，以及体验券待核销、权益已到账、部分使用、已用完等状态；有效期及作废状态同步更新。</li>
+<li><strong>作废</strong>：操作列仅保留作废。未用完且未锁定的券可确认作废，保留历史且不返额度；已核销到账的体验权益不通过此操作撤回，不可作废的记录显示禁用按钮。</li>
+<li><strong>上下文</strong>：从券详情或本次批次进入时保留限定范围，可查看全部记录；筛选重置不退出范围。</li>
+<li><strong>演示数据</strong>：保留体验券定向和券码领取样例，覆盖待核销、权益到账、部分使用、已用完和作废，旧浏览器数据仅补充一次样例。</li>
+</ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券发放明细" data-toc-id="优惠券发放明细">优惠券发放明细</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面目标" data-toc-id="页面目标">页面目标</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#查询与展示" data-toc-id="查询与展示">查询与展示</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#状态与操作" data-toc-id="状态与操作">状态与操作</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#本期边界" data-toc-id="本期边界">本期边界</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发放记录-PRD" data-toc-id="发放记录-PRD">发放记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面与查询" data-toc-id="页面与查询">页面与查询</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

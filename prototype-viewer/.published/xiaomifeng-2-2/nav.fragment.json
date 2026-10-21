@@ -13,17 +13,64 @@
           "templateType": "screen",
           "routeHash": "#/coupons",
           "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-management.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券管理PRD.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券列表PRD.md",
           "children": []
         },
         {
           "id": "xiaomifeng-2-2--coupon-issue-records",
-          "title": "发放明细",
+          "title": "发放记录",
           "order": 2,
           "templateType": "screen",
           "routeHash": "#/coupon-issues",
           "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-issue-records.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券发放明细PRD.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/发放记录PRD.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--coupon-redemptions",
+          "title": "活动发券",
+          "order": 3,
+          "templateType": "screen",
+          "routeHash": "#/coupon-redemptions",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-redemptions.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/活动发券PRD.md",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "xiaomifeng-2-2--coupon-mini",
+      "title": "用户小程序演示",
+      "order": 2,
+      "children": [
+        {
+          "id": "xiaomifeng-2-2--coupon-receive",
+          "title": "优惠券领取",
+          "order": 1,
+          "templateType": "screen",
+          "routeHash": "#/coupon-receive",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-receive.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券领取PRD.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--coupon-my",
+          "title": "我的优惠券",
+          "order": 2,
+          "templateType": "screen",
+          "routeHash": "#/coupon-my",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-my.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/我的优惠券PRD.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--coupon-order",
+          "title": "下单使用与订单关联",
+          "order": 3,
+          "templateType": "screen",
+          "routeHash": "#/coupon-order",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-order.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/下单使用PRD.md",
           "children": []
         }
       ]
@@ -31,7 +78,7 @@
     {
       "id": "xiaomifeng-2-2--system",
       "title": "系统管理",
-      "order": 2,
+      "order": 3,
       "children": [
         {
           "id": "xiaomifeng-2-2--operation-logs",

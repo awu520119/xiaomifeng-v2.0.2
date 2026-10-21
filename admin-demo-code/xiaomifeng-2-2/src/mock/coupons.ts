@@ -23,7 +23,8 @@ export type CouponTemplate = {
 };
 export type CouponUseRecord = {
   orderNo: string; shootingPoint: string; theme: string; productId: string; productName: string; usedAt: string;
-  orderAmount?: number; discountAmount?: number; payAmount?: number;
+  orderAmount?: number; discountAmount?: number; payAmount?: number; operator?: string; source?: '后台核销' | '小程序下单';
+  couponReturnedAt?: string;
 };
 export type CouponIssueRecord = {
   id: string; couponId: string; couponName: string; couponKind: CouponKind; benefit: string;
@@ -32,10 +33,13 @@ export type CouponIssueRecord = {
   productIds: string[]; shootingPoints: string[]; availableRange: string[];
   minSpend: number; discountAmount: number; discountRate: number;
   totalUses: number; usedTimes: number; usageHistory: CouponUseRecord[];
-  orderNo?: string; shootingPoint?: string; batchNo?: string; claimPlanId?: string;
+  orderNo?: string; shootingPoint?: string; batchNo?: string; claimPlanId?: string; lockedOrderId?: string;
 };
-export type CouponClaimPlan = { id: string; couponId: string; allowedPhones: string[]; createdAt: string };
-export type CouponStore = { version: 3; templates: CouponTemplate[]; tickets: CouponIssueRecord[]; plans: CouponClaimPlan[] };
+export type CouponClaimPlan = { id: string; couponId: string; allowedPhones: string[]; createdAt: string; totalLimit?: number; perUserLimit?: number; endsAt?: string; status?: '启用' | '已停用' };
+export type CouponBatch = { id: string; couponId: string; source: '定向发放' | '专属券码'; quantity: number; createdAt: string; operator: string; origin?: string };
+export type ExperienceAccountRight = { id: string; sourceTicketId: string; couponId: string; couponName: string; phone: string; phoneDigits: string; productIds: string[]; totalUses: number; remainingUses: number; grantedAt: string; operator: string; orderNo?: string; startsAt?: string; expiresAt?: string; usageHistory?: CouponUseRecord[] };
+export type CouponOrder = { id: string; phone: string; productId: string; productName: string; ticketId?: string; rightId?: string; originalAmount: number; discountAmount: number; payAmount: number; status: '待支付' | '待核销' | '待使用' | '已完成' | '已取消' | '已退款' | '部分退款'; createdAt: string; fulfilledAt?: string; refundedAt?: string; refundAmount?: number; couponReturnResult?: string };
+export type CouponStore = { version: 3; templates: CouponTemplate[]; tickets: CouponIssueRecord[]; plans: CouponClaimPlan[]; batches?: CouponBatch[]; orders?: CouponOrder[]; accountRights?: ExperienceAccountRight[]; demoSeeds?: string[] };
 export const couponStoreKey = 'xingying-coupon-demo-v3';
 export function couponLocalTime(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
@@ -47,12 +51,12 @@ export function parsePhones(value: string) { return value.split(/[\s,，;；]+/)
 export function phoneListError(phones: string[]) {
   if (!phones.length) return '请输入手机号';
   if (phones.some((phone) => !/^1\d{10}$/.test(phone))) return '手机号须为11位数字，请检查后重试';
-  if (new Set(phones).size !== phones.length) return '有重复手机号，请去重后重试';
   return undefined;
 }
 export function couponRuleText(coupon: Pick<CouponTemplate, 'kind' | 'minSpend' | 'discountAmount' | 'discountRate' | 'rightsCount'>) {
   if (coupon.kind === '体验权益券') return `指定主题体验 ${coupon.rightsCount} 次`;
   if (coupon.kind === '满减券') return `满 ${coupon.minSpend} 元减 ${coupon.discountAmount} 元`;
+  if (coupon.kind === '抵扣券') return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}抵扣 ${coupon.discountAmount} 元`;
   return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}享 ${coupon.discountRate} 折`;
 }
 export function couponTotalUses(record: CouponIssueRecord) { return record.totalUses; }
@@ -64,12 +68,11 @@ export function effectiveCouponStatus(record: CouponIssueRecord): CouponStatus {
   return record.phoneDigits ? '待使用' : '未领取';
 }
 export function canVoidTicket(record: CouponIssueRecord) { return record.status !== '已作废' && record.usedTimes < record.totalUses; }
-export function couponQuotaUsed(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return tickets.filter((row) => row.couponId === coupon.id).length; }
+export function couponQuotaUsed(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return tickets.filter((row) => row.couponId === coupon.id && (coupon.kind !== '体验权益券' || Boolean(row.phoneDigits) || row.status === '已作废')).length; }
 export function remainingQuota(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return Math.max(0, coupon.totalLimit - couponQuotaUsed(coupon, tickets)); }
 export function canIssueCoupon(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return coupon.status !== '已停用' && Date.now() <= new Date(coupon.endsAt.replace(' ', 'T')).getTime() && remainingQuota(coupon, tickets) > 0; }
-export function receiveLimitError(coupon: CouponTemplate, phone: string, tickets: CouponIssueRecord[]) {
-  return tickets.filter((row) => row.couponId === coupon.id && row.phoneDigits === phone).length >= coupon.perUserLimit ? `该用户已达到每人 ${coupon.perUserLimit} 张的限领上限` : undefined;
-}
+// 保留旧调用签名以兼容本地演示数据，不再按用户限制领取数量。
+export function receiveLimitError(_coupon: CouponTemplate, _phone: string, _tickets: CouponIssueRecord[]): string | undefined { return undefined; }
 export function createTicket(coupon: CouponTemplate, source: IssueSource, phone?: string): CouponIssueRecord {
   const code = uniqueCouponId();
   return { id: code, couponId: coupon.id, couponName: coupon.name, couponKind: coupon.kind, benefit: coupon.benefit, redeemCode: code,
@@ -83,7 +86,7 @@ export function ticketProducts(ticket: Pick<CouponIssueRecord, 'productIds' | 's
     && (ticket.availableRange.includes('全部可用') || ticket.availableRange.includes(row.theme)));
 }
 export function priceDiscount(ticket: CouponIssueRecord, amount: number) {
-  return Math.round(Math.min(amount, ticket.couponKind === '满减券' ? ticket.discountAmount : amount * (1 - ticket.discountRate / 10)) * 100) / 100;
+  return Math.round(Math.min(amount, ['满减券', '抵扣券'].includes(ticket.couponKind) ? ticket.discountAmount : amount * (1 - ticket.discountRate / 10)) * 100) / 100;
 }
 export function validateTicketUse(ticket: CouponIssueRecord, values: { orderNo: string; productId: string; orderAmount?: number }, allTickets: CouponIssueRecord[]) {
   const status = effectiveCouponStatus(ticket);
@@ -110,5 +113,12 @@ const sampleDiscount = createTicket(initialCouponTemplates[1], '定向发放', '
 sampleDiscount.id = sampleDiscount.redeemCode = 'CN-DEMO-DISCOUNT-001';
 const sampleReduction = createTicket(initialCouponTemplates[2], '定向发放', '13800000003');
 sampleReduction.id = sampleReduction.redeemCode = 'CN-DEMO-REDUCTION-001';
-export const initialIssueRecords = [samplePartial, sampleCode, sampleDiscount, sampleReduction];
-export const initialCouponStore: CouponStore = { version: 3, templates: initialCouponTemplates, tickets: initialIssueRecords, plans: [] };
+const sampleExchanged = createTicket(initialCouponTemplates[0], '定向发放', '13800000004');
+sampleExchanged.id = sampleExchanged.redeemCode = 'CN-DEMO-EXPERIENCE-003';
+sampleExchanged.usedTimes = sampleExchanged.totalUses;
+sampleExchanged.status = '已核销';
+export const initialIssueRecords = [samplePartial, sampleCode, sampleDiscount, sampleReduction, sampleExchanged];
+export const initialCouponStore: CouponStore = {
+  version: 3, templates: initialCouponTemplates, tickets: initialIssueRecords, plans: [], batches: [], orders: [],
+  accountRights: [{ id: 'RIGHT-DEMO-001', sourceTicketId: sampleExchanged.id, couponId: sampleExchanged.couponId, couponName: sampleExchanged.couponName, phone: sampleExchanged.phone, phoneDigits: sampleExchanged.phoneDigits!, productIds: [...sampleExchanged.productIds], totalUses: 2, remainingUses: 1, grantedAt: dateTimeOffset(-2), operator: '系统管理员', usageHistory: [{ orderNo: 'DEMO-ORDER-RIGHT-001', shootingPoint: '南长街', theme: '古韵照壁', productId: 'SP001', productName: shootingProducts[0].name, usedAt: dateTimeOffset(-1), orderAmount: shootingProducts[0].price, discountAmount: shootingProducts[0].price, payAmount: 0, operator: '用户下单', source: '小程序下单' }] }],
+};

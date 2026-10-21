@@ -406,85 +406,53 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="优惠券与发放记录-MVP-原型">优惠券与发放记录 MVP 原型</h1>
-<p>版本：v1.2｜日期：2026-10-20</p>
-<p>运营创建优惠券后，可在受控发放量内定向发券或生成第三方兑换码，并查询实际发放与兑换记录。</p>
+<h1 id="优惠券管理-PRD">优惠券管理 PRD</h1>
+<blockquote>
+<p>版本 v3.3 · 2026-10-21 · 本地 Mock 原型</p>
+</blockquote>
+<p>运营创建满减券、折扣券或体验券，在当前页发券并查看券码。</p>
+<h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
 <tr>
-<th>版本</th>
 <th>日期</th>
+<th>版本</th>
 <th>提出人</th>
 <th>变更</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>v1.2</td>
-<td>2026-10-20</td>
-<td>—</td>
-<td>增加券详情基础数据、渠道码售出与兑换演示、体验次数核销演示</td>
+<td>2026-10-21</td>
+<td>v3.3</td>
+<td>用户</td>
+<td>保留体验券；价格券仅保留满减、折扣；精简创建字段、列表和发券抽屉</td>
 </tr>
 <tr>
-<td>v1.1</td>
-<td>2026-10-20</td>
-<td>—</td>
-<td>增加发放总量、每人限领、余额拦截及满减金额校验</td>
-</tr>
-<tr>
-<td>v1.0</td>
-<td>—</td>
-<td>—</td>
-<td>初版</td>
+<td>2026-10-21</td>
+<td>v3.2</td>
+<td>用户</td>
+<td>确认自动备码、账户权益有效期及退款返券规则</td>
 </tr>
 </tbody>
 </table>
-<h2 id="目标">目标</h2>
-<p>复用现有系统的优惠券模板和单张发放记录流程，补充体验次数券及美团/抖音唯一兑换码导出。原型仅使用本地 Mock。</p>
-<h2 id="页面结构与操作路径">页面结构与操作路径</h2>
-<h3 id="优惠券列表">优惠券列表</h3>
-<ul>
-<li>按优惠券名称、拍摄点筛选；支持重置。列表顶部说明“新建优惠券 → 选择发放方式 → 在发放明细追踪”。</li>
-<li>列表显示名称、券权益、适用主题、适用拍摄点、领券后有效天数、发放占用、持券数/已使用持券数和状态；创建时间放在详情中。</li>
-<li>新建优惠券先选择价格优惠或体验权益；价格优惠再选择特价、满减、折扣或固定金额抵扣，体验权益填写固定体验次数。</li>
-<li>保留单一成本承担方，为后续结算提供归属依据。</li>
-<li>创建时设置发放总量与每人限领数量，均为正整数；每人限领不可超过发放总量。满减券的减免金额必须小于使用门槛。</li>
-<li>发放总量由直接发放的持券记录和已生成的第三方兑换码共同占用，包含已使用、已过期和已作废记录；兑换码兑换后形成的持券记录不重复计数，作废不返还额度。列表与详情显示占用数和剩余数；发完后状态显示「已发完」，停止新发券、生成兑换码及展示可用领取入口。</li>
-<li>每人限领按同一优惠券和手机号累计已发持券记录，包含已使用、已过期和已作废记录。定向发券超过限额时提示并阻止发放。历史券未配置限额时显示「不限（历史券）」。</li>
-<li>列表提供定向发券、停用/启用；停用后不再支持新的领取和定向发券，已发出的券及已导出的兑换码仍可在有效期内使用。点击券名查看规则、复制活动领取链接、查看二维码，并按渠道和数量导出第三方唯一兑换码。</li>
-<li>新建成功后展示可继续操作：定向发券、查看领取入口；体验权益券另提供第三方兑换码导出。三种操作互不排斥，可稍后从详情进入。</li>
-</ul>
-<h3 id="优惠券详情与记录入口">优惠券详情与记录入口</h3>
-<ul>
-<li>详情展示发放占用、进入用户账户的持券数、已使用持券数和持券使用率；使用率按至少成功核销一次的持券数除以总持券数计算，未兑换码不计入分母。</li>
-<li>详情中区分“持券记录”和“第三方兑换码”，不将未兑换码计入持券数量。</li>
-<li>提供独立的全局发放明细页，分为“持券记录”和“第三方兑换码”两个页签；从优惠券详情进入时，自动按当前优惠券及对应页签筛选。</li>
-<li>持券记录按优惠券名称/券码、手机号和状态筛选，显示用户、状态、核销订单、发放时间、有效期及核销拍摄点。只有待使用的券可以作废。</li>
-<li>第三方兑换码按优惠券名称/兑换码/批次号、渠道和状态筛选，展示每个码的渠道、批次、生成及售出时间、兑换用户、兑换时间和权益截止时间；未售出或待兑换的码可以作废。</li>
-<li>兑换码生成后为「未售出」，模拟渠道售出后为「待兑换」；只有待兑换码可模拟兑换。兑换后生成关联持券记录，按兑换时间加券规则 N 天计算截止时间；实际售出和兑换仍由渠道及用户端承接。</li>
-<li>体验次数券的持券记录展示已用/总次数；本地原型可按适用拍摄点和主题模拟逐次核销，同一订单号只接受一次，最后一次核销后转为「已核销」。</li>
-</ul>
-<h2 id="核心流程">核心流程</h2>
+<h2 id="页面与操作">页面与操作</h2>
 <ol>
-<li>运营创建优惠券模板，配置类型、额度/次数、适用范围、拍摄点、有效天数和成本承担方。</li>
-<li>运营从列表向手机号定向发券，或从券详情复制活动领取入口。</li>
-<li>美团/抖音售卖时，从券详情按渠道和数量导出唯一兑换码。</li>
-<li>用户领取或兑换后形成持券记录；运营可在“持券记录”页签查询用户券，在“第三方兑换码”页签查询尚未兑换的渠道码。</li>
+<li><strong>布局</strong>：筛选、创建与列表位于同一白卡，不重复显示列表标题；抽屉白色标题栏，主次按钮位于右下角。</li>
+<li><strong>类型</strong>：保留「满减券」「折扣券」「体验券」；移除固定金额抵扣券的创建入口。体验券仍可创建、定向发放与查看券码。</li>
+<li><strong>列表</strong>：券名称、券类型、适用范围、有效期、状态、发放概况及操作；名称下不显示编码，不显示独立优惠规则和使用/兑换列。发放概况同列标注总量、已发放、已领取。</li>
+<li><strong>创建</strong>：名称、类型、优惠配置或体验主题/套餐、有效期、发放总量、使用规则；「使用规则」为必填。体验主题支持搜索多选，不配置可兑换次数；新券按单次体验备码，历史券既有权益不重置。不显示每人限领、内部备注。</li>
+<li><strong>定向发放</strong>：右抽屉仅保留手机号输入及操作；支持换行、逗号等分隔，重复号码按输入条数分别发券，不去重。成功后可查看本次批次记录。</li>
+<li><strong>公开领取</strong>：价格券固定复用一个二维码与链接，仅查看、下载二维码和复制链接。体验券不显示公开领取操作。</li>
+<li><strong>查看券码</strong>：当前页抽屉展示券码、使用状态、领取用户、领取时间、截止时间、操作；操作为「详情」。支持券码/手机号及状态筛选，无权益到账时间、待体验/已体验/总次数、关联订单字段。</li>
+<li><strong>单码详情</strong>：展示单码、状态、用户、期限、二维码和领取链接，支持下载与复制，不提供生成入口。</li>
+<li><strong>编辑启停</strong>：编辑、停用/启用位于竖向主题色更多菜单。发生发放后核心规则只读，名称与使用规则可修改；期限、额度与启停口径引用《优惠券体系PRD.md》。</li>
 </ol>
-<h2 id="本期边界">本期边界</h2>
-<ul>
-<li>保留现有系统支持的特价券（固定 1 分钱）、满减券和折扣券配置；本期固定金额抵扣券、体验次数权益券各自只支持一个简单额度。价格券暂不新增更复杂的封顶、叠加等规则。</li>
-<li>有效期沿用现有系统的“领取后 N 天”，不增加批次起止日期。</li>
-<li>成本承担方每张券只选一个，不做比例分摊。</li>
-<li>不实现小程序下单选券、自动择优、退款返券、支付及财务结算；渠道售出、兑换和体验核销均为本地演示，不连接真实平台或服务订单。</li>
-<li>适用范围和拍摄点在原型中以本地选项模拟；新加的发放控制字段用于本次 MVP 规则演示。</li>
-<li>领取链接在原型中仅展示入口；实际领取、并发发放限额、订单用券校验与交易闭环仍需真实服务承接。</li>
-</ul>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券与发放记录-MVP-原型" data-toc-id="优惠券与发放记录-MVP-原型">优惠券与发放记录 MVP 原型</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#目标" data-toc-id="目标">目标</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#页面结构与操作路径" data-toc-id="页面结构与操作路径">页面结构与操作路径</a></span><ul class="toc-list"><li class="toc-item toc-h3"><span class="toc-row"><a href="#优惠券列表" data-toc-id="优惠券列表">优惠券列表</a></span></li><li class="toc-item toc-h3"><span class="toc-row"><a href="#优惠券详情与记录入口" data-toc-id="优惠券详情与记录入口">优惠券详情与记录入口</a></span></li></ul></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#核心流程" data-toc-id="核心流程">核心流程</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#本期边界" data-toc-id="本期边界">本期边界</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券管理-PRD" data-toc-id="优惠券管理-PRD">优惠券管理 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面与操作" data-toc-id="页面与操作">页面与操作</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

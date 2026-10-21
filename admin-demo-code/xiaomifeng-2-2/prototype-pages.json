@@ -10,16 +10,21 @@
       "order": 1
     },
     {
+      "id": "coupon-mini",
+      "title": "用户小程序演示",
+      "order": 2
+    },
+    {
       "id": "system",
       "title": "系统管理",
-      "order": 2
+      "order": 3
     }
   ],
   "pages": [
     {
       "id": "coupon-management",
-      "title": "优惠券列表",
-      "doc": "优惠券管理PRD.md",
+      "title": "优惠券管理",
+      "doc": "优惠券列表PRD.md",
       "hash": "#/coupons",
       "mode": "screen",
       "parent": "marketing",
@@ -28,11 +33,47 @@
     {
       "id": "coupon-issue-records",
       "title": "发放记录",
-      "doc": "优惠券发放明细PRD.md",
+      "doc": "发放记录PRD.md",
       "hash": "#/coupon-issues",
       "mode": "screen",
       "parent": "marketing",
       "order": 2
+    },
+    {
+      "id": "coupon-redemptions",
+      "title": "活动发券",
+      "doc": "活动发券PRD.md",
+      "hash": "#/coupon-redemptions",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 3
+    },
+    {
+      "id": "coupon-receive",
+      "title": "优惠券领取",
+      "doc": "优惠券领取PRD.md",
+      "hash": "#/coupon-receive",
+      "mode": "screen",
+      "parent": "coupon-mini",
+      "order": 1
+    },
+    {
+      "id": "coupon-my",
+      "title": "我的优惠券",
+      "doc": "我的优惠券PRD.md",
+      "hash": "#/coupon-my",
+      "mode": "screen",
+      "parent": "coupon-mini",
+      "order": 2
+    },
+    {
+      "id": "coupon-order",
+      "title": "下单使用与订单关联",
+      "doc": "下单使用PRD.md",
+      "hash": "#/coupon-order",
+      "mode": "screen",
+      "parent": "coupon-mini",
+      "order": 3
     },
     {
       "id": "operation-logs",
