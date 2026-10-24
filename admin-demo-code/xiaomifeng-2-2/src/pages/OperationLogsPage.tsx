@@ -1,4 +1,4 @@
-import { Button, DatePicker, Select, Table, Tooltip } from 'antd';
+import { Button, DatePicker, Select, Table, Tag, Tooltip } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
@@ -9,6 +9,8 @@ const operatorOptions = Array.from(new Map(initialOperationLogs.map((log) => [lo
   value: log.operatorId,
   label: `${log.operatorAccount}（${log.operator}）`,
 }])).values());
+
+const operationTypeTone = (type: OperationType) => ({ 新增: 'create', 编辑: 'edit', 删除: 'delete', 执行: 'execute' }[type]);
 
 function OperationContent({ log }: { log: OperationLog }) {
   const changeTexts = log.changes.map((change) => `${change.field}：${change.before === '未创建' || change.before === '—' ? change.after : `${change.before} → ${change.after}`}`);
@@ -37,9 +39,9 @@ function OperationContent({ log }: { log: OperationLog }) {
 const columns: TableColumnsType<OperationLog> = [
   { title: '操作时间', dataIndex: 'time', width: 180 },
   { title: '操作人', dataIndex: 'operatorAccount', width: 160 },
-  { title: '操作类型', dataIndex: 'operationType', width: 110 },
-  { title: '操作模块', dataIndex: 'module', width: 140 },
-  { title: '操作内容', key: 'content', render: (_, row) => <OperationContent log={row} /> },
+  { title: '操作类型', dataIndex: 'operationType', width: 110, render: (value: OperationType) => <Tag className={`operation-log-type-tag operation-log-type-tag-${operationTypeTone(value)}`}>{value}</Tag> },
+  { title: '操作模块', dataIndex: 'module', width: 140, render: (value: string) => <Tag className="operation-log-module-tag">{value}</Tag> },
+  { title: '操作内容', key: 'content', width: 420, render: (_, row) => <OperationContent log={row} /> },
 ];
 
 export default function OperationLogsPage() {
@@ -80,7 +82,7 @@ export default function OperationLogsPage() {
         </div>
       </section>
       <section className="operation-log-card admin-list-card">
-        <Table<OperationLog> rowKey="id" columns={columns} dataSource={rows} scroll={{ x: 1000 }} pagination={{ current: currentPage, onChange: setCurrentPage, pageSize: 10, showSizeChanger: false, showTotal: (total) => `共 ${total} 条记录` }} locale={{ emptyText: hasFilters ? <span>没有找到匹配的操作记录<Button type="link" onClick={reset}>清除筛选</Button></span> : '暂无操作记录' }} />
+        <Table<OperationLog> rowKey="id" columns={columns} dataSource={rows} scroll={{ x: 1010, y: 'calc(100vh - 320px)' }} pagination={{ current: currentPage, onChange: setCurrentPage, pageSize: 10, showSizeChanger: false, showTotal: (total) => `共 ${total} 条记录` }} locale={{ emptyText: hasFilters ? <span>没有找到匹配的操作记录<Button type="link" onClick={reset}>清除筛选</Button></span> : '暂无操作记录' }} />
       </section>
     </section>
   );

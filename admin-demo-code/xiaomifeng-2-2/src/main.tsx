@@ -4,8 +4,11 @@ import { App as AntApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
+import { applyAdminDesignVariables } from './design/system';
 import { adminTheme } from './theme';
 import './styles.css';
+
+applyAdminDesignVariables();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

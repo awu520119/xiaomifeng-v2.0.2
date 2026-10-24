@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>创建优惠券</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #303133;
+      --text-secondary: #606266;
+      --border: #e4e7ed;
+      --accent: #409eff;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    /* === 全局滚动条：窄 + 悬浮才显示 ===
+       覆盖范围：main.desc / aside.toc-wrap（各自独立滚动）、pre 代码块（横向）、
+       mermaid 容器（横向）、其他可能溢出的子元素。
+       Webkit：固定 6px 宽 + thumb 默认透明，悬浮显色；Firefox：scrollbar-width:thin + 颜色透明。 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 3px;
+      transition: background .2s ease;
+    }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .3); }
+    *:hover::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, .5); }
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, .3) transparent; }
+    .desc-layout {
+      /* flex 列：下 .desc-content（flex row）。
+         关键：height:100vh（不再是 min-height），把整个 desc 锁在 iframe 视口内；
+         这样 main.desc 和 aside.toc-wrap 才能各自成为独立的 overflow-y:auto 滚动容器，
+         互不影响（内容再长也只各自滚动，不会把大纲滚出可视区）。
+         大纲切换按钮已迁移到 viewer 右侧 panel-header（source of truth），
+         通过 postMessage('desc-toc-toggle') 通知本 iframe 切 toc-collapsed。 */
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      --toc-width: 300px;
+    }
+    .desc-content {
+      /* 容纳 main.desc + toc-divider + aside.toc-wrap 的 flex row。
+         position:relative 让 .toc-divider 的绝对定位锚定在 content 区。
+         align-items:stretch（默认值，显式写出）让两个子项都撑满整高；
+         min-height:0 让 flex 子项可以被压缩，进而触发各自的 overflow-y:auto。 */
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      position: relative;
+      flex: 1;
+      min-height: 0;
+    }
+    main.desc {
+      /* 描述内容：独立的纵向滚动条。 */
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      overflow-y: auto;
+    }
+    .desc-body {
+      /* 文档正文的左右间距：右栏默认 600px，16px 边距紧凑且不显宽。 */
+      padding: 16px;
+      overflow-x: hidden;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+    .desc-content > .toc-divider {
+      /* 不占 layout 空间：浮在 main 与 aside 之间作为视觉边界/分隔条。
+         定位锚定在 .desc-content（position:relative），所以不延伸到 sticky header 下面。 */
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: var(--toc-width, 300px);
+      width: 1px;
+      background: var(--border);
+      pointer-events: none;
+      z-index: 1;
+    }
+    aside.toc-wrap {
+      /* 大纲：独立的纵向滚动条。min-height:0 + flex 子项才能被压缩到撑满高度并出现内部滚动。
+         左右间距紧凑（12px 右 / 8px 左），大纲文字贴近右边界而不贴住左侧分隔线。 */
+      width: var(--toc-width, 300px);
+      flex-shrink: 0;
+      min-height: 0;
+      padding: 16px 12px 16px 8px;
+      overflow-y: auto;
+    }
+    /* 注意：toc-divider / aside.toc-wrap 都在 .desc-content 内部（不是 .desc-layout 直接子），
+       隐藏规则必须穿透一层。直接子选择器 '>' 之前在旧结构下生效，迁移到新结构后就匹配不上了。 */
+    .desc-layout.no-toc .desc-content > .toc-divider,
+    .desc-layout.no-toc .desc-content > aside.toc-wrap { display: none; }
+    .desc-layout.toc-collapsed .desc-content > .toc-divider,
+    .desc-layout.toc-collapsed .desc-content > aside.toc-wrap { display: none; }
+    /* toc-collapsed 状态只影响右栏显示，不再改 main 的 padding（main 现在通过 desc-body 自管 padding） */
+    main.desc h1, main.desc h2, main.desc h3, main.desc h4, main.desc h5, main.desc h6 {
+      color: var(--text);
+      margin: 16px 0 8px;
+      font-weight: 600;
+      scroll-margin-top: 16px;
+    }
+    main.desc h1 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    main.desc h2 { font-size: 17px; }
+    main.desc h3 { font-size: 15px; }
+    main.desc h4 { font-size: 14px; }
+    main.desc h5 { font-size: 13px; }
+    main.desc h6 { font-size: 13px; color: var(--text-secondary); }
+    main.desc p { margin: 6px 0; }
+    main.desc code {
+      background: #f0f2f5; padding: 1px 5px; border-radius: 3px;
+      font-size: 12.5px; word-break: break-word;
+    }
+    main.desc pre {
+      background: #f6f8fa; padding: 10px 12px; border-radius: 4px;
+      overflow-x: auto; max-width: 100%; white-space: pre-wrap; word-break: break-word;
+    }
+    main.desc pre code { background: transparent; padding: 0; white-space: pre-wrap; word-break: break-word; }
+    main.desc table { border-collapse: collapse; margin: 8px 0; width: 100%; table-layout: fixed; }
+    main.desc table th, main.desc table td {
+      border: 1px solid var(--border); padding: 4px 8px;
+      font-size: 13px; word-break: break-word;
+    }
+    main.desc table th { background: #fafafa; }
+    main.desc ul, main.desc ol { padding-left: 20px; margin: 6px 0; }
+    main.desc li { margin: 2px 0; }
+    main.desc blockquote {
+      border-left: 3px solid var(--accent); padding-left: 10px;
+      color: var(--text-secondary); margin: 8px 0; background: #f6f8fa;
+    }
+    main.desc a { color: var(--accent); text-decoration: none; word-break: break-all; }
+    main.desc a:hover { text-decoration: underline; }
+    main.desc img { max-width: 100%; height: auto; display: block; margin: 6px 0; }
+    main.desc .mermaid {
+      display: flex; justify-content: center; align-items: center;
+      margin: 10px 0; padding: 8px; background: #fafbfc; border-radius: 4px;
+      overflow-x: auto;
+    }
+    main.desc .mermaid svg { max-width: 100%; height: auto; }
+    main.desc hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* ===== 右侧 TOC：作为 aside.toc-wrap 的普通流内容；
+       滚动由外层 aside.toc-wrap（overflow-y:auto）承担，不再用 sticky/max-height。 ===== */
+    .toc-nav {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    /* 大纲头部：粘在 aside 顶端，"全部展开/折叠"按钮在大纲列表滚动时始终可见。
+       background 盖住下方滚上来的列表项，避免文字重叠。 */
+    .toc-header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--bg, #ffffff);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toc-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #909399;
+      letter-spacing: 0.5px;
+    }
+    .toc-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .toc-action {
+      background: transparent;
+      border: 0;
+      padding: 2px 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 3px;
+      font-size: 11px;
+      line-height: 1.4;
+      transition: color .15s ease, background .15s ease;
+    }
+    .toc-action:hover {
+      color: var(--accent);
+      background: #f5f7fa;
+    }
+
+    /* ===== TOC 列表项：参照 tree-row 视觉，去掉图标，加视觉层级 ===== */
+    .toc-list { list-style: none; padding: 0; margin: 0; }
+    .toc-list .toc-list { padding-left: 14px; margin: 2px 0; }
+    .toc-item { margin: 0; }
+    /* 默认折叠：H2+ 的子列表隐藏；H1 默认展开 */
+    .toc-item > .toc-list { display: none; }
+    .toc-item.is-expanded > .toc-list { display: block; }
+    .toc-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      user-select: none;
+      transition: background .15s ease;
+    }
+    .toc-row:hover { background: #f0f2f5; }
+    /* H1 给更多视觉权重：略大的 padding + 默认加粗 */
+    .toc-h1 > .toc-row {
+      padding-top: 6px;
+      padding-bottom: 6px;
+      font-weight: 500;
+    }
+    /* H4 视觉降级：稍浅颜色 */
+    .toc-h4 > .toc-row { color: var(--text-secondary); }
+    .toc-h4 > .toc-row > .toc-chevron { color: #c0c4cc; }
+    .toc-chevron {
+      width: 16px;
+      text-align: center;
+      color: #606266;
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background .15s ease, color .15s ease;
+    }
+    .toc-chevron::before { content: '▸'; }
+    .toc-item.is-expanded > .toc-row > .toc-chevron::before { content: '▾'; }
+    .toc-chevron:hover { background: #f0f2f5; color: var(--accent); }
+    .toc-row > a {
+      flex: 1;
+      min-width: 0;
+      color: var(--text);
+      text-decoration: none !important;
+      border-radius: 4px;
+      /* 每个节点最多一行：超长标题用 ... 截断（去掉原来的 word-break: break-word） */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* 兜底：用 nav.toc-nav 提高特异性 + !important 锁色，避免任何缓存或第三方 CSS 覆盖 */
+    nav.toc-nav .toc-row > a,
+    nav.toc-nav .toc-item > a {
+      color: var(--text) !important;
+      text-decoration: none !important;
+    }
+    nav.toc-nav .toc-row > a:link,
+    nav.toc-nav .toc-row > a:visited,
+    nav.toc-nav .toc-row > a:hover,
+    nav.toc-nav .toc-row > a:focus,
+    nav.toc-nav .toc-row > a:active,
+    nav.toc-nav .toc-item > a:link,
+    nav.toc-nav .toc-item > a:visited,
+    nav.toc-nav .toc-item > a:hover,
+    nav.toc-nav .toc-item > a:focus,
+    nav.toc-nav .toc-item > a:active {
+      color: var(--text) !important;
+      text-decoration: none !important;
+    }
+    /* 激活项：浅蓝底 + 蓝字 + 左侧色条 */
+    .toc-item.is-active > .toc-row {
+      background: #ecf5ff;
+      color: var(--accent);
+      font-weight: 500;
+      box-shadow: inset 2px 0 0 var(--accent);
+    }
+    .toc-item.is-active > .toc-row > .toc-chevron { color: var(--accent); }
+    nav.toc-nav .toc-item.is-active > .toc-row > a {
+      color: var(--accent) !important;
+    }
+
+    /* ===== 第一行 TOC 切换按钮：原嵌在第一个 heading 后面，已迁到 viewer 顶栏控制 =====
+       保留 .toc-heading-row 仅作未来扩展位（无视觉影响） */
+    .toc-heading-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .toc-heading-row > h1,
+    .toc-heading-row > h2,
+    .toc-heading-row > h3,
+    .toc-heading-row > h4,
+    .toc-heading-row > h5,
+    .toc-heading-row > h6 {
+      flex: 1;
+      min-width: 0;
+      margin-right: 0;
+    }
+/* desc-enhance.css — 描述区增强样式（代码块头部 + 复制图标 + 复制反馈 toast） */
+main.desc pre { position: relative; }
+
+/* ===== 代码块：头部行 + 悬浮复制图标 ===== */
+main.desc pre.desc-code {
+  padding: 0;
+  /* 上方留给 head 行 */
+  padding-top: 32px;
+  background: #f6f8fa;
+}
+
+main.desc .desc-code-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 12px;
+  background: #eef1f4;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom: 1px solid #e2e6eb;
+  font-size: 12px;
+  color: var(--text-secondary, #606266);
+  user-select: none;
+}
+
+main.desc .desc-lang {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  text-transform: lowercase;
+}
+
+main.desc .desc-copy-trigger {
+  /* 复制图标按钮：默认半透明，悬浮 pre 时清晰可见 */
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s ease, color .15s ease, background .15s ease;
+}
+main.desc pre.desc-code:hover .desc-copy-trigger,
+main.desc .desc-copy-trigger:focus-visible {
+  opacity: 1;
+}
+main.desc .desc-copy-trigger:hover {
+  background: #dde3ea;
+  color: var(--accent, #409eff);
+}
+
+/* 复制反馈 toast：浮在描述 iframe 视口顶部约 50px 居中（fixed，不随滚动跑） */
+main.desc .desc-copy-toast {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translate(-50%, -8px); /* 初始上移 8px，准备下落入场 */
+  background: #1f1f1f;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  padding: 10px 18px;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 9999;
+}
+main.desc .desc-copy-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+main.desc pre.desc-code > code {
+  display: block;
+  padding: 12px;
+  /* 头行顶起整个 pre 的内边距 */
+  margin: 0;
+  background: #f6f8fa;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* ===== 描述区布局 + TOC 样式：统一定义在 build_desc.py 的 _HTML_TEMPLATE，
+   本文件只保留 desc 增强层（代码块/复制/toast），避免双份事实源。 ===== */
+  </style>
+</head>
+<body>
+  <div class="desc-layout toc-collapsed has-toc">
+    <div class="desc-content">
+      <main class="desc">
+        <div class="desc-body">
+<h1 id="创建优惠券-PRD">创建优惠券 PRD</h1>
+<blockquote>
+<p>版本 v1.0　·　日期 2026-10-22</p>
+</blockquote>
+<p><em>需求场景：运营人员创建满减券、折扣券或体验券，填写适用范围、领取后有效天数、总量和使用规则。</em></p>
+<h2 id="变更记录">变更记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>变更内容</th>
+<th>提出人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-10-22</td>
+<td>初版</td>
+<td>用户</td>
+</tr>
+</tbody>
+</table>
+<h2 id="一创建优惠券权限说明">一、创建优惠券—权限说明</h2>
+<ol>
+<li><strong>页面入口</strong>：优惠券列表点击「创建优惠券」，打开右侧表单。<ul>
+<li><strong>权限</strong>：当前账号须具有创建优惠券功能权限。</li>
+<li><strong>发券账号</strong>：创建保存后，通过<a href="优惠券详情PRD-20261022.md">《优惠券详情 PRD》</a>的「配置权限」维护。</li>
+</ul>
+</li>
+</ol>
+<h2 id="二创建优惠券基础信息">二、创建优惠券—基础信息</h2>
+<ol>
+<li>
+<p><strong>优惠券名称</strong>：文本输入，必填，最多 50 字。</p>
+<ul>
+<li>保存时去除首尾空格；为空或仅含空格时不可保存。</li>
+</ul>
+</li>
+<li>
+<p><strong>优惠券类型</strong>：单选，必填，默认「满减券」。</p>
+<ul>
+<li><strong>可选类型</strong>：「满减券」「折扣券」「体验券」。</li>
+<li>切换类型后，展示该类型对应的优惠规则字段。</li>
+</ul>
+</li>
+</ol>
+<h2 id="三创建优惠券优惠规则">三、创建优惠券—优惠规则</h2>
+<ol>
+<li>
+<p><strong>使用门槛</strong>：满减券、折扣券展示，数字输入，必填，单位元，最多两位小数，默认 100 元。</p>
+<ul>
+<li><strong>满减券</strong>：金额须大于 0。</li>
+<li><strong>折扣券</strong>：金额不小于 0；0 表示无门槛。</li>
+</ul>
+</li>
+<li>
+<p><strong>满减金额</strong>：仅满减券展示，数字输入，必填，单位元，最多两位小数，默认 20 元。</p>
+<ul>
+<li><strong>校验</strong>：须大于 0，且小于使用门槛；不满足时不可保存。</li>
+</ul>
+</li>
+<li>
+<p><strong>折扣</strong>：仅折扣券展示，数字输入，必填，默认 8 折。</p>
+<ul>
+<li><strong>范围</strong>：0.1 至 9.9 折，最多一位小数。</li>
+</ul>
+</li>
+<li>
+<p><strong>可用范围</strong>：满减券、折扣券展示，单选，必填，默认「全部可用」。</p>
+<ul>
+<li><strong>全部可用</strong>：适用于全部拍摄点和主题。</li>
+<li><strong>指定主题</strong>：展示「适用拍摄点」「适用主题」，两项均必填。</li>
+</ul>
+</li>
+<li>
+<p><strong>适用拍摄点</strong>：体验券、指定主题的价格券展示，下拉多选，必填。</p>
+<ul>
+<li><strong>默认值</strong>：「全部拍摄点」。</li>
+<li><strong>可选范围</strong>：保留「全部拍摄点」和具体拍摄点；「全部拍摄点」与具体点互斥。</li>
+</ul>
+</li>
+<li>
+<p><strong>适用主题</strong>：体验券、指定主题的价格券展示，可搜索多选，必填。</p>
+<ul>
+<li><strong>可选范围</strong>：仅展示已选拍摄点下的主题；未选择拍摄点时不可选择主题。</li>
+<li><strong>联动清理</strong>：修改拍摄点后更新候选项，清除不再适用的已选主题。</li>
+</ul>
+</li>
+<li>
+<p><strong>体验券权益</strong>：新体验券为单次体验，不配置体验次数。</p>
+<ul>
+<li>历史多次体验券保留既有权益，编辑时不重置。</li>
+<li>不配置每人限领和内部备注。</li>
+</ul>
+</li>
+</ol>
+<h2 id="四创建优惠券有效期与发放说明">四、创建优惠券—有效期与发放说明</h2>
+<ol>
+<li>
+<p><strong>有效期</strong>：数字输入，必填，默认 30 天。</p>
+<ul>
+<li><strong>输入范围</strong>：1 至 3650 的正整数，控件展示「领取后 {有效天数} 天可用」。</li>
+<li><strong>起算与截止</strong>：引用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」中的有效期规则。</li>
+</ul>
+</li>
+<li>
+<p><strong>发放总量</strong>：数字输入，必填，单位张，默认 100 张。</p>
+<ul>
+<li><strong>体验券</strong>：1 至 10000 的正整数。</li>
+<li><strong>满减券、折扣券</strong>：1 至 100000 的正整数。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用规则</strong>：多行文本，必填，最多 1000 字。</p>
+<ul>
+<li><strong>字数提示</strong>：展示已输入字数和上限。</li>
+<li><strong>校验</strong>：为空或仅含空格时不可保存。</li>
+</ul>
+</li>
+</ol>
+<h2 id="五创建优惠券保存与编辑说明">五、创建优惠券—保存与编辑说明</h2>
+<ol>
+<li>
+<p><strong>保存</strong>：必填项和字段校验全部通过后，创建优惠券并记录创建时间。</p>
+<ul>
+<li><strong>初始状态</strong>：新券默认未暂停，按<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」展示模板状态。</li>
+<li><strong>体验券备码</strong>：按总量自动准备独立券码及连续体验券编号，无须手动生成。</li>
+<li><strong>成功结果</strong>：关闭表单，更新优惠券列表。</li>
+<li><strong>校验失败</strong>：保留已填写内容，指出对应字段错误，不保存部分配置。</li>
+</ul>
+</li>
+<li>
+<p><strong>取消</strong>：点击「取消」或关闭表单，不保存本次输入。</p>
+</li>
+<li>
+<p><strong>编辑优惠券</strong>：从列表「编辑」进入时复用本表单。</p>
+<ul>
+<li><strong>可编辑字段</strong>：优惠券名称、使用规则。</li>
+<li><strong>只读字段</strong>：券类型、优惠规则、范围、有效期、发放总量回显原值并灰显，保存时保持原配置。</li>
+</ul>
+</li>
+</ol>
+        </div>
+      </main>
+      <div class="toc-divider" data-toc-divider></div>
+      <aside class="toc-wrap">
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#创建优惠券-PRD" data-toc-id="创建优惠券-PRD">创建优惠券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一创建优惠券权限说明" data-toc-id="一创建优惠券权限说明">一、创建优惠券—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二创建优惠券基础信息" data-toc-id="二创建优惠券基础信息">二、创建优惠券—基础信息</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三创建优惠券优惠规则" data-toc-id="三创建优惠券优惠规则">三、创建优惠券—优惠规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四创建优惠券有效期与发放说明" data-toc-id="四创建优惠券有效期与发放说明">四、创建优惠券—有效期与发放说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五创建优惠券保存与编辑说明" data-toc-id="五创建优惠券保存与编辑说明">五、创建优惠券—保存与编辑说明</a></span></li></ul></li></ul></nav>
+      </aside>
+    </div>
+  </div>
+<script>
+/* desc-enhance.js — 描述区增强。
+ *
+ * 由 build_desc.py 把这段 <script> 内联到 desc/<id>.html 的 </body> 之前。
+ *
+ * 行为：
+ *   - <pre><code>：在 <pre> 内插入头部行（语言 chip + 悬浮复制图标），
+ *     鼠标悬浮 pre 才显示复制图标，点复制全部代码 + 顶部 toast 反馈。
+ *   - 右侧 TOC：固定宽度 300px（不可拖拽）；点击平滑滚动到对应 heading；
+ *     滚动时高亮当前 heading 对应项。
+ *   - 大纲状态完全由父 viewer 控制（viewer 是 source of truth）；本 iframe 只响应
+ *     'desc-toc-toggle' 命令并把 layout 切到 toc-collapsed。
+ *
+ * 大纲初始恒折叠：不读 localStorage（旧版本记忆已废弃），避免大纲在窄 iframe 里
+ * 显示出来挤占文档宽度。
+ */
+(function () {
+  'use strict';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const COPY_ICON_PATH = 'M9 9h10v10H9zM5 5h10V3H5a2 2 0 0 0-2 2v10h2z';
+
+  function enhance() {
+    // 1) 代码块头部 + 复制图标
+    document.querySelectorAll('main.desc pre > code').forEach(enhanceCodeBlock);
+
+    // 2) 右侧 TOC：点击滚动 + 滚动时高亮当前 heading
+    setupToc();
+  }
+
+  function setupToc() {
+    const layout = document.querySelector('.desc-layout');
+    if (!layout) return;
+
+    const tocLinks = layout.querySelectorAll('.toc-nav a[href^="#"]');
+
+    // 默认折叠；父 viewer 接管后通过 postMessage 切换。
+    restoreTocState(layout);
+
+    // 父 viewer 右侧 panel-header 的大纲按钮 → postMessage('desc-toc-toggle') →
+    // 本 iframe 切 layout.toc-collapsed。**viewer 是 source of truth**，本 iframe 只执行。
+    window.addEventListener('message', (ev) => {
+      // 只接受父 viewer 的命令（与 viewer 端 isTrustedFrame 的安全模型对齐）
+      if (ev.source !== window.parent) return;
+      const data = ev.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'desc-toc-toggle' || typeof data.visible !== 'boolean') return;
+      layout.classList.toggle('toc-collapsed', !data.visible);
+    });
+
+    // 大纲头部"展开/折叠全部"按钮
+    const toggleAllBtn = layout.querySelector('.toc-toggle-all');
+    // 用纯 DOM 遍历替代 :has()（:has() 在 Chrome<105 / Safari<15.4 / Firefox<121 会抛 SyntaxError）
+    const expandableItems = () => Array.from(
+      layout.querySelectorAll('.toc-item')
+    ).filter((item) => Array.from(item.children).some((el) => el.classList.contains('toc-list')));
+    const allExpanded = () => {
+      const items = expandableItems();
+      if (!items.length) return false;
+      return items.every((item) => item.classList.contains('is-expanded'));
+    };
+    const updateToggleAllText = () => {
+      if (!toggleAllBtn) return;
+      toggleAllBtn.textContent = allExpanded() ? '全部折叠' : '全部展开';
+    };
+    if (toggleAllBtn) {
+      toggleAllBtn.addEventListener('click', () => {
+        const shouldExpand = !allExpanded();
+        expandableItems().forEach((item) => {
+          item.classList.toggle('is-expanded', shouldExpand);
+        });
+        updateToggleAllText();
+      });
+      updateToggleAllText();
+    }
+
+    // 单项折叠 / 展开（chevron 点击）
+    layout.querySelectorAll('[data-toc-chevron]').forEach((chevron) => {
+      chevron.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const item = chevron.closest('.toc-item');
+        if (item && Array.from(item.children).some((el) => el.classList.contains('toc-list'))) {
+          item.classList.toggle('is-expanded');
+          updateToggleAllText();
+        }
+      });
+    });
+
+    // 没有 toc 链接就直接结束
+    if (!tocLinks.length) return;
+
+    // 点击 → 在 main.desc 内平滑滚动 + 同步 URL hash
+    const main = layout.querySelector('main.desc');
+    if (main) {
+      tocLinks.forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const id = link.getAttribute('data-toc-id') || link.getAttribute('href').slice(1);
+          const target = id && document.getElementById(id);
+          if (!target) return;
+          e.preventDefault();
+          // offset 16 与 CSS scroll-margin-top 保持一致
+          const mainRect = main.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const desired = (targetRect.top - mainRect.top) + main.scrollTop - 16;
+          main.scrollTo({ top: desired, behavior: 'smooth' });
+          // 保留当前 entry 的 state（避免把顶层 {node} 状态覆盖成 null，后退/前进时失效）
+          try { history.replaceState(window.history.state, '', '#' + id); } catch (_) {}
+        });
+      });
+    }
+
+    // 滚动监听 → 高亮当前 heading
+    const headings = Array.from(
+      document.querySelectorAll('main.desc h1[id], main.desc h2[id], main.desc h3[id], main.desc h4[id], main.desc h5[id], main.desc h6[id]')
+    );
+    if (!headings.length || !main) return;
+
+    const idToLink = new Map();
+    tocLinks.forEach((link) => {
+      const id = link.getAttribute('data-toc-id') || link.getAttribute('href').slice(1);
+      if (id) idToLink.set(id, link);
+    });
+
+    const setActive = (link, on) => {
+      if (!link) return;
+      const li = link.closest('.toc-item');
+      if (li && li.classList) li.classList.toggle('is-active', !!on);
+    };
+
+    // scroll-margin-top 把标题锚定在容器顶 16px；getBoundingClientRect 有 subpixel 偏差，
+    // 阈值必须留容差，否则滚动定位后的 16.5px 会被判为「未到达」，高亮停在上一个标题。
+    const cssTopOfHeading = 16;
+    const headingTolerance = 4;
+    const updateActive = () => {
+      const mainRect = main.getBoundingClientRect();
+      const containerTop = mainRect.top;
+      // 已滚到底时最后一个标题必然应高亮；否则文档末尾章节不足一屏时，
+      // 它的 heading 永远滚不到容器顶阈值，会回落到选中上一个节点。
+      const atBottom = main.scrollTop + main.clientHeight >= main.scrollHeight - 2;
+      let activeId = '';
+      if (atBottom && headings.length) {
+        activeId = headings[headings.length - 1].id;
+      } else {
+        // 初始不高亮任何项：仅当某标题滚到容器顶附近才高亮（避免开头有引导段时误选中首标题）
+        for (const h of headings) {
+          if (h.getBoundingClientRect().top - containerTop <= cssTopOfHeading + headingTolerance) {
+            activeId = h.id;
+          } else {
+            break;
+          }
+        }
+      }
+      tocLinks.forEach((l) => setActive(l, false));
+      setActive(idToLink.get(activeId), true);
+    };
+
+    let raf = 0;
+    main.addEventListener(
+      'scroll',
+      () => {
+        if (!raf) raf = requestAnimationFrame(() => { updateActive(); raf = 0; });
+      },
+      { passive: true }
+    );
+    // 不在初始化时立即调用 updateActive()：DOMContentLoaded 阶段布局未完全定型，
+    // getBoundingClientRect 会算错标题位置（曾误选中末尾标题）。高亮只随滚动触发，
+    // 打开页面初始无高亮，用户滚动到某章节后正确高亮。
+  }
+
+  function restoreTocState(layout) {
+    // 大纲默认隐藏：viewer 是 source of truth，本 iframe 启动时始终折叠（不占宽度）。
+    // 显式展示大纲由父 viewer 通过 'desc-toc-toggle' 消息切换。
+    layout.classList.add('toc-collapsed');
+  }
+
+  function enhanceCodeBlock(codeEl) {
+    const pre = codeEl.parentElement;
+    if (!pre || pre.dataset.enhanceBound === '1') return;
+    pre.dataset.enhanceBound = '1';
+    pre.classList.add('desc-code');
+    // position:relative 已在 CSS 定义（main.desc pre），不再内联设置
+
+    // 抽语言：class="language-bash" → "bash"；类名不存在则显示 'text'
+    let lang = '';
+    codeEl.className && codeEl.className.split(/\s+/).forEach((c) => {
+      if (c.startsWith('language-')) lang = c.slice('language-'.length);
+    });
+
+    const head = document.createElement('div');
+    head.className = 'desc-code-head';
+
+    const langChip = document.createElement('span');
+    langChip.className = 'desc-lang';
+    langChip.textContent = lang || 'text';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'desc-copy-trigger';
+    copyBtn.setAttribute('aria-label', '复制代码');
+    copyBtn.title = '复制代码';
+
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 20 20');
+    svg.setAttribute('width', '14');
+    svg.setAttribute('height', '14');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = `<path fill="currentColor" d="${COPY_ICON_PATH}"/>`;
+    copyBtn.appendChild(svg);
+
+    copyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      copy(copyBtn, codeEl.innerText);
+    });
+
+    head.appendChild(langChip);
+    head.appendChild(copyBtn);
+    pre.insertBefore(head, codeEl);
+  }
+
+  async function copy(btn, text) {
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    };
+    let ok = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (_) { ok = false; }
+    }
+    if (!ok) ok = fallback();
+    showToast(ok ? '复制成功 ✓' : '复制失败');
+  }
+
+  function showToast(text) {
+    const main = document.querySelector('main.desc');
+    if (!main) return;
+    const old = main.querySelector('.desc-copy-toast');
+    if (old) old.remove();
+    const toast = document.createElement('span');
+    toast.className = 'desc-copy-toast';  // 成功/失败统一黑底，语义由文案承载
+    toast.textContent = text;
+    main.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => toast.remove(), 400);
+    }, 1400);
+  }
+
+  function ready(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+
+  ready(enhance);
+})();
+
+  </script>
+</body>
+</html>

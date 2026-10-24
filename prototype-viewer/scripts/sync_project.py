@@ -121,8 +121,23 @@ def sync(project: Path, verbose: bool = False) -> None:
         + json.dumps(data, ensure_ascii=False, indent=2) + ";\n",
         encoding="utf-8",
     )
-    # 说明 HTML 统一放在 desc/<节点 id>.html；不清理手动文件，发布器只清理自己记录的产物。
+    # 说明 HTML 属于同步生成物，清理范围只限本清单登记过的文件。
+    generated_path = project / ".generated-desc.json"
+    previous_generated: set[str] = set()
+    if generated_path.is_file():
+        try:
+            previous_generated = set(json.loads(generated_path.read_text(encoding="utf-8")).get("ids", []))
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            fail(f"{generated_path} 格式无效；请先检查后再同步")
     build_desc.build_all(project, clean=False, quiet=not verbose)
+    current_generated = {node["id"] for node in iter_nodes(combined) if node.get("mdPath")}
+    for stale_id in previous_generated - current_generated:
+        if re.fullmatch(r"[a-z0-9][a-z0-9-]*", stale_id):
+            (project / "desc" / f"{stale_id}.html").unlink(missing_ok=True)
+    generated_path.write_text(
+        json.dumps({"ids": sorted(current_generated)}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     result = subprocess.run([sys.executable, str(SCRIPT_DIR / "validate.py"), str(project), "--strict"], check=False)
     if result.returncode != 0:
         fail("同步后的严格校验未通过")

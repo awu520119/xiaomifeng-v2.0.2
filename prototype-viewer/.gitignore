@@ -1,1 +1,3 @@
 share/
+.venv/
+shell/node_modules/

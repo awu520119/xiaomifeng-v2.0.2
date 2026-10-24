@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "colors": {
+    "primary": "#2776FF",
+    "text": "#303338",
+    "textSecondary": "#696C70",
+    "textPlaceholder": "#B3B8BF",
+    "border": "#D7DAE0",
+    "split": "#E9EBF0",
+    "background": "#F2F4F7",
+    "surface": "#FFFFFF",
+    "error": "#FF4D4F",
+    "success": "#52C41A",
+    "navigationBackground": "#000000",
+    "navigationSubmenuBackground": "#0C0D0D",
+    "navigationText": "rgba(255, 255, 255, 0.8)",
+    "navigationSelectedBackground": "#3F86FF",
+    "navigationSelectedText": "#FFFFFF",
+    "tableHeaderBackground": "#FAFAFA"
+  },
+  "typography": {
+    "fontFamily": "'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+    "fontSize": 14,
+    "lineHeight": 1.5714285714
+  },
+  "layout": {
+    "sidebarWidth": 220,
+    "sidebarCollapsedWidth": 80,
+    "headerHeight": 58,
+    "contentPadding": 24
+  },
+  "components": {
+    "borderRadius": 2,
+    "controlHeight": 32,
+    "menuItemHeight": 42,
+    "menuItemBorderRadius": 3,
+    "tableCellPaddingBlock": 13,
+    "tableCellPaddingInline": 12,
+    "paginationItemSize": 32,
+    "drawerPadding": 24
+  }
+}

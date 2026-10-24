@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { CouponStore } from '../mock/coupons';
 import { resolveCouponCode } from '../mock/couponFlow';
-import { canIssueCoupon, couponLocalTime, createTicket, effectiveCouponStatus, maskPhone, receiveLimitError, shootingProducts } from '../mock/coupons';
+import { canIssueCoupon, couponExpiryAt, couponLocalTime, createTicket, effectiveCouponStatus, maskPhone, receiveLimitError, shootingProducts } from '../mock/coupons';
 type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>> };
 export default function CouponReceivePage({ store, setStore }: Props) {
   const [params] = useSearchParams(); const navigate = useNavigate(); const planId = params.get('planId');
@@ -28,22 +28,30 @@ export default function CouponReceivePage({ store, setStore }: Props) {
         if (plan!.allowedPhones.length && !plan!.allowedPhones.includes(values.phone)) { message.error('该手机号不在本次允许领取名单中'); return; }
         if (!canIssueCoupon(coupon, store.tickets)) { message.error('该券已停用、失效或发放名额已满'); return; }
         if (limit) { message.error(limit); return; }
-        const ticket = { ...createTicket(coupon, '扫码领取', values.phone), claimPlanId: plan!.id };
-        setStore((current) => ({ ...current, tickets: [ticket, ...current.tickets] })); setResultId(ticket.id);
+        if (coupon.kind === '体验权益券') {
+          const code = store.tickets.find((row) => row.couponId === coupon.id && !row.phoneDigits && row.status !== '已作废');
+          if (!code) { message.error('体验券已领完'); return; }
+          const issuedAt = couponLocalTime();
+          setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === code.id ? { ...row, phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, source: '扫码领取', claimPlanId: plan!.id, status: '待使用' } : row) })); setResultId(code.id);
+        } else {
+          const ticket = { ...createTicket(coupon, '扫码领取', values.phone), claimPlanId: plan!.id };
+          setStore((current) => ({ ...current, tickets: [ticket, ...current.tickets] })); setResultId(ticket.id);
+        }
       } else {
         if (!codeTicket) { message.error('券码不存在'); return; }
         if (codeTicket.phoneDigits) { if (codeTicket.phoneDigits === values.phone) { setResultId(codeTicket.id); return; } message.error('该券码已被其他用户领取'); return; }
         if (coupon.status === '已停用') { message.error('该体验券已停用领取'); return; }
-        if (['已作废', '已过期', '已核销'].includes(effectiveCouponStatus(codeTicket))) { message.error('该券码已失效或作废，不能兑换'); return; }
+        if (['已作废', '已过期', '已使用', '已使用（退款）'].includes(effectiveCouponStatus(codeTicket))) { message.error('该券码已失效或作废，不能领取'); return; }
         if (limit) { message.error(limit); return; }
-        setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === codeTicket.id ? { ...row, phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt: couponLocalTime(), status: '待使用' } : row) })); setResultId(codeTicket.id);
+        const issuedAt = couponLocalTime();
+        setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === codeTicket.id ? { ...row, phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, status: '待使用' } : row) })); setResultId(codeTicket.id);
       }
       message.destroy();
     } finally { setBusy(false); }
   };
   return <main className="coupon-receive-page"><section className="coupon-receive-card"><Typography.Title level={3}>{planId ? '扫码领取优惠券' : '体验券领取'}</Typography.Title>
-    {result ? <><Result status="success" title={planId ? '领取成功' : '领取成功'} subTitle={`优惠券已发给 ${result.phone}`} /><Descriptions column={1} size="small" items={[{ key: 'name', label: '优惠券', children: result.couponName }, { key: 'code', label: '唯一券号', children: result.redeemCode }, { key: 'rule', label: '优惠内容', children: result.benefit }, { key: 'status', label: '状态', children: <Tag>{effectiveCouponStatus(result)}</Tag> }, { key: 'start', label: '生效日期', children: result.startsAt }, { key: 'end', label: '失效日期', children: result.expiresAt }]} />{result.couponKind === '体验权益券' && <Typography.Paragraph type="secondary">领取后请出示券码，由工作人员核销并将体验权益发到账户。</Typography.Paragraph>}<Space><Button onClick={() => { setResultId(null); }}>继续{planId ? '领取' : '领取'}</Button><Button type="primary" onClick={() => navigate(`/coupon-my?phone=${result.phoneDigits}`)}>查看我的优惠券</Button></Space></> : <>
-      {coupon && <div className="coupon-receive-info"><Typography.Text strong>{coupon.name}</Typography.Text><p>{coupon.benefit}</p>{coupon.kind === '体验权益券' && <p>可兑换：{shootingProducts.filter((row) => coupon.productIds.includes(row.id)).map((row) => row.name).join('、')}</p>}<p>生效：{coupon.startsAt}<br />失效：{coupon.endsAt}</p>{plan?.allowedPhones.length ? <Tag>仅指定手机号可领取</Tag> : null}</div>}
+    {result ? <><Result status="success" title={planId ? '领取成功' : '领取成功'} subTitle={`优惠券已发给 ${result.phone}`} /><Descriptions column={1} size="small" items={[{ key: 'name', label: '优惠券', children: result.couponName }, { key: 'code', label: '唯一券号', children: result.redeemCode }, { key: 'rule', label: '优惠内容', children: result.benefit }, { key: 'status', label: '状态', children: <Tag>{effectiveCouponStatus(result)}</Tag> }, { key: 'claimedAt', label: '领取时间', children: result.issuedAt }, { key: 'end', label: '截止时间', children: result.expiresAt }]} />{result.couponKind === '体验权益券' && <Typography.Paragraph type="secondary">领取后请出示券码，由工作人员确认后将体验权益发到账户。</Typography.Paragraph>}<Space><Button onClick={() => { setResultId(null); }}>继续{planId ? '领取' : '领取'}</Button><Button type="primary" onClick={() => navigate(`/coupon-my?phone=${result.phoneDigits}`)}>查看我的优惠券</Button></Space></> : <>
+      {coupon && <div className="coupon-receive-info"><Typography.Text strong>{coupon.name}</Typography.Text><p>{coupon.benefit}</p>{coupon.kind === '体验权益券' && <p>可兑换：{shootingProducts.filter((row) => coupon.productIds.includes(row.id)).map((row) => row.name).join('、')}</p>}<p>有效期：领取后 {coupon.validityDays} 天可用</p>{plan?.allowedPhones.length ? <Tag>仅指定手机号可领取</Tag> : null}</div>}
       {planId && !plan ? <Result status="warning" title="领取入口不存在" subTitle="请向活动方获取正确的领取链接" /> : <Form form={form} layout="vertical" onFinish={receive} initialValues={{ code: params.get('code') || '' }}>
         <Form.Item name="phone" label="手机号" rules={[{ required: true, message: '请输入手机号' }, { pattern: /^1\d{10}$/, message: '请输入11位手机号' }]}><Input maxLength={11} placeholder="输入领取人的手机号" /></Form.Item>
         {!planId && <Form.Item name="code" label="唯一券号 / 兑换码" rules={[{ required: true, whitespace: true, message: '请输入兑换码' }]}><Input readOnly={Boolean(params.get('code'))} placeholder="输入券码，或扫描券码二维码" /></Form.Item>}

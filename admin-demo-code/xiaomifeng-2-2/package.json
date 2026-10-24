@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "check": "tsc --noEmit",
-    "build": "tsc --noEmit && vite build",
+    "design:check": "node design/schema.mjs",
+    "build": "npm run design:check && tsc --noEmit && vite build",
+    "export:html": "npm run build && node scripts/export-html.mjs",
+    "test": "npm run test:coupon",
     "publish:viewer": "npm run build && node scripts/publish-to-viewer.mjs",
     "test:coupon": "node scripts/test-coupon-flow.mjs"
   },

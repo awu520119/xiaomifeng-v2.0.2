@@ -70,20 +70,14 @@ def main() -> int:
         parser.error(f"输出已存在：{output}；确认覆盖请加 --force")
 
     data = load_nav(project)
-    app_path = project / "react-app/dist/index.html"
-    app_html = read(app_path) if app_path.is_file() else ""
     pages: dict[str, dict[str, str]] = {}
     descs: dict[str, str] = {}
-    redirect_pattern = re.compile(r"location\.replace\(['\"]\.\./react-app/dist/index\.html(#[-\w/]+)?['\"]\)")
 
     for node in iter_leaf_nodes(data["tree"]):
         html_path = node.get("htmlPath")
         if html_path:
             page_html = read(project / html_path)
-            match = redirect_pattern.search(page_html)
-            if match and not app_html:
-                raise FileNotFoundError(f"页面 {node['id']} 依赖 React 示例，请先构建 react-app")
-            pages[html_path] = {"reactHash": match.group(1) or ""} if match else {"srcdoc": page_html}
+            pages[html_path] = {"srcdoc": page_html}
         if node.get("mdPath"):
             descs[node["id"]] = inline_desc_assets(
                 read(project / "desc" / f"{node['id']}.html"), project
@@ -91,10 +85,8 @@ def main() -> int:
 
     html = read(project / "index.html")
     html = inline_tag(html, "style", "assets/viewer.css", read(project / "assets/viewer.css"))
-    html = inline_tag(html, "script", "assets/vue.global.prod.js", read(project / "assets/vue.global.prod.js"))
     html = inline_tag(html, "script", "nav.js", f"window.NAV_DATA = {safe_json(data)};")
     embedded = (
-        "window.PROTOTYPE_EMBEDDED_REACT_APP_HTML = " + safe_json(app_html) + ";\n"
         "window.PROTOTYPE_EMBEDDED_PAGES = " + safe_json(pages) + ";\n"
         "window.PROTOTYPE_EMBEDDED_DESCS = " + safe_json(descs) + ";"
     )

@@ -10,79 +10,195 @@
       "order": 1
     },
     {
-      "id": "coupon-mini",
-      "title": "用户小程序演示",
+      "id": "orders",
+      "title": "订单管理",
       "order": 2
     },
     {
       "id": "system",
       "title": "系统管理",
       "order": 3
+    },
+    {
+      "id": "mini",
+      "title": "用户端小程序",
+      "order": 4
     }
   ],
   "pages": [
     {
       "id": "coupon-management",
-      "title": "优惠券管理",
-      "doc": "优惠券列表PRD.md",
-      "hash": "#/coupons",
+      "title": "优惠券列表",
+      "doc": "优惠券列表PRD-20261022.md",
+      "hash": "#/demo/export/coupon-list",
       "mode": "screen",
       "parent": "marketing",
       "order": 1
     },
     {
-      "id": "coupon-issue-records",
+      "id": "coupon-create",
+      "title": "创建优惠券",
+      "doc": "创建优惠券PRD-20261022.md",
+      "hash": "#/demo/export/coupon-create",
+      "mode": "drawer",
+      "parent": "marketing",
+      "order": 2,
+      "dialogTitle": "创建优惠券"
+    },
+    {
+      "id": "coupon-directed",
+      "title": "定向发放",
+      "doc": "定向发放PRD-20261022.md",
+      "hash": "#/demo/export/coupon-directed",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 3,
+      "dialogTitle": "定向发放"
+    },
+    {
+      "id": "coupon-public",
+      "title": "公开领取",
+      "doc": "公开领取PRD-20261022.md",
+      "hash": "#/demo/export/coupon-public",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 4,
+      "dialogTitle": "公开领取"
+    },
+    {
+      "id": "coupon-detail",
+      "title": "优惠券详情",
+      "doc": "优惠券详情PRD-20261022.md",
+      "hash": "#/demo/export/coupon-detail",
+      "mode": "drawer",
+      "parent": "marketing",
+      "order": 5,
+      "dialogTitle": "优惠券详情"
+    },
+    {
+      "id": "coupon-codes",
+      "title": "查看券码",
+      "doc": "查看券码PRD-20261022.md",
+      "hash": "#/demo/export/coupon-codes",
+      "mode": "drawer",
+      "parent": "marketing",
+      "order": 6,
+      "dialogTitle": "查看券码"
+    },
+    {
+      "id": "coupon-code-detail",
+      "title": "券码详情",
+      "doc": "券码详情PRD-20261022.md",
+      "hash": "#/demo/export/coupon-code-detail",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 7,
+      "dialogTitle": "券码详情"
+    },
+    {
+      "id": "coupon-records",
+      "title": "券使用记录",
+      "doc": "券使用记录PRD-20261022.md",
+      "hash": "#/demo/export/coupon-usage",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 8
+    },
+    {
+      "id": "coupon-issued-records",
+      "title": "定向发放记录",
+      "doc": "定向发放记录PRD-20261022.md",
+      "hash": "#/demo/export/coupon-issued",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 9
+    },
+    {
+      "id": "issuer-center",
+      "title": "发券",
+      "doc": "发券PRD-20261022.md",
+      "hash": "#/demo/export/issuer-coupons",
+      "mode": "screen",
+      "parent": "marketing",
+      "order": 10
+    },
+    {
+      "id": "issuer-records",
       "title": "发放记录",
-      "doc": "发放记录PRD.md",
-      "hash": "#/coupon-issues",
+      "doc": "发放记录PRD-20261022.md",
+      "hash": "#/demo/export/issuer-records",
       "mode": "screen",
       "parent": "marketing",
-      "order": 2
+      "order": 11
     },
     {
-      "id": "coupon-redemptions",
-      "title": "活动发券",
-      "doc": "活动发券PRD.md",
-      "hash": "#/coupon-redemptions",
-      "mode": "screen",
-      "parent": "marketing",
-      "order": 3
-    },
-    {
-      "id": "coupon-receive",
-      "title": "优惠券领取",
-      "doc": "优惠券领取PRD.md",
-      "hash": "#/coupon-receive",
-      "mode": "screen",
-      "parent": "coupon-mini",
-      "order": 1
-    },
-    {
-      "id": "coupon-my",
-      "title": "我的优惠券",
-      "doc": "我的优惠券PRD.md",
-      "hash": "#/coupon-my",
-      "mode": "screen",
-      "parent": "coupon-mini",
-      "order": 2
-    },
-    {
-      "id": "coupon-order",
-      "title": "下单使用与订单关联",
-      "doc": "下单使用PRD.md",
-      "hash": "#/coupon-order",
-      "mode": "screen",
-      "parent": "coupon-mini",
-      "order": 3
+      "id": "order-list",
+      "title": "订单详情（优惠券）",
+      "doc": "订单详情（优惠券）PRD-20261022.md",
+      "hash": "#/demo/export/order-coupon-detail",
+      "mode": "drawer",
+      "parent": "orders",
+      "order": 1,
+      "dialogTitle": "订单详情"
     },
     {
       "id": "operation-logs",
       "title": "操作日志",
-      "doc": "操作日志PRD.md",
-      "hash": "#/operation-logs",
+      "doc": "操作日志PRD-20261022.md",
+      "hash": "#/demo/export/operation-logs",
       "mode": "screen",
       "parent": "system",
       "order": 1
+    },
+    {
+      "id": "mini-receive",
+      "title": "链接扫码领取",
+      "doc": "小程序领取页设计说明.md",
+      "hash": "#/demo/export/mini-receive?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 1
+    },
+    {
+      "id": "mini-redeem",
+      "title": "兑换码领取体验券",
+      "doc": "小程序兑换页设计说明.md",
+      "hash": "#/demo/export/mini-redeem?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 2
+    },
+    {
+      "id": "mini-wallet",
+      "title": "我的券包",
+      "doc": "小程序券包设计说明.md",
+      "hash": "#/demo/export/mini-wallet?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 3
+    },
+    {
+      "id": "mini-product",
+      "title": "商品详情与选购",
+      "doc": "小程序商品详情与选套餐设计说明.md",
+      "hash": "#/demo/export/mini-product?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 4
+    },
+    {
+      "id": "mini-mine",
+      "title": "我的",
+      "doc": "小程序我的页设计说明.md",
+      "hash": "#/demo/export/mini-mine?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 5
     }
   ]
 }

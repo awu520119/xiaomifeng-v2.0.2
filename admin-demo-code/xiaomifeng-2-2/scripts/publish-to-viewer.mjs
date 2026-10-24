@@ -34,8 +34,14 @@ function readConfig() {
     if (!/^[^/\\]+\.md$/.test(page.doc || '') || docs.has(page.doc)) fail(`页面 ${page.id} 的 doc 必须是唯一的 Markdown 文件名`);
     if (!page.title || !groups.has(page.parent) || !Number.isInteger(page.order)) fail(`页面 ${page.id} 的 parent、title 或 order 无效`);
     if (!['screen', 'drawer'].includes(page.mode) || typeof page.hash !== 'string' || !page.hash.startsWith('#/')) fail(`页面 ${page.id} 的 mode 或 hash 无效`);
+    if (page.device !== undefined && !['pc', 'mobile'].includes(page.device)) fail(`页面 ${page.id} 的 device 无效`);
     if (page.mode === 'drawer' && !page.hash.startsWith('#/demo/export/')) fail(`抽屉页 ${page.id} 必须使用 #/demo/export/ 路由`);
     pages.add(page.id); docs.add(page.doc);
+  }
+  if (config.referenceDocs !== undefined && !Array.isArray(config.referenceDocs)) fail('referenceDocs 必须是 Markdown 文件名数组');
+  for (const doc of config.referenceDocs || []) {
+    if (typeof doc !== 'string' || !/^[^/\\]+\.md$/.test(doc) || docs.has(doc)) fail('referenceDocs 中存在非法或重复文档');
+    docs.add(doc);
   }
   return config;
 }
@@ -72,10 +78,11 @@ function inlineBuild() {
 }
 
 function pageHtml(html, page) {
-  const boot = `<script>if(!location.hash)location.hash=${JSON.stringify(page.hash)};</script>`;
-  const staticStyle = '<style>body.prd-static-page .app-sider{display:none!important}body.prd-static-page .app-workspace{width:100%!important}</style>';
+  const device = page.device === 'mobile' ? `<meta name="device" content="mobile"><script>window.addEventListener('load',function(){if(window.parent!==window)window.parent.postMessage({type:'page-device',device:'mobile'},'*')},{once:true});</script>` : '';
+  const boot = `<script>document.documentElement.dataset.prototypeViewer='true';if(!location.hash)location.hash=${JSON.stringify(page.hash)};</script>`;
   return html
-    .replace('<body>', `<body class="prd-static-page">${staticStyle}${boot}`)
+    .replace('</head>', `${device}</head>`)
+    .replace('<body>', `<body>${boot}`)
     .replace(/<title>.*?<\/title>/, `<title>${page.title}</title>`);
 }
 
@@ -137,8 +144,9 @@ function main() {
   const publishedRoot = join(viewer, '.published');
   const target = join(publishedRoot, config.sourceId);
   if (!inside(publishedRoot, target)) fail('发布目标路径异常');
-  for (const page of config.pages) {
-    if (!existsSync(join(root, 'docs', page.doc))) fail(`找不到 PRD：docs/${page.doc}`);
+  const docFiles = [...config.pages.map((page) => page.doc), ...(config.referenceDocs || [])];
+  for (const doc of docFiles) {
+    if (!existsSync(join(root, 'docs', doc))) fail(`找不到 PRD：docs/${doc}`);
   }
   const html = inlineBuild();
   mkdirSync(publishedRoot, { recursive: true });
@@ -164,7 +172,9 @@ function main() {
     mkdirSync(join(stage, 'desc'));
     for (const page of config.pages) {
       writeFileSync(join(stage, 'pages', `${page.id}.html`), pageHtml(html, page), 'utf8');
-      copyFileSync(join(root, 'docs', page.doc), join(stage, 'desc', page.doc));
+    }
+    for (const doc of docFiles) {
+      copyFileSync(join(root, 'docs', doc), join(stage, 'desc', doc));
     }
     writeFileSync(join(stage, 'nav.fragment.json'), `${JSON.stringify(fragment(config), null, 2)}\n`, 'utf8');
     run('python3', [join(root, 'scripts', 'smoke-published.py'), stage], root);

@@ -1,0 +1,22 @@
+{
+  "ids": [
+    "xiaomifeng-2-2--coupon-code-detail",
+    "xiaomifeng-2-2--coupon-codes",
+    "xiaomifeng-2-2--coupon-create",
+    "xiaomifeng-2-2--coupon-detail",
+    "xiaomifeng-2-2--coupon-directed",
+    "xiaomifeng-2-2--coupon-issued-records",
+    "xiaomifeng-2-2--coupon-management",
+    "xiaomifeng-2-2--coupon-public",
+    "xiaomifeng-2-2--coupon-records",
+    "xiaomifeng-2-2--issuer-center",
+    "xiaomifeng-2-2--issuer-records",
+    "xiaomifeng-2-2--mini-checkout",
+    "xiaomifeng-2-2--mini-detail",
+    "xiaomifeng-2-2--mini-receive",
+    "xiaomifeng-2-2--mini-redeem",
+    "xiaomifeng-2-2--mini-wallet",
+    "xiaomifeng-2-2--operation-logs",
+    "xiaomifeng-2-2--order-list"
+  ]
+}
