@@ -1313,10 +1313,12 @@ html[data-prototype-viewer] .app-sider { display: none !important; }
 
 .prototype-stage-mask { position: fixed; inset: 0; z-index: 900; background: var(--admin-color-background); }
 .prototype-export-isolated > .coupon-page { visibility: hidden; pointer-events: none; }
-.prototype-export-workspace .issuer-tabs,
 .prototype-export-workspace .issuer-open-records { display: none; }
 html[data-prototype-viewer] .ant-drawer-mask,
-html[data-prototype-viewer] .ant-modal-mask { background: var(--admin-color-split) !important; opacity: 1 !important; }
+html[data-prototype-viewer] .ant-modal-mask,
+html[data-prototype-viewer] .mini-sheet-overlay,
+html[data-prototype-viewer] .mini-confirm-overlay,
+html[data-prototype-viewer] .mini-scan-overlay { background: rgba(0, 0, 0, 0.6) !important; opacity: 1 !important; }
 
 /* 发券中心视觉尺度统一：保留现有信息与操作，收敛手机工作区的排版节奏。 */
 .issuer-app-frame { padding: 16px 16px 32px; }

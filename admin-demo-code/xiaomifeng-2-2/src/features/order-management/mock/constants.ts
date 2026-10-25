@@ -24,7 +24,7 @@ export function toPremiumOrder(order: CouponOrder, store: CouponStore): Order {
   return {
     id: order.id, orderNo: order.id, status: orderStatus(order), orderType: '套餐订单',
     theme: product.theme, point: product.point, user: order.phone, phone: order.phone,
-    amount: order.originalAmount, paidAmount: order.payAmount, refundAmount: order.refundAmount || 0,
+    amount: order.originalAmount, expectedAmount: product.price, paidAmount: order.payAmount, refundAmount: order.refundAmount || 0,
     netAmount: order.payAmount - (order.refundAmount || 0), shareBaseAmount: 0,
     collectionMode: 'platform', splitMode: 'system', fundingMode: 'offline_settlement', scenicName: product.point,
     accountId: 'mini-program', accountName: '小程序用户', accountSource: 'C', channelAccountId: '', channelAccountIds: [],
@@ -49,5 +49,5 @@ export function toPremiumOrder(order: CouponOrder, store: CouponStore): Order {
 function shootingProductsFallback(id: string) {
   const product = shootingProducts.find((item) => item.id === id);
   const [point = '—', theme = '—'] = product?.name.split('，') || [];
-  return { point: product?.shootingPoint || point, theme: product?.theme || theme };
+  return { point: product?.shootingPoint || point, theme: product?.theme || theme, price: product?.price || 0 };
 }

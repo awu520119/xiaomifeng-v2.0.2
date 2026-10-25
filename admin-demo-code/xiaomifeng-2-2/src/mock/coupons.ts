@@ -97,7 +97,7 @@ export function phoneListError(phones: string[]) {
   return undefined;
 }
 export function couponRuleText(coupon: Pick<CouponTemplate, 'kind' | 'minSpend' | 'discountAmount' | 'discountRate' | 'rightsCount'>) {
-  if (coupon.kind === '体验权益券') return `指定主题体验 ${coupon.rightsCount} 次`;
+  if (coupon.kind === '体验权益券') return `可兑换 ${coupon.rightsCount} 次体验`;
   if (coupon.kind === '满减券') return `满 ${coupon.minSpend} 元减 ${coupon.discountAmount} 元`;
   if (coupon.kind === '抵扣券') return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}抵扣 ${coupon.discountAmount} 元`;
   return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}享 ${coupon.discountRate} 折`;
@@ -145,7 +145,7 @@ export function validateTicketUse(ticket: CouponIssueRecord, values: { orderNo: 
 }
 const defaultCoupon = { validityDays: 30, totalLimit: 100, perUserLimit: 2, sponsor: '平台', status: '启用' as const, createdAt: dateTimeOffset(-6), authorizedIssuerIds: [currentCouponOperatorId], minSpend: 0, discountAmount: 0, discountRate: 10, rightsCount: 1, productIds: [] as string[], availableRange: ['全部可用'], shootingPoints: ['全部拍摄点'] };
 export const initialCouponTemplates: CouponTemplate[] = [
-  { ...defaultCoupon, id: 'CP-EXPERIENCE', name: '指定主题兑换券', kind: '体验权益券', rightsCount: 1, productIds: ['SP001', 'SP002'], availableRange: ['古韵照壁', '白墙黛瓦'], shootingPoints: ['南长街'], benefit: '指定主题体验 1 次' },
+  { ...defaultCoupon, id: 'CP-EXPERIENCE', name: '指定主题兑换券', kind: '体验权益券', rightsCount: 1, productIds: ['SP001', 'SP002'], availableRange: ['古韵照壁', '白墙黛瓦'], shootingPoints: ['南长街'], benefit: '可兑换 1 次体验' },
   { ...defaultCoupon, id: 'CP-DISCOUNT', name: '拍摄满100元享8折', kind: '折扣券', minSpend: 100, discountRate: 8, benefit: '满 100 元享 8 折' },
   { ...defaultCoupon, id: 'CP-REDUCTION', name: '拍摄满100减20', kind: '满减券', minSpend: 100, discountAmount: 20, benefit: '满 100 元减 20 元' },
 ];

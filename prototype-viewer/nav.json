@@ -1,6 +1,6 @@
 {
   "projectName": "形影随拍后台 · Ant Design 原型查看器",
-  "lastSyncAt": "2026-10-24 19:11:05",
+  "lastSyncAt": "2026-10-26 07:42:03",
   "tree": [
     {
       "id": "xiaomifeng-2-2--marketing",
@@ -160,22 +160,22 @@
       "children": [
         {
           "id": "xiaomifeng-2-2--mini-receive",
-          "title": "链接扫码领取",
+          "title": "领取页",
           "order": 1,
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-receive?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-receive.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序领取页设计说明.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序领取页PRD-20261022.md",
           "children": []
         },
         {
           "id": "xiaomifeng-2-2--mini-redeem",
-          "title": "兑换码领取体验券",
+          "title": "兑换页",
           "order": 2,
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-redeem?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-redeem.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序兑换页设计说明.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序兑换页PRD-20261022.md",
           "children": []
         },
         {
@@ -185,27 +185,27 @@
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-wallet?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-wallet.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券包设计说明.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--mini-detail",
-          "title": "用户券详情",
-          "order": 4,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/mini-detail?phone=13800000001&ticketId=CN-DEMO-MINI-DISCOUNT",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-detail.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券详情设计说明.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券包PRD-20261022.md",
           "children": []
         },
         {
           "id": "xiaomifeng-2-2--mini-checkout",
-          "title": "确认订单与选券",
-          "order": 5,
+          "title": "确认订单",
+          "order": 4,
           "templateType": "screen",
-          "routeHash": "#/demo/export/mini-checkout?phone=13800000001&productId=SP007",
+          "routeHash": "#/demo/export/mini-checkout?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-checkout.html",
           "mdPath": ".published/xiaomifeng-2-2/desc/小程序下单选券设计说明.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--mini-order",
+          "title": "订单详情",
+          "order": 5,
+          "templateType": "screen",
+          "routeHash": "#/demo/export/mini-order?phone=13800000001",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-order.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序订单详情PRD-20261022.md",
           "children": []
         }
       ]

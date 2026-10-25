@@ -1,9 +1,9 @@
 import type { CouponStore } from './coupons';
 import { createTicket } from './coupons';
 
-const seedId = 'mini-coupon-review-v2';
+const seedId = 'mini-coupon-review-v3';
 
-/** 两张可选价格券与体验券落在同一演示账号，便于串联券包和结算。 */
+/** 满减券、折扣券和体验券落在同一演示账号，便于展示券包与结算。 */
 export function withMiniProgramSamples(store: CouponStore): CouponStore {
   if (store.demoSeeds?.includes(seedId)) return store;
   const phone = '13800000001';

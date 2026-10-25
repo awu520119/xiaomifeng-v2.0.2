@@ -24,17 +24,17 @@ function shortScope(ticket: Pick<CouponIssueRecord, 'shootingPoints' | 'availabl
   return `${points}，${themes}`;
 }
 function benefit(coupon: Pick<CouponTemplate, 'kind' | 'discountAmount' | 'discountRate' | 'rightsCount' | 'minSpend'>) {
-  if (coupon.kind === '体验权益券') return { hero: `${coupon.rightsCount}次体验`, sub: '指定主题可用' };
+  if (coupon.kind === '体验权益券') return { hero: `可兑换 ${coupon.rightsCount} 次体验`, sub: '体验权益' };
   if (coupon.kind === '折扣券') return { hero: `${coupon.discountRate}折`, sub: coupon.minSpend ? `满¥${coupon.minSpend}可用` : '无门槛' };
   return { hero: `¥${coupon.discountAmount}`, sub: coupon.minSpend ? `满¥${coupon.minSpend}可用` : '无门槛' };
 }
 function ticketBenefit(ticket: CouponIssueRecord) { return benefit({ kind: ticket.couponKind, discountAmount: ticket.discountAmount, discountRate: ticket.discountRate, rightsCount: ticket.totalUses, minSpend: ticket.minSpend }); }
 function ticketKindClass(kind: CouponIssueRecord['couponKind']) { return kind === '体验权益券' ? 'experience' : kind === '折扣券' ? 'discount' : 'reduction'; }
 function ticketStatusClass(status: string) { return status === '待使用' ? 'ready' : status === '使用中' ? 'using' : ['已使用', '已使用（退款）'].includes(status) ? 'done' : ['已过期', '已作废'].includes(status) ? 'past' : 'neutral'; }
-function MiniShell({ title, phone, back, right, children, footer, hideAccount = false }: { title: string; phone: string; back?: () => void; right?: React.ReactNode; children: React.ReactNode; footer?: React.ReactNode; hideAccount?: boolean }) {
+function MiniShell({ title, phone, back, right, children, footer, hideAccount = false, disableBack = false }: { title: string; phone: string; back?: () => void; right?: React.ReactNode; children: React.ReactNode; footer?: React.ReactNode; hideAccount?: boolean; disableBack?: boolean }) {
   return <main className="mini-root">
     <div className="mini-screen">
-      <header className="mini-header"><button className="mini-back" onClick={back} aria-label="返回">‹</button><strong>{title}</strong><div className="mini-header-right">{right}</div></header>
+      <header className="mini-header"><button className="mini-back" onClick={back} aria-label="返回" disabled={disableBack}>{disableBack ? '' : '‹'}</button><strong>{title}</strong><div className="mini-header-right">{right}</div></header>
       {!hideAccount && <div className="mini-account">当前账号 {maskPhone(phone)}</div>}
       <div className={`mini-content${footer ? ' mini-content-footer' : ''}`}>{children}</div>
       {footer && <div className="mini-footer">{footer}</div>}
@@ -71,6 +71,7 @@ export default function CouponMiniApp({ page, store, setStore }: Props) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const phone = params.get('phone') || demoPhone;
+  const viewerMode = document.documentElement.dataset.prototypeViewer === 'true';
   const go = (target: Page, extra: Record<string, string> = {}) => navigate(path(target, { phone, ...extra }));
   const [error, setError] = useState('');
   const [resultId, setResultId] = useState<string>();
@@ -139,8 +140,8 @@ export default function CouponMiniApp({ page, store, setStore }: Props) {
         } catch (cause) { setError((cause as Error).message); }
       };
       const demoScanCode = store.tickets.find((item) => item.couponKind === '体验权益券' && !item.phoneDigits && item.status === '未领取')?.redeemCode || '';
-      return <MiniShell title="兑换体验券" phone={phone} hideAccount back={() => go('wallet')} footer={!result && <MainButton onClick={prepareRedeem}>立即兑换</MainButton>}>
-        {result ? <ClaimResult title={claimedBefore ? '已在券包中' : '兑换成功'} onWallet={() => go('wallet')} /> : <>
+      return <MiniShell title={viewerMode ? '兑换页' : '兑换体验券'} phone={phone} hideAccount back={() => go('wallet')} disableBack={viewerMode} footer={!result && <MainButton onClick={prepareRedeem}>立即兑换</MainButton>}>
+        {result ? <ClaimResult title={claimedBefore ? '已在券包中' : '兑换成功'} onWallet={() => {}} /> : <>
           <section className="mini-redeem-visual"><div className="mini-redeem-visual-mark"><GiftOutlined /></div><div><strong>优惠券</strong><span>通用券兑换入口</span></div><em>通用券</em></section>
           <div className="mini-field"><div className="mini-code-row"><input id="mini-code" value={code} onChange={(event) => { setCode(event.target.value); setCheckedCode(''); setConfirmRedeem(false); setError(''); }} placeholder="请输入体验券兑换码" autoCapitalize="characters" /><button className="mini-scan-button" type="button" aria-label="扫码兑换" onClick={() => setScanOpen(true)}><ScanOutlined /></button></div></div>
           {error && <p className="mini-error" role="alert">{error}</p>}
@@ -156,7 +157,7 @@ export default function CouponMiniApp({ page, store, setStore }: Props) {
         setStore(next.store); setResultId(next.ticketId); setError('');
       } catch (cause) { setError((cause as Error).message); }
     };
-    return <MiniShell title="领取优惠券" phone={phone} hideAccount back={() => go('wallet')} footer={!result && claimCoupon && <MainButton onClick={claim}>立即领取</MainButton>}>
+    return <MiniShell title={viewerMode ? '领取页' : '领取优惠券'} phone={phone} hideAccount back={() => go('wallet')} disableBack={viewerMode} footer={!result && claimCoupon && <MainButton onClick={claim}>立即领取</MainButton>}>
       {result ? <ClaimResult title="领取成功" onWallet={() => go('wallet')} /> : claimCoupon ? <>
         <section className="mini-receive-hero"><GiftOutlined /><div><span>限时优惠券</span><strong>领取专属优惠</strong></div></section>
         <ClaimCouponCard coupon={claimCoupon} onOpen={() => setClaimDetailOpen(true)} />
@@ -213,6 +214,7 @@ function Mine({ store, phone, go }: { store: CouponStore; phone: string; go: (pa
 }
 
 function OrderDetail({ store, setStore, phone, orderId, go }: { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>>; phone: string; orderId: string | null; go: (page: Page, extra?: Record<string, string>) => void }) {
+  const [params] = useSearchParams();
   const order = (store.orders || []).find((item) => item.phone === phone && item.id === orderId) || (store.orders || []).find((item) => item.phone === phone && item.id === 'ORDER-DEMO-MINI-COMMERCE-001') || (store.orders || []).find((item) => item.phone === phone);
   const [error, setError] = useState('');
   const change = (action: 'pay' | 'cancel') => {
@@ -220,7 +222,7 @@ function OrderDetail({ store, setStore, phone, orderId, go }: { store: CouponSto
     try { setStore(transitionOrder(store, order.id, action)); setError(''); }
     catch (cause) { setError((cause as Error).message); }
   };
-  return <MiniShell title="订单详情" phone={phone} hideAccount back={() => go('mine')} footer={order?.status === '待支付' && <div className="mini-order-actions"><button onClick={() => change('cancel')}>取消</button><MainButton onClick={() => change('pay')}>立即支付</MainButton></div>}>
+  return <MiniShell title="订单详情" phone={phone} hideAccount back={() => go(params.get('fromCheckout') === '1' ? 'checkout' : 'mine', params.get('fromCheckout') === '1' ? { productId: params.get('productId') || 'SP009' } : {})} footer={order?.status === '待支付' && <div className="mini-order-actions"><button onClick={() => change('cancel')}>取消</button><MainButton onClick={() => change('pay')}>立即支付</MainButton></div>}>
     {order ? <><div className="mini-order-state"><span>◷</span><h1>{order.status === '待使用' ? '待拍摄' : order.status}</h1>{order.status === '待支付' && <p>请尽快完成支付，优惠券已为本单保留</p>}</div>
       <div className="mini-order-item"><img src={lotusPond} alt="套餐拍摄点" /><div><strong>{order.productName}</strong><b>¥{order.originalAmount.toFixed(2)}</b><small>拍摄点：{shootingProducts.find((item) => item.id === order.productId)?.shootingPoint}</small></div></div>
       <div className="mini-order-location"><strong>拍摄点</strong><p>{shootingProducts.find((item) => item.id === order.productId)?.shootingPoint}</p><div><span>➤ 导航</span><span>☎ 电话</span></div></div>
@@ -230,15 +232,16 @@ function OrderDetail({ store, setStore, phone, orderId, go }: { store: CouponSto
 }
 
 function Wallet({ store, phone, go }: { store: CouponStore; phone: string; go: (page: Page, extra?: Record<string, string>) => void }) {
+  const [params] = useSearchParams();
   const [tab, setTab] = useState<'待使用' | '使用中' | '已失效'>('待使用');
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(() => params.get('detail') === 'first' ? store.tickets.find((item) => item.phoneDigits === phone)?.id ?? null : null);
   const [notice, setNotice] = useState('');
   const owned = store.tickets.filter((item) => item.phoneDigits === phone);
   const status = (item: CouponIssueRecord) => couponUsageStatus(item, store);
   const rows = owned.filter((item) => tab === '已失效' ? !['待使用', '使用中'].includes(status(item)) : status(item) === tab)
     .sort((a, b) => tab === '待使用' ? a.expiresAt.localeCompare(b.expiresAt) : b.issuedAt.localeCompare(a.issuedAt));
   const detail = owned.find((item) => item.id === detailId);
-  return <MiniShell title="我的券包" phone={phone} hideAccount back={() => go('mine')}>
+  return <MiniShell title="我的券包" phone={phone} hideAccount back={() => go('mine')} disableBack={document.documentElement.dataset.prototypeViewer === 'true'}>
     <div className="mini-tabs" role="tablist" aria-label="优惠券状态">{(['待使用', '使用中', '已失效'] as const).map((item) => <button key={item} role="tab" aria-selected={tab === item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}<small>{owned.filter((ticket) => item === '已失效' ? !['待使用', '使用中'].includes(status(ticket)) : status(ticket) === item).length}</small></button>)}</div>
     {notice && <p className="mini-wallet-notice" role="status">{notice}</p>}
     <div className="mini-ticket-list">{rows.length ? rows.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} store={store} onOpen={() => setDetailId(ticket.id)} onAction={() => setNotice('去使用将跳转到首页')} hideAction={tab === '已失效'} />) : <div className="mini-empty"><h2>暂无{tab}的券</h2><p>通过领取链接、二维码或兑换码获取的券会出现在这里。</p></div>}</div>
@@ -260,7 +263,7 @@ function Checkout({ store, setStore, phone, params, go }: { store: CouponStore; 
   const prices = store.tickets.filter((item) => item.phoneDigits === phone && item.couponKind !== '体验权益券');
   const rights = (store.accountRights || []).filter((item) => item.phoneDigits === phone);
   const usablePrices = prices.filter((item) => !priceCouponReason(item, product.id));
-  const usableRights = rights.filter((item) => ['可使用', '部分使用'].includes(rightStatus(item)) && item.productIds.includes(product.id));
+  const usableRights = rights.filter((item) => ['可使用', '部分使用'].includes(rightStatus(item)) && (!item.productIds.length || item.productIds.includes(product.id)));
   const ranked = [...usablePrices.map((item) => ({ id: item.id, discount: priceDiscount(item, product.price) })), ...usableRights.map((item) => ({ id: item.id, discount: product.price }))].sort((a, b) => b.discount - a.discount);
   const best = ranked[0]?.id;
   const invalidChoice = Boolean(choice && !ranked.some((item) => item.id === choice));
@@ -274,10 +277,10 @@ function Checkout({ store, setStore, phone, params, go }: { store: CouponStore; 
       const next = createCouponOrder(store, phone, product.id, validChoice);
       const created = next.orders![0];
       const paid = created.payAmount > 0 ? transitionOrder(next, created.id, 'pay') : next;
-      setStore(paid); setError(''); go('order', { orderId: created.id });
+      setStore(paid); setError(''); go('order', { orderId: created.id, fromCheckout: '1', productId: product.id });
     } catch (cause) { setError((cause as Error).message); }
   };
-  return <MiniShell title="确认订单" phone={phone} hideAccount back={() => go('product')} footer={<div className="mini-checkout-footer"><button className="mini-footer-coupon" type="button" onClick={() => setSelector(true)}><GiftOutlined /><span>{ranked.length} 张可用优惠券</span><em>{discount ? `−¥${discount.toFixed(2)}` : '›'}</em></button><div className="mini-footer-pay"><span>应付 <b>¥{Math.max(0, product.price - discount).toFixed(2)}</b></span><MainButton onClick={submit}>{product.price - discount > 0 ? '确认支付' : '确认下单'}</MainButton></div></div>}>
+  return <MiniShell title="确认订单" phone={phone} hideAccount back={() => go('product')} disableBack={document.documentElement.dataset.prototypeViewer === 'true'} footer={<div className="mini-checkout-footer"><button className="mini-footer-coupon" type="button" onClick={() => setSelector(true)}><GiftOutlined /><span>{ranked.length} 张可用优惠券</span><em>{discount ? `−¥${discount.toFixed(2)}` : '›'}</em></button><div className="mini-footer-pay"><span>应付 <b>¥{Math.max(0, product.price - discount).toFixed(2)}</b></span><MainButton onClick={submit}>{product.price - discount > 0 ? '确认支付' : '确认下单'}</MainButton></div></div>}>
     <section className="mini-checkout-block mini-checkout-product"><img src={lotusPond} alt="曲径通幽套餐拍摄场景" /><div><h2>{product.name}</h2><strong>¥{product.price.toFixed(2)}</strong><p>拍摄点：{product.shootingPoint}</p></div></section>
     <section className="mini-checkout-block mini-amounts"><div><span>商品金额</span><b>¥{product.price.toFixed(2)}</b></div><div><span>优惠金额</span><b>−¥{discount.toFixed(2)}</b></div><div className="total"><span>应付金额</span><strong>¥{Math.max(0, product.price - discount).toFixed(2)}</strong></div></section>
     {error && <p className="mini-error" role="alert">{error}</p>}

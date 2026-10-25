@@ -6,6 +6,7 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-header { flex: 0 0 54px; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; padding: 0 12px; background: #fff; border-bottom: 1px solid var(--mini-line); }
 .mini-header strong { text-align: center; font-size: 16px; line-height: 22px; font-weight: 600; }
 .mini-back { width: 44px; height: 44px; border: 0; background: transparent; color: var(--mini-ink); font-size: 30px !important; line-height: 1; text-align: left; }
+.mini-back:disabled { color: #c7cdd4; cursor: default; }
 .mini-header-right { display: flex; justify-content: flex-end; }
 .mini-text-button { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--mini-blue); font-size: 13px !important; white-space: nowrap; }
 .mini-account { padding: 9px 16px; color: var(--mini-muted); background: #fff; font-size: 12px; line-height: 18px; }
@@ -647,10 +648,13 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 }
 
 .mini-ticket-hero.experience {
-  font-size: 24px;
-  line-height: 30px;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+  font-size: clamp(14px, 4.8vw, 18px);
+  line-height: 23px;
+  letter-spacing: -0.3px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .mini-ticket-name {
@@ -700,7 +704,7 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
   }
 
   .mini-ticket-hero.experience {
-    font-size: 22px;
+    font-size: clamp(14px, 4.8vw, 18px);
   }
 
   .mini-ticket-bottom {

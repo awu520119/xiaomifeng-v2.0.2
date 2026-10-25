@@ -16,7 +16,7 @@ const statusTone = (status: string) => ({ '发放中': 'active', '未开始': 'u
 
 export default function CouponDetailContent({ coupon, store, status, authorizedIssuers, onConfigureAuthorization }: Props) {
   const claimed = store.tickets.filter((ticket) => ticket.couponId === coupon.id && ticket.phoneDigits).length;
-  const products = shootingProducts.filter((product) => coupon.productIds.includes(product.id));
+  const products = shootingProducts.filter((product) => !coupon.productIds.length || coupon.productIds.includes(product.id));
   const points = coupon.kind === '体验权益券' ? [...new Set(products.map((product) => product.shootingPoint))] : coupon.shootingPoints;
   const themes = coupon.kind === '体验权益券' ? [...new Set(products.map((product) => product.theme))] : coupon.availableRange;
 

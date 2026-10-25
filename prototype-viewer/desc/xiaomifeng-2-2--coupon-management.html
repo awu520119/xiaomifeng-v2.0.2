@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-22</p>
 </blockquote>
-<p><em>需求场景：运营人员查询优惠券类型、适用范围和发放状态，并进入创建、详情、发放及券码管理。</em></p>
+<p><em>需求场景：运营人员查询所有创建的优惠券类型、适用范围和发放状态。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -426,135 +426,85 @@ main.desc pre.desc-code > code {
 <td>v1.0</td>
 <td>2026-10-22</td>
 <td>初版</td>
-<td>用户</td>
+<td>awu</td>
 </tr>
 </tbody>
 </table>
 <h2 id="一优惠券列表权限说明">一、优惠券列表—权限说明</h2>
 <ol>
-<li>
-<p><strong>页面入口</strong>：在「营销管理」下进入「优惠券管理」，默认展示优惠券列表。</p>
-</li>
-<li>
-<p><strong>功能权限</strong>：页面访问、创建、编辑、发券、发券权限配置及暂停或恢复发放分别受对应功能权限控制。</p>
-<ul>
-<li>未取得操作权限时，不允许执行对应动作。</li>
+<li><strong>页面和功能权限</strong>：<ul>
+<li><strong>统一条件</strong>：勾选【营销管理】-【优惠券管理】下的权限</li>
 </ul>
 </li>
-<li>
-<p><strong>单券授权</strong>：实际发放须同时满足「具有发券功能权限」和「已获得目标券发放授权」。此授权不用于隐藏管理列表或只读详情。</p>
-<ul>
-<li>系统管理员发券时同样受单券授权约束。</li>
-</ul>
-</li>
-<li>
-<p><strong>权限配置</strong>：配置单券发券账号须具有发券权限配置功能权限，配置人不必在目标券的发放授权名单内。</p>
-<ul>
-<li>字段及保存结果见<a href="优惠券详情PRD-20261022.md">《优惠券详情 PRD》</a>。</li>
+<li><strong>数据权限</strong>：<ul>
+<li><strong>平台和租户管理员</strong>：默认有全部券的发放权限；</li>
+<li>其他账号能看到的券列表，由单券的「发券权限」控制。</li>
 </ul>
 </li>
 </ol>
 <h2 id="二优惠券列表筛选项说明">二、优惠券列表—筛选项说明</h2>
 <ol>
 <li>
-<p><strong>筛选规则</strong>：条件共同生效，未选择条件时不限制该项。</p>
-<ul>
-<li>本页不提供日期范围筛选。</li>
-</ul>
-</li>
-<li>
-<p><strong>券名称</strong>：关键词输入。按券名称包含关键词匹配，支持清空。</p>
+<p>.<strong>券名称</strong>：关键词输入。按券名称包含关键词匹配，支持清空。</p>
 </li>
 <li>
 <p><strong>券类型</strong>：单选。「满减券」「折扣券」「体验券」，支持清空。</p>
 </li>
 <li>
-<p><strong>状态</strong>：单选。「发放中」「已暂停」「已结束」，含义见「状态与计算口径」。</p>
+<p><strong>状态</strong>：单选。「发放中」「已暂停」「已结束」。</p>
 </li>
 <li>
 <p><strong>拍摄点</strong>：单选。展示拍摄点选项。</p>
 <ul>
-<li>选择后匹配适用于该点的券，包含「全部拍摄点」适用券。</li>
-</ul>
-</li>
-<li>
-<p><strong>查询与重置</strong>：修改或清空条件后回到第 1 页。</p>
-<ul>
-<li>点击搜索按钮或回车回到第 1 页。</li>
-<li>点击「重置」清空全部条件并回到第 1 页。</li>
+<li>选择后匹配适用于该点的券。</li>
 </ul>
 </li>
 </ol>
 <h2 id="三优惠券列表列表说明">三、优惠券列表—列表说明</h2>
 <ol>
 <li>
-<p><strong>字段顺序</strong>：按下列字段顺序展示，创建时间位于操作项之前。</p>
+<p><strong>券名称</strong>：展示优惠券名称，支持点击打开「优惠券详情」。</p>
 </li>
 <li>
-<p><strong>序号</strong>：根据当前页和每页条数连续编号，跨页不重新从 1 开始。</p>
-</li>
-<li>
-<p><strong>券名称</strong>：展示优惠券名称，点击打开「优惠券详情」。</p>
-</li>
-<li>
-<p><strong>券类型</strong>：展示三类券标签。</p>
+<p><strong>适用范围</strong>：</p>
 <ul>
-<li>满减券为暖橙色，折扣券为紫色，体验券为青绿色。</li>
-</ul>
-</li>
-<li>
-<p><strong>适用范围</strong>：价格券展示适用拍摄点与主题。</p>
-<ul>
-<li>体验券展示配置的体验拍摄点与主题。</li>
+<li>价格券展示适用拍摄点与主题。</li>
+<li>体验券展示配置的可兑换体验主题。</li>
 <li>长内容支持查看全文。</li>
 </ul>
 </li>
 <li>
-<p><strong>有效期</strong>：展示「领取后 {有效天数} 天可用」，不展示固定起止区间。</p>
+<p><strong>状态</strong>：展示券模板的发放状态，包括已结束、已暂停、发放中。<br>
+    | 判定条件 | 状态 | 展示颜色 |<br>
+    | --- | --- | --- |<br>
+    | 剩余发放量为 0 | 「已结束」 | 灰色 |<br>
+    | 剩余量大于 0，且已人工暂停 | 「已暂停」 | 橙色 |<br>
+    | 剩余量大于 0，且未暂停 | 「发放中」 | 绿色 |</p>
 </li>
 <li>
-<p><strong>状态</strong>：展示券模板的发放状态，见「状态与计算口径」。</p>
-</li>
-<li>
-<p><strong>已领取/总量</strong>：展示已成功绑定用户的券数量与配置总量。</p>
-<ul>
-<li>同一用户多张券分别计数。</li>
-</ul>
-</li>
-<li>
-<p><strong>创建时间</strong>：展示创建时间，精确到分钟。</p>
-<ul>
-<li>历史记录缺失时展示「—」。</li>
-</ul>
-</li>
-<li>
-<p><strong>操作</strong>：展示「详情」及对应发放入口，其他操作收进更多菜单。</p>
-</li>
-<li>
-<p><strong>分页</strong>：展示总条数，允许切换页码和每页条数。</p>
-<ul>
-<li>每页条数变化后使用新条数展示并保留筛选条件。列表内容独立滚动，分页保持在列表卡底部。</li>
-</ul>
+<p><strong>已领取/总量</strong>：展示已被用户领取的券数量与配置总量。</p>
 </li>
 </ol>
 <h2 id="四优惠券列表操作说明">四、优惠券列表—操作说明</h2>
 <ol>
 <li>
-<p><strong>价格券发放</strong>：满减券和折扣券提供「发放」，其下可选「定向发放」「公开发放」。</p>
+<p><strong>发放</strong>：对应「满减券」和「折扣券」，下拉可选择「定向发放」「公开发放」。</p>
 <ul>
-<li>不满足「权限说明」中的发放条件或券不可发放时禁用。</li>
+<li>无权限时禁用。</li>
+<li>定向发放同原逻辑；公开发放回显领取二维码和链接。详见《》</li>
 </ul>
 </li>
 <li>
-<p><strong>体验券操作</strong>：体验券在本列表提供「查看券码」。</p>
+<p><strong>查看券码</strong>：对应「体验券」类型。</p>
 <ul>
-<li>指定体验券码的定向发放在「券码详情」完成。移动端三类券的发放见<a href="发券PRD-20261022.md">《发券 PRD》</a>。</li>
+<li>指定体验券码的定向发放在「券码详情」完成。详见<a href="发券PRD-20261022.md">《发券 PRD》</a>。</li>
 </ul>
 </li>
 <li>
-<p><strong>更多操作</strong>：提供「编辑」「发券权限」及「暂停发放」或「恢复发放」。编辑字段见<a href="创建优惠券PRD-20261022.md">《创建优惠券 PRD》</a>。</p>
+<p><strong>发券权限</strong>：实际发放须同时满足「具有发券功能权限」和「已获得目标券发放授权」。</p>
 <ul>
-<li>授权配置见<a href="优惠券详情PRD-20261022.md">《优惠券详情 PRD》</a>。</li>
+<li>平台管理员和超级管理员默认拥有该权限</li>
+<li>支持添加其他账号发起该券的权限。</li>
 </ul>
 </li>
 <li>
@@ -567,112 +517,18 @@ main.desc pre.desc-code > code {
 <p><strong>恢复发放</strong>：已暂停且仍有剩余额度时允许恢复。</p>
 <ul>
 <li>剩余量为 0 时不允许恢复，提示「优惠券剩余量为 0，不能恢复发放」。</li>
-</ul>
-</li>
-</ol>
-<h2 id="五优惠券列表状态与计算口径">五、优惠券列表—状态与计算口径</h2>
-<ol>
-<li>
-<p><strong>券类型</strong>：本期仅提供「满减券」「折扣券」「体验券」。</p>
-<ul>
-<li>三类券在各页面使用相同名称及颜色。</li>
+<li>恢复后券模板展示「发放中」，因模板暂停而停止领取的公开入口同步恢复，领取时仍校验共用剩余量。</li>
 </ul>
 </li>
 <li>
-<p><strong>券模板状态</strong>：管理列表、优惠券详情和发券中心共用下表。</p>
-<ul>
-<li>按表中顺序判定，不与用户券使用状态混用。</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>判定条件</th>
-<th>状态</th>
-<th>展示颜色</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>剩余发放量为 0</td>
-<td>「已结束」</td>
-<td>灰色</td>
-</tr>
-<tr>
-<td>剩余量大于 0，且已人工暂停</td>
-<td>「已暂停」</td>
-<td>橙色</td>
-</tr>
-<tr>
-<td>剩余量大于 0，且未暂停</td>
-<td>「发放中」</td>
-<td>绿色</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>
-<p><strong>额度</strong>：定向发放、公开领取及体验券码领取共用券总量。</p>
-<ul>
-<li><strong>占用时机</strong>：实际绑定用户后计入已领取和额度占用；未领取券码的自动备码不占用额度。</li>
-<li><strong>作废处理</strong>：券作废后不返还额度；未领取券码作废同样占用额度。</li>
-<li><strong>剩余数量</strong>：剩余量 = 总量 − 占用数量，最低为 0。</li>
-</ul>
-</li>
-<li>
-<p><strong>用户券状态</strong>：已领取券的「待使用、使用中、已使用、已使用（退款）、已过期、已作废」含义统一引用<a href="券使用记录PRD-20261022.md">《券使用记录 PRD》</a>「使用状态说明」。</p>
-<ul>
-<li>未绑定券码另展示「未领取」。</li>
-</ul>
-</li>
-<li>
-<p><strong>有效期</strong>：模板仅配置领取后有效天数。</p>
-<ul>
-<li><strong>起算时机</strong>：领取成功或定向发放到账时，记录领取时间。</li>
-<li><strong>截止计算</strong>：截止时间 = 领取时间 + 有效天数，时分秒与领取时刻相同。</li>
-<li><strong>时间举例</strong>：2026-10-22 14:30:00 领取、有效 7 天，截止为 2026-10-29 14:30:00。</li>
-<li><strong>失效判定</strong>：超过截止时刻失效，不延长到当天 23:59:59。</li>
-</ul>
-</li>
-<li>
-<p><strong>时间起算与保留</strong>：未领取券码不启动计时。</p>
-<ul>
-<li>二维码下载、打开或重复查看不重新起算。已领取券保留领取时确定的截止时间。</li>
-<li>本期不配置固定有效期区间或单独的领取截止时间。</li>
-</ul>
-</li>
-<li>
-<p><strong>信息刷新</strong>：打开页面、返回列表或完成创建、编辑、授权、发放、暂停及恢复操作后，展示最新已保存信息。</p>
-<ul>
-<li>各处已领取数、剩余量及状态基于同一张券的实际领取结果计算。</li>
-</ul>
-</li>
-</ol>
-<h2 id="六优惠券列表关联页面说明">六、优惠券列表—关联页面说明</h2>
-<ol>
-<li>
-<p><strong>创建优惠券</strong>：见<a href="创建优惠券PRD-20261022.md">创建优惠券 PRD</a>。</p>
-</li>
-<li>
-<p><strong>定向发放</strong>：见<a href="定向发放PRD-20261022.md">定向发放 PRD</a>。</p>
-</li>
-<li>
-<p><strong>公开领取</strong>：见<a href="公开领取PRD-20261022.md">公开领取 PRD</a>。</p>
-</li>
-<li>
-<p><strong>优惠券详情</strong>：见<a href="优惠券详情PRD-20261022.md">优惠券详情 PRD</a>。</p>
-</li>
-<li>
-<p><strong>查看券码</strong>：见<a href="查看券码PRD-20261022.md">查看券码 PRD</a>。</p>
-</li>
-<li>
-<p><strong>券码详情</strong>：见<a href="券码详情PRD-20261022.md">券码详情 PRD</a>。</p>
+<p><strong>编辑</strong>：仅支持编辑「优惠券名称」和「使用规则」</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券列表-PRD" data-toc-id="优惠券列表-PRD">优惠券列表 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一优惠券列表权限说明" data-toc-id="一优惠券列表权限说明">一、优惠券列表—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二优惠券列表筛选项说明" data-toc-id="二优惠券列表筛选项说明">二、优惠券列表—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三优惠券列表列表说明" data-toc-id="三优惠券列表列表说明">三、优惠券列表—列表说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四优惠券列表操作说明" data-toc-id="四优惠券列表操作说明">四、优惠券列表—操作说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五优惠券列表状态与计算口径" data-toc-id="五优惠券列表状态与计算口径">五、优惠券列表—状态与计算口径</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#六优惠券列表关联页面说明" data-toc-id="六优惠券列表关联页面说明">六、优惠券列表—关联页面说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券列表-PRD" data-toc-id="优惠券列表-PRD">优惠券列表 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一优惠券列表权限说明" data-toc-id="一优惠券列表权限说明">一、优惠券列表—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二优惠券列表筛选项说明" data-toc-id="二优惠券列表筛选项说明">二、优惠券列表—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三优惠券列表列表说明" data-toc-id="三优惠券列表列表说明">三、优惠券列表—列表说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四优惠券列表操作说明" data-toc-id="四优惠券列表操作说明">四、优惠券列表—操作说明</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

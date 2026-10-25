@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-22</p>
 </blockquote>
-<p><em>需求场景：运营人员创建满减券、折扣券或体验券，填写适用范围、领取后有效天数、总量和使用规则。</em></p>
+<p><em>需求场景：运营人员创建满减券、折扣券或体验券，配置优惠规则、统一可用范围、领取后有效天数、总量和使用规则。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -425,23 +425,19 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-22</td>
-<td>初版</td>
+<td>初版；体验券支持配置可兑换次数，统一三类券的可用范围选择</td>
 <td>用户</td>
 </tr>
 </tbody>
 </table>
 <h2 id="一创建优惠券权限说明">一、创建优惠券—权限说明</h2>
 <ol>
-<li><strong>页面入口</strong>：优惠券列表点击「创建优惠券」，打开右侧表单。<ul>
-<li><strong>权限</strong>：当前账号须具有创建优惠券功能权限。</li>
-<li><strong>发券账号</strong>：创建保存后，通过<a href="优惠券详情PRD-20261022.md">《优惠券详情 PRD》</a>的「配置权限」维护。</li>
-</ul>
-</li>
+<li><strong>权限</strong>：须具有【营销管理】-【优惠券管理】-【编辑】权限。</li>
 </ol>
 <h2 id="二创建优惠券基础信息">二、创建优惠券—基础信息</h2>
 <ol>
 <li>
-<p><strong>优惠券名称</strong>：文本输入，必填，最多 50 字。</p>
+<p><strong>优惠券名称</strong>：文本输入，必填，最多 20 字。</p>
 <ul>
 <li>保存时去除首尾空格；为空或仅含空格时不可保存。</li>
 </ul>
@@ -476,31 +472,16 @@ main.desc pre.desc-code > code {
 </ul>
 </li>
 <li>
-<p><strong>可用范围</strong>：满减券、折扣券展示，单选，必填，默认「全部可用」。</p>
+<p><strong>体验券权益</strong>：数字输入，必填，正整数，配置该券可兑换的体验次数，展示为「可兑换 {次数} 次体验」。</p>
+<ul>
+<li>新建默认 1 次；历史体验券编辑时保留原配置。</li>
+</ul>
+</li>
+<li>
+<p><strong>可用范围</strong>：三类券均展示，单选，必填，默认「全部可用」。</p>
 <ul>
 <li><strong>全部可用</strong>：适用于全部拍摄点和主题。</li>
-<li><strong>指定主题</strong>：展示「适用拍摄点」「适用主题」，两项均必填。</li>
-</ul>
-</li>
-<li>
-<p><strong>适用拍摄点</strong>：体验券、指定主题的价格券展示，下拉多选，必填。</p>
-<ul>
-<li><strong>默认值</strong>：「全部拍摄点」。</li>
-<li><strong>可选范围</strong>：保留「全部拍摄点」和具体拍摄点；「全部拍摄点」与具体点互斥。</li>
-</ul>
-</li>
-<li>
-<p><strong>适用主题</strong>：体验券、指定主题的价格券展示，可搜索多选，必填。</p>
-<ul>
-<li><strong>可选范围</strong>：仅展示已选拍摄点下的主题；未选择拍摄点时不可选择主题。</li>
-<li><strong>联动清理</strong>：修改拍摄点后更新候选项，清除不再适用的已选主题。</li>
-</ul>
-</li>
-<li>
-<p><strong>体验券权益</strong>：新体验券为单次体验，不配置体验次数。</p>
-<ul>
-<li>历史多次体验券保留既有权益，编辑时不重置。</li>
-<li>不配置每人限领和内部备注。</li>
+<li><strong>指定主题</strong>：可切换「指定主题」，选择拍摄点-选择可用的主题。</li>
 </ul>
 </li>
 </ol>
@@ -509,8 +490,7 @@ main.desc pre.desc-code > code {
 <li>
 <p><strong>有效期</strong>：数字输入，必填，默认 30 天。</p>
 <ul>
-<li><strong>输入范围</strong>：1 至 3650 的正整数，控件展示「领取后 {有效天数} 天可用」。</li>
-<li><strong>起算与截止</strong>：引用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」中的有效期规则。</li>
+<li><strong>输入范围</strong>：1 至 3650 的正整数，展示「领取后 {有效天数} 天可用」。</li>
 </ul>
 </li>
 <li>
@@ -528,25 +508,12 @@ main.desc pre.desc-code > code {
 </ul>
 </li>
 </ol>
-<h2 id="五创建优惠券保存与编辑说明">五、创建优惠券—保存与编辑说明</h2>
+<h2 id="五编辑优惠券">五、编辑优惠券</h2>
 <ol>
-<li>
-<p><strong>保存</strong>：必填项和字段校验全部通过后，创建优惠券并记录创建时间。</p>
-<ul>
-<li><strong>初始状态</strong>：新券默认未暂停，按<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」展示模板状态。</li>
-<li><strong>体验券备码</strong>：按总量自动准备独立券码及连续体验券编号，无须手动生成。</li>
-<li><strong>成功结果</strong>：关闭表单，更新优惠券列表。</li>
-<li><strong>校验失败</strong>：保留已填写内容，指出对应字段错误，不保存部分配置。</li>
-</ul>
-</li>
-<li>
-<p><strong>取消</strong>：点击「取消」或关闭表单，不保存本次输入。</p>
-</li>
-<li>
-<p><strong>编辑优惠券</strong>：从列表「编辑」进入时复用本表单。</p>
-<ul>
+<li><strong>编辑优惠券</strong>：<ul>
 <li><strong>可编辑字段</strong>：优惠券名称、使用规则。</li>
 <li><strong>只读字段</strong>：券类型、优惠规则、范围、有效期、发放总量回显原值并灰显，保存时保持原配置。</li>
+<li><strong>记录保留</strong>：保存编辑不重新发券，不重置已领取券的领取时间、截止时间、使用状态及历史使用记录。</li>
 </ul>
 </li>
 </ol>
@@ -554,7 +521,7 @@ main.desc pre.desc-code > code {
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#创建优惠券-PRD" data-toc-id="创建优惠券-PRD">创建优惠券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一创建优惠券权限说明" data-toc-id="一创建优惠券权限说明">一、创建优惠券—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二创建优惠券基础信息" data-toc-id="二创建优惠券基础信息">二、创建优惠券—基础信息</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三创建优惠券优惠规则" data-toc-id="三创建优惠券优惠规则">三、创建优惠券—优惠规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四创建优惠券有效期与发放说明" data-toc-id="四创建优惠券有效期与发放说明">四、创建优惠券—有效期与发放说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五创建优惠券保存与编辑说明" data-toc-id="五创建优惠券保存与编辑说明">五、创建优惠券—保存与编辑说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#创建优惠券-PRD" data-toc-id="创建优惠券-PRD">创建优惠券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一创建优惠券权限说明" data-toc-id="一创建优惠券权限说明">一、创建优惠券—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二创建优惠券基础信息" data-toc-id="二创建优惠券基础信息">二、创建优惠券—基础信息</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三创建优惠券优惠规则" data-toc-id="三创建优惠券优惠规则">三、创建优惠券—优惠规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四创建优惠券有效期与发放说明" data-toc-id="四创建优惠券有效期与发放说明">四、创建优惠券—有效期与发放说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五编辑优惠券" data-toc-id="五编辑优惠券">五、编辑优惠券</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

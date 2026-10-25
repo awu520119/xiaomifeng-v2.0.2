@@ -1,14 +1,12 @@
-import { Descriptions, Drawer, Empty, Typography } from 'antd';
-import { useState } from 'react';
+import { Empty, Typography } from 'antd';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CouponStore } from '../mock/coupons';
 import CouponListPage from './CouponListPage';
 import type { CouponPrototypeView } from './CouponListPage';
-import CouponIssueRecordsPage from './CouponIssueRecordsPage';
+import CouponRecordsPage from './CouponRecordsPage';
 import CouponIssuerCenterPage from './CouponIssuerCenterPage';
 import OperationLogsPage from './OperationLogsPage';
-import { toPremiumOrder } from '../features/order-management/mock/constants';
-import { OrderCouponInformation, OrderDetailSection } from '../features/order-management/pages/OrderDetailSections';
+import OrderListPage from './OrderListPage';
 import '../features/order-management/pages/order-management.css';
 import CouponMiniApp from './mini/CouponMiniApp';
 
@@ -23,33 +21,21 @@ const couponViews: Record<string, CouponPrototypeView | undefined> = {
   'coupon-code-detail': 'codeDetail',
 };
 
-function OrderCouponExport({ store }: { store: CouponStore }) {
-  const [open, setOpen] = useState(true);
-  const source = (store.orders || []).find((order) => order.ticketId || order.rightId);
-  const order = source ? toPremiumOrder(source, store) : undefined;
-  return <Drawer className="order-detail-drawer" title="订单详情" width={800} open={open} onClose={() => setOpen(false)} maskClosable={false} keyboard={false}>
-    {order ? <OrderDetailSection title="订单信息"><Descriptions column={1} size="small">
-      <Descriptions.Item label="订单号">{order.orderNo}</Descriptions.Item>
-      <Descriptions.Item label="优惠信息"><OrderCouponInformation order={order} /></Descriptions.Item>
-    </Descriptions></OrderDetailSection> : <Empty description="暂无用券订单" />}
-  </Drawer>;
-}
-
 /** Viewer entry points reuse the live pages, including their forms, dialogs and local interactions. */
 export default function PrototypeExportPage({ page, store, setStore }: Props) {
   const miniPages = { 'mini-receive': 'receive', 'mini-redeem': 'redeem', 'mini-wallet': 'wallet', 'mini-checkout': 'checkout', 'mini-product': 'product', 'mini-mine': 'mine', 'mini-order': 'order' } as const;
   if (Object.hasOwn(miniPages, page)) return <CouponMiniApp key={page} page={miniPages[page as keyof typeof miniPages]} store={store} setStore={setStore} />;
   const isIssuerPage = ['issuer-center', 'issuer-coupons', 'issuer-records'].includes(page);
-  const isPopupPage = Boolean(couponViews[page]) || page === 'order-coupon-detail';
+  const isPopupPage = Boolean(couponViews[page]);
   let content;
   if (Object.hasOwn(couponViews, page)) {
     content = <CouponListPage key={page} store={store} setStore={setStore} initialView={couponViews[page]} />;
   } else if (page === 'coupon-usage' || page === 'coupon-issued') {
-    content = <CouponIssueRecordsPage key={page} store={store} setStore={setStore} mode={page === 'coupon-issued' ? 'issue' : 'ledger'} />;
+    content = <CouponRecordsPage key={page} store={store} setStore={setStore} initialTab={page === 'coupon-issued' ? 'issue' : 'ledger'} lockTabs />;
   } else if (isIssuerPage) {
-    content = <CouponIssuerCenterPage key={page} store={store} setStore={setStore} initialTab={page === 'issuer-records' ? '发放记录' : '发券'} />;
+    content = <CouponIssuerCenterPage key={page} store={store} setStore={setStore} initialTab={page === 'issuer-records' ? '发放记录' : '发券'} lockTabs />;
   } else if (page === 'order-coupon-detail') {
-    content = <OrderCouponExport store={store} />;
+    content = <OrderListPage store={store} initialDetail lockDetail />;
   } else if (page === 'operation-logs') {
     content = <OperationLogsPage />;
   } else {

@@ -202,7 +202,7 @@ export function createCouponOrder(store: CouponStore, phone: string, productId: 
   const right = (store.accountRights || []).find((item) => item.id === choice && item.phoneDigits === phone);
   if (choice && !ticket && !right) throw new Error('所选优惠已不可用，请重新选择');
   if (ticket) { const reason = priceCouponReason(ticket, productId); if (reason) throw new Error(reason); }
-  if (right && (!['可使用', '部分使用'].includes(rightStatus(right)) || !right.productIds.includes(productId))) throw new Error('体验权益已失效、用完或不适用本商品');
+  if (right && (!['可使用', '部分使用'].includes(rightStatus(right)) || (right.productIds.length > 0 && !right.productIds.includes(productId)))) throw new Error('体验权益已失效、用完或不适用本商品');
   const discount = right ? product.price : ticket ? priceDiscount(ticket, product.price) : 0;
   const order: CouponOrder = { id: uniqueCouponId('OR'), phone, productId, productName: product.name, ticketId: ticket?.id, rightId: right?.id, originalAmount: product.price, discountAmount: discount, payAmount: Math.round((product.price - discount) * 100) / 100, status: right ? '待使用' : '待支付', createdAt: couponLocalTime() };
   return { ...store, orders: [order, ...(store.orders || [])], tickets: store.tickets.map((item) => item.id === ticket?.id ? { ...item, lockedOrderId: order.id } : item), accountRights: (store.accountRights || []).map((item) => item.id === right?.id ? { ...item, remainingUses: item.remainingUses - 1 } : item) };

@@ -48,11 +48,12 @@ def main() -> int:
                     expected_dialog = expectations[page_id].get("dialogTitle")
                     if expected_dialog:
                         page.get_by_role("dialog", name=expected_dialog, exact=True).wait_for(state="visible", timeout=15000)
-                        page.locator(".prototype-stage-mask").wait_for(state="visible", timeout=15000)
+                        if page_id != "order-list":
+                            page.locator(".prototype-stage-mask").wait_for(state="visible", timeout=15000)
                         mask = page.locator(".ant-drawer-mask, .ant-modal-mask").first
                         mask.wait_for(state="visible", timeout=15000)
-                        if not mask.evaluate("node => getComputedStyle(node).opacity === '1' && getComputedStyle(node).backgroundColor === 'rgb(233, 235, 240)'"):
-                            raise RuntimeError(f"{page_id} 的遮罩仍会露出背景")
+                        if not mask.evaluate("node => getComputedStyle(node).opacity === '1' && getComputedStyle(node).backgroundColor === 'rgba(0, 0, 0, 0.6)'"):
+                            raise RuntimeError(f"{page_id} 的遮罩不是黑色 60%")
                     if item.get("templateType") == "drawer":
                         page.get_by_role("dialog").wait_for(state="visible", timeout=15000)
                         page.locator(".ant-drawer-mask").wait_for(state="visible", timeout=15000)
@@ -66,27 +67,44 @@ def main() -> int:
                         if page.evaluate("document.documentElement.scrollWidth > window.innerWidth"):
                             raise RuntimeError(f"{page_id} 移动端发生横向溢出")
                         if page_id == "mini-receive":
+                            if not page.get_by_role("button", name="返回", exact=True).is_disabled():
+                                raise RuntimeError("领取页返回按钮未禁用")
                             page.get_by_role("button", name="立即领取").click()
                             page.get_by_text("领取成功", exact=True).wait_for(state="visible", timeout=15000)
                         elif page_id == "mini-redeem":
+                            if not page.get_by_role("button", name="返回", exact=True).is_disabled():
+                                raise RuntimeError("兑换页返回按钮未禁用")
                             if not page.get_by_placeholder("请输入体验券兑换码").input_value():
                                 raise RuntimeError("兑换页缺少可试用的演示兑换码")
-                            page.get_by_role("button", name="查询").click()
+                            page.get_by_role("button", name="立即兑换").click()
                             page.get_by_role("button", name="确认兑换").click()
                             page.get_by_text("兑换成功", exact=True).wait_for(state="visible", timeout=15000)
+                            page.get_by_role("button", name="查看我的券包", exact=True).click()
+                            if page.locator(".mini-root").get_by_text("兑换成功", exact=True).count() != 1:
+                                raise RuntimeError("兑换结果中的查看券包操作发生跳转")
                         elif page_id == "mini-wallet":
+                            if not page.get_by_role("button", name="返回", exact=True).is_disabled():
+                                raise RuntimeError("券包页返回按钮未禁用")
                             page.locator(".mini-ticket").first.wait_for(state="visible", timeout=15000)
-                        elif page_id == "mini-detail":
-                            page.get_by_text("适用范围", exact=True).wait_for(state="visible", timeout=15000)
+                            for kind in ["满减券", "折扣券", "体验券"]:
+                                if not page.locator(".mini-ticket-kind").filter(has_text=kind).count():
+                                    raise RuntimeError(f"券包缺少{kind}演示券")
+                            experience = page.locator(".mini-ticket-hero.experience").first
+                            box = experience.bounding_box()
+                            if not box or box["x"] + box["width"] > page.locator(".mini-ticket").first.bounding_box()["x"] + page.locator(".mini-ticket").first.bounding_box()["width"]:
+                                raise RuntimeError("体验权益文案超出券卡")
                         elif page_id == "mini-checkout":
-                            page.locator(".mini-coupon-entry").click()
+                            if not page.get_by_role("button", name="返回", exact=True).is_disabled():
+                                raise RuntimeError("确认订单页返回按钮未禁用")
+                            page.locator(".mini-footer-coupon").click()
                             page.get_by_role("dialog", name="选择优惠券").wait_for(state="visible", timeout=15000)
-                            if page.locator(".mini-choice").count() < 3:
-                                raise RuntimeError("确认订单未展示两张可选价格券")
-                            page.get_by_role("button", name=re.compile(r"确定使用")).click()
-                            page.get_by_role("button", name="提交订单").click()
-                            page.get_by_role("button", name=re.compile(r"确认支付")).click()
-                            page.get_by_text("支付成功，优惠信息已记录在订单中。", exact=True).wait_for(state="visible", timeout=15000)
+                            if page.locator(".mini-choice").count() < 2:
+                                raise RuntimeError("确认订单缺少可选券")
+                            page.get_by_role("button", name="确定", exact=True).click()
+                            page.get_by_role("button", name=re.compile(r"确认支付|确认下单")).click()
+                            page.get_by_text("待拍摄", exact=True).wait_for(state="visible", timeout=15000)
+                            page.get_by_role("button", name="返回", exact=True).click()
+                            page.locator(".mini-header strong").get_by_text("确认订单", exact=True).wait_for(state="visible", timeout=15000)
                     if page_id == "coupon-create":
                         page.get_by_placeholder("请输入优惠券名称", exact=True).fill("原型创建验证券")
                         page.get_by_placeholder("请输入使用规则，说明使用条件、适用范围等", exact=True).fill("满 100 元减 20 元，仅限适用主题。")
@@ -101,14 +119,47 @@ def main() -> int:
                         selected.wait_for(state="attached", timeout=15000)
                         if selected.evaluate("node => node.textContent.trim()") != expected_tab:
                             raise RuntimeError(f"{page_id} 未默认打开 {expected_tab}")
-                        if page.locator(".issuer-tabs").is_visible():
-                            raise RuntimeError(f"{page_id} 仍可切换到其他 PRD 页签")
-                    if page_id in {"coupon-records", "coupon-issued-records"} and page.locator(".coupon-records-tabs").count():
-                        raise RuntimeError(f"{page_id} 仍包含其他记录页签")
+                        tabs = page.locator(".issuer-tabs")
+                        if not tabs.is_visible() or tabs.locator(".ant-segmented-item").count() != 2:
+                            raise RuntimeError(f"{page_id} 未展示两个页签")
+                        disabled = tabs.locator(".ant-segmented-item-disabled")
+                        if disabled.count() != 1 or not disabled.locator("input").is_disabled():
+                            raise RuntimeError(f"{page_id} 非当前页签未禁用")
+                        disabled.click(force=True)
+                        if selected.inner_text().strip() != expected_tab:
+                            raise RuntimeError(f"{page_id} 可切换到其他 PRD 页签")
+                    if page_id in {"coupon-records", "coupon-issued-records"}:
+                        tabs = page.locator(".coupon-records-tabs")
+                        expected_tab = "定向发放记录" if page_id == "coupon-issued-records" else "券使用记录"
+                        if tabs.get_by_role("tab").count() != 2:
+                            raise RuntimeError(f"{page_id} 未展示两个记录页签")
+                        selected = tabs.get_by_role("tab", selected=True)
+                        disabled = tabs.locator('[role="tab"][aria-disabled="true"]')
+                        if selected.inner_text().strip() != expected_tab or disabled.count() != 1:
+                            raise RuntimeError(f"{page_id} 页签选中或禁用状态异常")
+                        disabled.click(force=True)
+                        if selected.inner_text().strip() != expected_tab:
+                            raise RuntimeError(f"{page_id} 可切换到其他记录页签")
                     if page_id == "order-list":
                         dialog = page.get_by_role("dialog", name="订单详情", exact=True)
-                        if "优惠信息" not in dialog.inner_text() or any(text in dialog.inner_text() for text in ["退款", "分账", "起飞任务", "拍摄流程"]):
-                            raise RuntimeError("订单优惠原型仍包含无关业务")
+                        if not page.locator(".order-table-card").is_visible() or dialog.locator(".ant-drawer-close").count():
+                            raise RuntimeError("订单列表背景或抽屉关闭限制异常")
+                        page.locator(".ant-drawer-mask").first.click(position={"x": 10, "y": 100})
+                        page.keyboard.press("Escape")
+                        if not dialog.is_visible():
+                            raise RuntimeError("订单详情可被遮罩或 Esc 关闭")
+                        required = ["媒体交付", "订单信息", "优惠信息", "收款信息", "主题信息", "流程日志", "起飞任务 ID"]
+                        if any(text not in dialog.inner_text() for text in required):
+                            raise RuntimeError("订单详情缺少项目原型中的完整信息")
+                        dialog.get_by_role("tab", name="照片(8)", exact=True).click()
+                        if dialog.locator(".media-photo-card").count() != 8:
+                            raise RuntimeError("订单详情照片切换异常")
+                        dialog.locator(".order-flight-task-link").first.click()
+                        task_dialog = page.get_by_role("dialog", name="起飞任务详情", exact=True)
+                        task_dialog.wait_for(state="visible", timeout=15000)
+                        task_dialog.locator(".ant-drawer-close").click()
+                        task_dialog.wait_for(state="hidden", timeout=15000)
+                        dialog.wait_for(state="visible", timeout=15000)
                     if page_id == "coupon-detail":
                         page.locator(".coupon-detail-drawer .ant-drawer-close").click()
                         page.get_by_role("dialog", name="优惠券详情", exact=True).wait_for(state="hidden", timeout=15000)

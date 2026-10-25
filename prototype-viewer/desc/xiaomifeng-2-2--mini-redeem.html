@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>兑换码领取体验券</title>
+  <title>兑换页</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,22 +406,97 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="小程序兑换页设计说明">小程序兑换页设计说明</h1>
-<h2 id="目标与入口">目标与入口</h2>
-<p>「我的券包」提供「兑换码领券」。兑换码仅用于体验券。单张体验券二维码链接携带兑换码时，也进入本页。</p>
-<h2 id="信息顺序">信息顺序</h2>
+<h1 id="小程序兑换页-PRD">小程序兑换页 PRD</h1>
+<blockquote>
+<p>版本 v1.0　·　日期 2026-10-25</p>
+</blockquote>
+<p><em>需求场景：用户通过输入或扫描体验券兑换码，将对应体验券领取到本人券包。</em></p>
+<h2 id="变更记录">变更记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>变更内容</th>
+<th>提出人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-10-25</td>
+<td>收敛兑换流程说明，保留扫码边界、确认校验及重复兑换规则</td>
+<td>用户</td>
+</tr>
+</tbody>
+</table>
+<h2 id="页面入口">页面入口</h2>
 <ol>
-<li>兑换码输入与「查询」。</li>
-<li>对应体验券的内容、范围和领取后有效天数。</li>
-<li>底部固定「确认兑换」。</li>
+<li>
+<p><strong>券包入口</strong>：从「我的券包」的「待使用」页签底部点击「兑换优惠券」，进入「兑换体验券」。</p>
+</li>
+<li>
+<p><strong>券码入口</strong>：通过单张体验券二维码或领取链接进入时，带入对应兑换码。</p>
+<ul>
+<li>兑换码仅用于体验券，不兑换满减券或折扣券。</li>
+</ul>
+</li>
 </ol>
-<p>确认后体验权益直接到账并进入券包。无效、已被他人领取、已停用或已领完均给出对应提示；当前账号已领取时引导返回券包。</p>
-<p>查看器独立入口会预填一条当前可领取的演示兑换码，便于直接核对流程；正常进入小程序时输入框为空。</p>
+<h2 id="兑换操作">兑换操作</h2>
+<ol>
+<li>
+<p><strong>页面封面</strong>：展示通用优惠券封面。</p>
+</li>
+<li>
+<p><strong>兑换码输入</strong>：提供输入框与扫码入口，输入框提示「请输入体验券兑换码」。</p>
+<ul>
+<li>普通券包入口不预填兑换码；修改输入后清除上次查询结果与错误提示。</li>
+<li>不提供独立「查询」按钮。</li>
+</ul>
+</li>
+<li>
+<p><strong>扫码</strong>：点击扫码图标打开相机预览。</p>
+<ul>
+<li>若无法调用相机或用户未授权，则提示原因，并允许手动输入。</li>
+<li>本期仅支持通过「使用演示券码」填码，不支持实际二维码识别。</li>
+</ul>
+</li>
+<li>
+<p><strong>立即兑换</strong>：点击「立即兑换」核对兑换码；若不存在对应体验券，则提示「兑换码不存在，请检查后重试」。</p>
+</li>
+<li>
+<p><strong>二次确认</strong>：有效兑换码打开「确认兑换」弹窗，以券卡展示体验权益、券名称、券类型及领取后有效天数。</p>
+<ul>
+<li>点击「取消」关闭且不领取；点击「确认兑换」提交领取。</li>
+</ul>
+</li>
+</ol>
+<h2 id="兑换结果">兑换结果</h2>
+<ol>
+<li>
+<p><strong>提交校验</strong>：确认时核对当前账号手机号、券码归属、券码状态、模板发放状态与剩余量。</p>
+<ul>
+<li>若已被他人领取、券码已失效、模板已暂停或已领完，则提示对应原因，不新增用户券或体验权益。</li>
+</ul>
+</li>
+<li>
+<p><strong>兑换成功</strong>：当前券码绑定本人，按领取时间与有效天数确定截止时间，体验权益同步到账。</p>
+<ul>
+<li>展示「兑换成功」，点击「查看我的券包」进入<a href="小程序券包PRD-20261022.md">券包</a>。</li>
+</ul>
+</li>
+<li>
+<p><strong>本人重复兑换</strong>：若该券码已由本人领取，则展示「已在券包中」，提供查看券包操作。</p>
+<ul>
+<li>不新增券、不重复占用额度、不重算有效期。</li>
+</ul>
+</li>
+</ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序兑换页设计说明" data-toc-id="小程序兑换页设计说明">小程序兑换页设计说明</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#目标与入口" data-toc-id="目标与入口">目标与入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#信息顺序" data-toc-id="信息顺序">信息顺序</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序兑换页-PRD" data-toc-id="小程序兑换页-PRD">小程序兑换页 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面入口" data-toc-id="页面入口">页面入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#兑换操作" data-toc-id="兑换操作">兑换操作</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#兑换结果" data-toc-id="兑换结果">兑换结果</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

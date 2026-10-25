@@ -432,28 +432,10 @@ main.desc pre.desc-code > code {
 </table>
 <h2 id="一券使用记录权限说明">一、券使用记录—权限说明</h2>
 <ol>
-<li>
-<p><strong>页面入口</strong>：在「营销管理」进入「优惠券记录」，默认打开「券使用记录」页签。</p>
-<ul>
-<li>同页的发放追溯说明见<a href="定向发放记录PRD-20261022.md">《定向发放记录 PRD》</a>。</li>
-</ul>
-</li>
-<li>
-<p><strong>查看权限</strong>：须具有优惠券记录的查看功能权限。</p>
-<ul>
-<li>本页不按当前发放人限制为本人记录。发券中心的本人数据限制见<a href="发放记录PRD-20261022.md">《发放记录 PRD》</a>。</li>
-</ul>
-</li>
-<li>
-<p><strong>记录范围</strong>：一条记录代表一张已绑定用户的券，包含定向发放、公开领取、券码领取三种来源。</p>
-<ul>
-<li>未领取体验券码在「查看券码」中查看，不进入本列表。</li>
-</ul>
-</li>
-<li>
-<p><strong>操作权限</strong>：「作废」须具有对应操作权限。</p>
-<ul>
-<li>查看记录权限与发券授权相互独立，不因用户无目标券发放授权而改变已发生的记录。</li>
+<li><strong>权限控制</strong>：<ul>
+<li>须具有「营销管理」下「优惠券管理」的「查询」/「编辑」功能权限。</li>
+<li><strong>作废</strong>：须具有「营销管理」下「优惠券管理」的「作废」权限。</li>
+<li><strong>数据权限</strong>：被授权发券用户只能看被授权的券使用记录。平台管理员和租户管理员可看全部</li>
 </ul>
 </li>
 </ol>
@@ -478,167 +460,44 @@ main.desc pre.desc-code > code {
 <p><strong>获取方式</strong>：单选。「定向发放」「公开领取」「券码领取」，支持清空。</p>
 </li>
 <li>
-<p><strong>使用状态</strong>：单选。「使用状态说明」定义的六种用户券状态，支持清空。</p>
-</li>
-<li>
-<p><strong>查询与重置</strong>：筛选变化或点击查询时回到第 1 页。</p>
-<ul>
-<li>「重置」清空页面筛选并回到第 1 页。</li>
-</ul>
-</li>
-<li>
-<p><strong>限定记录范围</strong>：从带有券、批次或单张券范围的上下文进入时保留该限定范围。</p>
-<ul>
-<li>展示「查看全部记录」用于解除范围。该范围与页面筛选共同生效。</li>
-</ul>
+<p><strong>使用状态</strong>：单选。包括待使用、使用中、已使用、已使用（退款）、已过期、已作废，支持清空。</p>
 </li>
 </ol>
 <h2 id="三券使用记录列表说明">三、券使用记录—列表说明</h2>
 <ol>
 <li>
-<p><strong>排序与分页</strong>：按获取时间倒序。</p>
-<ul>
-<li>默认每页 20 条，支持切换页码和每页条数，并展示总条数。无匹配数据时展示「暂无符合条件的券使用记录」。</li>
-</ul>
-</li>
-<li>
-<p><strong>字段顺序</strong>：按下列字段顺序展示。</p>
-</li>
-<li>
-<p><strong>序号</strong>：根据页码及每页条数连续编号。</p>
-</li>
-<li>
-<p><strong>券名称</strong>：展示用户券对应名称。</p>
-</li>
-<li>
-<p><strong>券类型</strong>：展示「满减券」「折扣券」「体验券」，标签与优惠券列表一致。</p>
-</li>
-<li>
-<p><strong>使用状态</strong>：展示「使用状态说明」定义的当前状态，不展示券模板发放状态。</p>
-</li>
-<li>
-<p><strong>持券用户</strong>：展示绑定用户脱敏手机号。</p>
-</li>
-<li>
-<p><strong>获取时间</strong>：实际领取或定向发放到账时间，精确到分钟。</p>
-<ul>
-<li>缺失时展示「—」。</li>
-</ul>
+<p><strong>使用状态</strong>：<br>
+    | 状态 | 业务含义与触发条件 |<br>
+    | --- | --- | --- |<br>
+    | 「待使用」 | 已领取，仍有效，未被订单占用且尚未完成该券对应使用；体验权益到账本身不表示已完成服务 |<br>
+    | 「使用中」 | 价格券被待支付订单占用；或体验券已创建体验订单但尚未完成服务 |<br>
+    | 「已使用」 | 价格券已经用于成功支付；或体验券已完成对应体验服务 | <br>
+    | 「已使用（退款）」 | 已使用的价格券发生退款且不满足返还条件，券保持使用终态 |<br>
+    | 「已过期」 | 未作废、未完成使用且未被订单占用，并已超过单券截止时间，不可继续使用 | <br>
+    | 「已作废」 | 人工执行作废成功，不可继续使用 |</p>
 </li>
 <li>
 <p><strong>关联订单号</strong>：展示当前占用订单或已关联订单。</p>
 <ul>
 <li>有订单时支持复制及查看完整号码，无订单展示「—」。</li>
+<li>有多个订单时显示多个订单号，用“，“隔开。</li>
 </ul>
 </li>
 <li>
 <p><strong>获取方式</strong>：展示「定向发放」「公开领取」「券码领取」。</p>
 </li>
 <li>
-<p><strong>有效期/截止时间</strong>：第一行展示领取后有效天数，第二行展示已固化的具体截止时间。</p>
-<ul>
-<li>计算口径引用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」。</li>
-</ul>
+<p><strong>有效期</strong>：第一行展示领取后有效天数，第二行展示已固化的具体截止时间。</p>
 </li>
 <li>
-<p><strong>操作</strong>：提供「作废」，不可操作时禁用。</p>
-</li>
-</ol>
-<h2 id="四券使用记录作废说明">四、券使用记录—作废说明</h2>
-<ol>
-<li>
-<p><strong>作废条件</strong>：券未作废、未消耗全部券权益且未被订单锁定时，具有操作权限的人员可发起作废。</p>
-<ul>
-<li>已作废、已消耗全部权益或被待支付订单锁定时不得重复执行。</li>
-</ul>
-</li>
-<li>
-<p><strong>作废确认</strong>：点击「作废」展示「作废该券？」及说明「该券将不能继续使用，历史记录保留。」。</p>
-<ul>
-<li>取消时不修改记录，确认成功后状态变为「已作废」，保留持有人、领取信息和已发生的使用记录，额度不返还。</li>
-</ul>
-</li>
-</ol>
-<h2 id="五券使用记录使用状态说明">五、券使用记录—使用状态说明</h2>
-<ol>
-<li>
-<p><strong>适用页面</strong>：下表用于本列表、已领取券码详情、查看券码及发券中心的用户券明细。</p>
-<ul>
-<li>券模板状态单独引用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>中的模板状态表。</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>状态</th>
-<th>业务含义与触发条件</th>
-<th>展示颜色</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>「待使用」</td>
-<td>已领取，仍有效，未被订单占用且尚未完成该券对应使用；体验权益到账本身不表示已完成服务</td>
-<td>橙色</td>
-</tr>
-<tr>
-<td>「使用中」</td>
-<td>价格券被待支付订单占用；或体验券已创建体验订单但尚未完成服务</td>
-<td>紫色</td>
-</tr>
-<tr>
-<td>「已使用」</td>
-<td>价格券已经用于成功支付；或体验券已完成对应体验服务</td>
-<td>绿色</td>
-</tr>
-<tr>
-<td>「已使用（退款）」</td>
-<td>已使用的价格券发生退款且不满足返还条件，券保持使用终态</td>
-<td>蓝色</td>
-</tr>
-<tr>
-<td>「已过期」</td>
-<td>未完成使用且超过单券截止时间，不可继续使用</td>
-<td>灰色</td>
-</tr>
-<tr>
-<td>「已作废」</td>
-<td>人工执行作废成功，不可继续使用</td>
-<td>红色</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>
-<p><strong>取消与关闭</strong>：占用订单取消或关闭后释放占用，仍有效的券回到「待使用」。</p>
-<ul>
-<li>超过截止时间则展示「已过期」。</li>
-</ul>
-</li>
-<li>
-<p><strong>退款返还</strong>：未履约订单全额退款且原价格券仍有效、未作废时，返还原券并恢复「待使用」，保留原券码和历史使用记录。</p>
-<ul>
-<li>部分退款、已履约退款或原券已过期时不返券。</li>
-</ul>
-</li>
-<li>
-<p><strong>状态判定</strong>：已作废优先展示「已作废」。</p>
-<ul>
-<li>已完成使用的券不因时间经过改为「已过期」。退款返还后按返还后的当前使用条件展示。</li>
-<li>历史多次体验券沿用既有权益，不因本期单次券规则重置。</li>
-</ul>
-</li>
-<li>
-<p><strong>刷新时机</strong>：打开记录页及发生领取、发放、订单占用、支付、关闭、履约、退款或作废后，以该张券最新业务结果展示状态。</p>
-<ul>
-<li>没有领取明细时不生成虚假用户券。</li>
-</ul>
+<p><strong>排序</strong>：按获取时间倒序。</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#券使用记录-PRD" data-toc-id="券使用记录-PRD">券使用记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一券使用记录权限说明" data-toc-id="一券使用记录权限说明">一、券使用记录—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二券使用记录筛选项说明" data-toc-id="二券使用记录筛选项说明">二、券使用记录—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三券使用记录列表说明" data-toc-id="三券使用记录列表说明">三、券使用记录—列表说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四券使用记录作废说明" data-toc-id="四券使用记录作废说明">四、券使用记录—作废说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五券使用记录使用状态说明" data-toc-id="五券使用记录使用状态说明">五、券使用记录—使用状态说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#券使用记录-PRD" data-toc-id="券使用记录-PRD">券使用记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一券使用记录权限说明" data-toc-id="一券使用记录权限说明">一、券使用记录—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二券使用记录筛选项说明" data-toc-id="二券使用记录筛选项说明">二、券使用记录—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三券使用记录列表说明" data-toc-id="三券使用记录列表说明">三、券使用记录—列表说明</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

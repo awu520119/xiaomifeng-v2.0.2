@@ -16,7 +16,7 @@ type OrderTab = '' | '待付款' | '待使用' | '已使用' | '退款中' | '�
 const ORDER_STATUS_TABS: OrderTab[] = ['', '待付款', '待使用', '已使用', '退款中', '退款失败', '已完成', '已退款', '已取消'];
 const DEFAULT_RANGE: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs('2026-10-01'), dayjs('2026-10-31')];
 
-export default function PremiumOrderListPage({ orders, initialOrderId }: { orders: Order[]; initialOrderId?: string }) {
+export default function PremiumOrderListPage({ orders, initialOrderId, lockDetail = false }: { orders: Order[]; initialOrderId?: string; lockDetail?: boolean }) {
   const { message } = useApp();
   const [activeStatus, setActiveStatus] = useState<OrderTab>('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(DEFAULT_RANGE);
@@ -68,7 +68,9 @@ export default function PremiumOrderListPage({ orders, initialOrderId }: { order
     { title: '订单用户', key: 'user', width: 120, dataIndex: 'user' },
     { title: '手机号', key: 'phone', width: 120, dataIndex: 'phone' },
     { title: '拍摄点', key: 'point', width: 150, dataIndex: 'point', ellipsis: true },
-    { title: '金额（元）', key: 'amount', width: 120, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.amount)}</span> },
+    { title: '应付金额（元）', key: 'expectedAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.expectedAmount)}</span> },
+    { title: '优惠金额（元）', key: 'couponDiscountAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.couponDiscountAmount || 0)}</span> },
+    { title: '实付金额（元）', key: 'paidAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.paidAmount)}</span> },
     { title: '订单类型', key: 'orderType', width: 110, dataIndex: 'orderType' },
     { title: '订单状态', key: 'status', width: 100, render: (_: unknown, order: Order) => orderStatus(order) },
     { title: '评分', key: 'rating', width: 100, align: 'center', render: (_: unknown, order: Order) => <Rate disabled value={order.rating || 0} /> },
@@ -82,6 +84,7 @@ export default function PremiumOrderListPage({ orders, initialOrderId }: { order
     setSelectedFlightTask(task);
   };
   const closeOrderDetail = () => {
+    if (lockDetail) return;
     setSelectedOrder(null);
     setSelectedFlightTask(null);
   };
@@ -99,8 +102,8 @@ export default function PremiumOrderListPage({ orders, initialOrderId }: { order
           <div className="order-summary-finance"><div className="order-summary-icon"><DollarCircleFilled /></div><div className="order-summary-stat order-summary-money"><Statistic title="月度净流水(元)" value={Math.max(0, paidAmount - refundAmount)} precision={2} prefix="￥" /></div><span className="order-summary-equals">=</span><div className="order-summary-stat order-summary-money"><Statistic title="总支付金额(元)" value={paidAmount} precision={2} prefix="￥" /></div><span className="order-summary-equals">−</span><div className="order-summary-stat order-summary-money order-summary-stat-danger"><Statistic title="总退款金额(元)" value={refundAmount} precision={2} prefix="￥" /></div></div>
         </div> : null}
       </section>
-      <section className="white-card order-table-card"><div className="order-table-toolbar order-reference-toolbar"><Tabs activeKey={activeStatus} onChange={(key) => setActiveStatus(key as OrderTab)} items={ORDER_STATUS_TABS.map((status) => ({ key: status, label: status || '全部订单' }))} /><div className="order-table-actions"><Select allowClear placeholder="标签筛选" value={tagFilter || undefined} onChange={(value) => setTagFilter(value || '')} options={orderTypeOptions} /><Input allowClear placeholder="搜索订单号、手机号、主题名称" value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Button type="primary" icon={<SearchOutlined />} aria-label="搜索订单" /></div></div><Table className="order-list-table" rowKey="id" columns={columns} dataSource={filteredOrders} scroll={{ x: 1900, y: 'calc(100vh - 500px)' }} pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'], showQuickJumper: true, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无订单数据' }} /></section>
-      <Drawer className="order-detail-drawer" title="订单详情" open={Boolean(detail)} onClose={closeOrderDetail} width={800} destroyOnClose footer={detail ? <div className="order-drawer-footer"><Button type="primary" danger disabled={!canRefund(detail)} onClick={() => message.info('退款流程属订单售后模块，本演示仅保留入口')}>退款</Button></div> : null}>
+      <section className="white-card order-table-card"><div className="order-table-toolbar order-reference-toolbar"><Tabs activeKey={activeStatus} onChange={(key) => setActiveStatus(key as OrderTab)} items={ORDER_STATUS_TABS.map((status) => ({ key: status, label: status || '全部订单' }))} /><div className="order-table-actions"><Select allowClear placeholder="标签筛选" value={tagFilter || undefined} onChange={(value) => setTagFilter(value || '')} options={orderTypeOptions} /><Input allowClear placeholder="搜索订单号、手机号、主题名称" value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Button type="primary" icon={<SearchOutlined />} aria-label="搜索订单" /></div></div><Table className="order-list-table" rowKey="id" columns={columns} dataSource={filteredOrders} scroll={{ x: 2140, y: 'calc(100vh - 500px)' }} pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'], showQuickJumper: true, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无订单数据' }} /></section>
+      <Drawer className="order-detail-drawer" title="订单详情" open={Boolean(detail)} onClose={closeOrderDetail} closable={!lockDetail} maskClosable={!lockDetail} keyboard={!lockDetail} width={800} destroyOnClose footer={detail ? <div className="order-drawer-footer"><Button type="primary" danger disabled={!canRefund(detail)} onClick={() => message.info('退款流程属订单售后模块，本演示仅保留入口')}>退款</Button></div> : null}>
         {detail ? <OrderDetailSections order={detail} onOpenFlightTask={openFlightTask} /> : null}
       </Drawer>
       <FlightTaskDetailDrawer task={selectedFlightTask} open={Boolean(selectedFlightTask)} onClose={() => setSelectedFlightTask(null)} />

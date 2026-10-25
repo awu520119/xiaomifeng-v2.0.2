@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>链接扫码领取</title>
+  <title>领取页</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,24 +406,91 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="小程序领取页设计说明">小程序领取页设计说明</h1>
-<h2 id="目标与入口">目标与入口</h2>
-<p>用户点击公开领取链接或扫描其二维码，进入同一张领取页。页面根据入口对应的优惠券展示内容，不设置领券中心。</p>
-<h2 id="信息顺序">信息顺序</h2>
+<h1 id="小程序领取页-PRD">小程序领取页 PRD</h1>
+<blockquote>
+<p>版本 v1.0　·　日期 2026-10-25</p>
+</blockquote>
+<p><em>需求场景：用户打开公开领取链接或扫描二维码，确认优惠内容后将优惠券领取到本人券包。</em></p>
+<h2 id="变更记录">变更记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>变更内容</th>
+<th>提出人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-10-25</td>
+<td>收敛领取页展示说明，保留领取校验、有效期及异常结果</td>
+<td>用户</td>
+</tr>
+</tbody>
+</table>
+<h2 id="页面入口">页面入口</h2>
 <ol>
-<li>优惠内容与券名称。</li>
-<li>适用拍摄点、主题及领取后有效天数。</li>
-<li>简短使用说明。</li>
-<li>底部固定「立即领取」。</li>
+<li>
+<p><strong>页面入口</strong>：通过<a href="公开领取PRD-20261022.md">公开领取</a>链接或二维码进入对应优惠券的领取页。</p>
+<ul>
+<li>单张体验券兑换码进入<a href="小程序兑换页PRD-20261022.md">兑换页</a>。</li>
+</ul>
+</li>
+<li>
+<p><strong>领取身份</strong>：使用当前小程序账号领取，不在页面展示账号信息或提供账号切换。</p>
+</li>
 </ol>
-<p>领取成功后在本页展示结果，提供「查看我的券包」。入口不存在、已停用、已领完或不在领取名单时，展示明确原因。体验券领取后权益直接到账，可在符合条件的订单使用。</p>
-<h2 id="演示说明">演示说明</h2>
-<p>查看器默认使用演示账号 <code>13800000001</code> 和满减券公开领取入口；正式领取链接以 <code>planId</code> 指定入口。后台与用户端共用本地 Mock。</p>
+<h2 id="页面内容与操作">页面内容与操作</h2>
+<ol>
+<li>
+<p><strong>券卡</strong>：顶部优惠提示区下展示券卡，包含优惠权益、券名称、券类型、「可领取」标签及「领取后 {有效天数} 天有效」。</p>
+<ul>
+<li>「可领取」为领取前展示标签，最终结果以提交时校验为准。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用规则</strong>：券卡底部默认收起，点击展开，再次点击收起。</p>
+<ul>
+<li>展示该券优惠摘要及仅限适用拍摄点和主题使用的说明。</li>
+</ul>
+</li>
+<li>
+<p><strong>券详情</strong>：点击券卡打开详情弹层，展示「优惠内容」「有效期」「适用范围」「使用规则」，关闭后返回领取页。</p>
+<ul>
+<li>领取前展示领取后有效天数，不生成具体截止时间。</li>
+</ul>
+</li>
+<li>
+<p><strong>领取操作</strong>：点击底部「立即领取」提交；打开详情或展开规则不执行领取。</p>
+</li>
+</ol>
+<h2 id="领取结果">领取结果</h2>
+<ol>
+<li>
+<p><strong>领取校验</strong>：提交时核对当前账号手机号、入口是否存在且有效、券模板发放状态及剩余量。</p>
+<ul>
+<li>若入口存在领取名单限制，则同时核对当前账号是否在名单内。</li>
+<li>校验失败展示原因，不新增用户券、不扣减额度。</li>
+</ul>
+</li>
+<li>
+<p><strong>领取成功</strong>：券绑定本人并进入券包，按本次领取时间加有效天数确定截止时间。</p>
+<ul>
+<li>体验券同步获得可下单的体验权益。</li>
+<li>展示「领取成功」，点击「查看我的券包」进入<a href="小程序券包PRD-20261022.md">券包</a>。</li>
+</ul>
+</li>
+<li>
+<p><strong>入口不可用</strong>：无法取得对应优惠券时，展示「领取入口不可用」，提示获取新的领取链接或二维码，并提供「查看我的券包」。</p>
+</li>
+</ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序领取页设计说明" data-toc-id="小程序领取页设计说明">小程序领取页设计说明</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#目标与入口" data-toc-id="目标与入口">目标与入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#信息顺序" data-toc-id="信息顺序">信息顺序</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#演示说明" data-toc-id="演示说明">演示说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序领取页-PRD" data-toc-id="小程序领取页-PRD">小程序领取页 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面入口" data-toc-id="页面入口">页面入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面内容与操作" data-toc-id="页面内容与操作">页面内容与操作</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#领取结果" data-toc-id="领取结果">领取结果</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

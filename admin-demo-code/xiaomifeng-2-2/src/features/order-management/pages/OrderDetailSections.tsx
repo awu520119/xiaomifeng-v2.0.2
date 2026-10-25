@@ -11,7 +11,9 @@ import mediaImage from '../../../assets/lotus-pond.jpg?inline';
 const { useApp } = App;
 
 export function OrderCouponInformation({ order }: { order: Order }) {
-  return order.couponName ? <>{order.couponName}{order.couponKind && order.couponKind !== '体验权益券' ? `（${order.couponKind}）` : ''}，优惠 ¥{moneyText(order.couponDiscountAmount || 0)}</> : <>未使用优惠券</>;
+  if (!order.couponName) return <>未使用优惠券</>;
+  const couponKind = order.couponKind === '体验权益券' ? '体验券' : order.couponKind || '优惠券';
+  return <>{order.couponName}（{couponKind}），优惠 ¥{moneyText(order.couponDiscountAmount || 0)}</>;
 }
 
 type MediaTab = 'movie' | 'photos' | 'vertical' | 'raw';

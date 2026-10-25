@@ -66,7 +66,7 @@ function LedgerRecords({ store, setStore }: Props) {
       { title: '获取时间', dataIndex: 'issuedAt', width: 160, render: (value: string) => value?.slice(0, 16) || '—' },
       { title: '关联订单号', width: 200, render: (_, ticket) => { const order = orderOf(ticket, store); return order ? <Typography.Text ellipsis={{ tooltip: order }} copyable>{order}</Typography.Text> : '—'; } },
       { title: '获取方式', width: 105, render: (_, ticket) => sourceName(ticket.source) },
-      { title: '有效期 / 截止时间', width: 220, render: (_, ticket) => <div><div>领取后 {ticket.validityDays} 天可用</div><Typography.Text type="secondary">截止：{ticket.expiresAt || '—'}</Typography.Text></div> },
+      { title: '有效期', width: 220, render: (_, ticket) => <div><div>领取后 {ticket.validityDays} 天可用</div><Typography.Text type="secondary">截止：{ticket.expiresAt || '—'}</Typography.Text></div> },
       { title: '操作', fixed: 'right', width: 80, render: (_, ticket) => canVoidTicket(ticket) && !ticket.lockedOrderId ? <Popconfirm title="作废该券？" description="该券将不能继续使用，历史记录保留。" onConfirm={() => voidTicket(ticket)}><Button type="link" danger>作废</Button></Popconfirm> : <Button type="link" disabled>作废</Button> },
     ]} /></div>
   </section>;

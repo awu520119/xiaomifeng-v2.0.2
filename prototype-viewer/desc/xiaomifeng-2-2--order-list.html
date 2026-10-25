@@ -430,97 +430,36 @@ main.desc pre.desc-code > code {
 </tr>
 </tbody>
 </table>
-<h2 id="一订单详情优惠券权限说明">一、订单详情（优惠券）—权限说明</h2>
+<h2 id="一订单列表金额字段">一、订单列表—金额字段</h2>
 <ol>
 <li>
-<p><strong>页面入口</strong>：在「订单管理」的「订单列表」点击「详情」，进入当前套餐订单详情。</p>
+<p><strong>应付金额</strong>：展示订单主题配置的当前售价，单位元，保留两位小数。</p>
 </li>
 <li>
-<p><strong>权限</strong>：沿用当前订单详情的查看权限。</p>
-<ul>
-<li>有订单查看权限即可查看该订单实际优惠信息，不额外要求取得对应券的发放授权。</li>
-</ul>
+<p><strong>优惠金额</strong>：订单使用优惠券或体验权益时，展示该订单实际优惠金额；未使用时展示「¥0.00」。</p>
 </li>
 <li>
-<p><strong>本期范围</strong>：订单类型只保留「套餐订单」。</p>
-<ul>
-<li>优惠券信息作为「订单信息」中的只读「优惠信息」字段展示，不新增优惠券操作、表单或独立状态区。</li>
-</ul>
+<p><strong>实付金额</strong>：将原「金额」列改名为「实付金额」，展示订单实际支付金额，单位元，保留两位小数。</p>
 </li>
 </ol>
-<h2 id="二订单详情优惠券详情字段说明">二、订单详情（优惠券）—详情字段说明</h2>
+<h2 id="二订单详情优惠券-增加优惠信息">二、订单详情（优惠券）-增加「优惠信息」</h2>
 <ol>
 <li>
-<p><strong>优惠信息</strong>：下列内容合并展示为一条「优惠信息」，用于回答使用券名称及实际优惠金额。</p>
-</li>
-<li>
-<p><strong>券名称</strong>：展示当前订单实际使用的券名称。</p>
+<p><strong>优惠信息格式</strong>：订单关联优惠券或体验权益时，统一展示「{优惠券名称}（{优惠券类型}），优惠 ¥{优惠金额}」。</p>
 <ul>
-<li>使用体验权益下单时展示对应体验券名称。</li>
-</ul>
-</li>
-<li>
-<p><strong>券类型</strong>：满减券、折扣券在券名称后用括号标识。</p>
-<ul>
-<li>体验券不额外拼接内部权益类型名称。</li>
-</ul>
-</li>
-<li>
-<p><strong>优惠金额</strong>：展示本订单实际记录的优惠金额，单位元，保留两位小数。</p>
-<ul>
-<li>不直接使用券模板面额代替订单实际优惠。</li>
-</ul>
-</li>
-<li>
-<p><strong>已使用券的展示</strong>：按本订单实际使用的券展示优惠信息。</p>
-<ul>
-<li><strong>价格券</strong>：「{券名称}（{券类型}），优惠 ¥{优惠金额}」。</li>
-<li><strong>体验券</strong>：「{券名称}，优惠 ¥{优惠金额}」。</li>
-<li><strong>零优惠</strong>：已用券且实际优惠为 0 时，展示「0.00」。</li>
+<li>满减券展示「满减券」，折扣券展示「折扣券」，体验权益券展示「体验券」。</li>
+<li>优惠金额取本订单实际记录值，单位元，保留两位小数；体验券按该订单记录的体验权益抵扣金额展示。</li>
 </ul>
 </li>
 <li>
 <p><strong>未使用券</strong>：订单未关联优惠券或体验权益时，优惠信息明确展示「未使用优惠券」。</p>
-</li>
-<li>
-<p><strong>关联信息缺失</strong>：订单存在用券关联，但券名称暂时不可取得时，展示「优惠券信息暂不可用」，保留订单已有实际优惠金额。</p>
-<ul>
-<li>不得误显示「未使用优惠券」。</li>
-</ul>
-</li>
-<li>
-<p><strong>数据一致性</strong>：展示该订单实际记录的优惠结果。</p>
-<ul>
-<li>券后续暂停、结束、改名或用户领取其他券，不得将本订单实际优惠金额替换为新券配置或其他订单金额。</li>
-</ul>
-</li>
-<li>
-<p><strong>展示边界</strong>：本期不在订单详情增加券码、体验券编号、体验次数、使用状态或发放人。</p>
-<ul>
-<li>若需查看用户券当前状态，使用后台「券使用记录」。</li>
-</ul>
-</li>
-</ol>
-<h2 id="三订单详情优惠券查看与刷新说明">三、订单详情（优惠券）—查看与刷新说明</h2>
-<ol>
-<li>
-<p><strong>打开详情</strong>：按所选订单展示对应优惠信息，切换查看另一订单时更新为该订单内容。</p>
-</li>
-<li>
-<p><strong>订单变化</strong>：订单支付、取消或退款后的金额与订单详情保持一致。</p>
-<ul>
-<li>「优惠金额」描述该订单记录的优惠，不把优惠券是否返还混入名称或另加未确认字段。</li>
-</ul>
-</li>
-<li>
-<p><strong>只读信息</strong>：「优惠信息」不提供复制链接、重新发券、修改优惠金额或跳转券码操作。</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#订单详情优惠券-PRD" data-toc-id="订单详情优惠券-PRD">订单详情（优惠券） PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一订单详情优惠券权限说明" data-toc-id="一订单详情优惠券权限说明">一、订单详情（优惠券）—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二订单详情优惠券详情字段说明" data-toc-id="二订单详情优惠券详情字段说明">二、订单详情（优惠券）—详情字段说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三订单详情优惠券查看与刷新说明" data-toc-id="三订单详情优惠券查看与刷新说明">三、订单详情（优惠券）—查看与刷新说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#订单详情优惠券-PRD" data-toc-id="订单详情优惠券-PRD">订单详情（优惠券） PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一订单列表金额字段" data-toc-id="一订单列表金额字段">一、订单列表—金额字段</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二订单详情优惠券-增加优惠信息" data-toc-id="二订单详情优惠券-增加优惠信息">二、订单详情（优惠券）-增加「优惠信息」</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

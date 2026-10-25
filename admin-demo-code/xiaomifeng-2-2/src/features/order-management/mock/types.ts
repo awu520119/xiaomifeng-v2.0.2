@@ -12,6 +12,7 @@ export interface Order {
   user: string;
   phone: string;
   amount: number;
+  expectedAmount: number;
   paidAmount: number;
   refundAmount: number;
   netAmount: number;

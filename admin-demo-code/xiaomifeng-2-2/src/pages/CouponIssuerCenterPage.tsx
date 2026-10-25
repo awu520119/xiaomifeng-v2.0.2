@@ -7,7 +7,7 @@ import { authorizedIssuerIds, canIssueCoupon, couponIssuerOptions, couponKinds, 
 import { couponUsageStatus, issueDirected } from '../mock/couponFlow';
 import { downloadQrCode, receiveUrl } from '../utils/couponExport';
 
-type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>>; initialTab?: '发券' | '发放记录' };
+type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>>; initialTab?: '发券' | '发放记录'; lockTabs?: boolean };
 type View = 'list' | 'direct' | 'public' | 'result';
 const kindText = (kind: CouponTemplate['kind']) => kind === '体验权益券' ? '体验券' : kind;
 const kindClass = (kind: CouponTemplate['kind']) => kind === '满减券' ? 'issuer-kind-reduction' : kind === '折扣券' ? 'issuer-kind-discount' : 'issuer-kind-experience';
@@ -18,7 +18,7 @@ const scopeText = (coupon: CouponTemplate) => coupon.kind === '体验权益券'
   ? shootingProducts.filter((item) => coupon.productIds.includes(item.id)).map((item) => item.name).join('、')
   : `${coupon.shootingPoints.join('、')}，${coupon.availableRange.join('、')}`;
 
-export default function CouponIssuerCenterPage({ store, setStore, initialTab = '发券' }: Props) {
+export default function CouponIssuerCenterPage({ store, setStore, initialTab = '发券', lockTabs = false }: Props) {
   const { message } = App.useApp();
   const [tab, setTab] = useState<'发券' | '发放记录'>(initialTab);
   const [recordFilter, setRecordFilter] = useState<'全部' | '定向发放' | '公开领取'>('全部');
@@ -98,9 +98,9 @@ export default function CouponIssuerCenterPage({ store, setStore, initialTab = '
 
   return <main className="issuer-mobile-shell"><div className="issuer-app-frame">
     {view === 'list' && <>
-      <Segmented className="issuer-tabs" block value={tab} onChange={(value) => setTab(value as typeof tab)} options={[
-        { value: '发券', label: <span className="issuer-tab-label"><GiftOutlined />发券</span> },
-        { value: '发放记录', label: <span className="issuer-tab-label"><ShareAltOutlined />发放记录</span> },
+      <Segmented className="issuer-tabs" block value={tab} onChange={(value) => { if (!lockTabs) setTab(value as typeof tab); }} options={[
+        { value: '发券', disabled: lockTabs && tab !== '发券', label: <span className="issuer-tab-label"><GiftOutlined />发券</span> },
+        { value: '发放记录', disabled: lockTabs && tab !== '发放记录', label: <span className="issuer-tab-label"><ShareAltOutlined />发放记录</span> },
       ]} />
       {tab === '发券' ? <section className="issuer-content">
         <div className="issuer-section-heading"><div><Typography.Title level={5}>选择优惠券</Typography.Title></div><Tag color="blue">{authorizedCoupons.length} 张</Tag></div>

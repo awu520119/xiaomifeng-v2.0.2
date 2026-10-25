@@ -25,7 +25,7 @@ export default function CouponCodeDetailContent({ ticket, serial, kindLabel, sta
     <div className="coupon-code-detail-info">
       <div className="coupon-code-detail-item"><span className="coupon-code-detail-label">领取用户</span><span className="coupon-code-detail-value">{ticket.phone || '未领取'}</span></div>
       <div className="coupon-code-detail-item"><span className="coupon-code-detail-label">领取时间</span><span className="coupon-code-detail-value">{ticket.issuedAt || '—'}</span></div>
-      <div className="coupon-code-detail-item coupon-code-detail-validity"><span className="coupon-code-detail-label">有效期 / 截止时间</span><span className="coupon-code-detail-value">领取后 {ticket.validityDays} 天可用{ticket.expiresAt ? `，截止 ${ticket.expiresAt}` : ''}</span></div>
+      <div className="coupon-code-detail-item coupon-code-detail-validity"><span className="coupon-code-detail-label">有效期</span><span className="coupon-code-detail-value">领取后 {ticket.validityDays} 天可用{ticket.expiresAt ? `，截止 ${ticket.expiresAt}` : ''}</span></div>
     </div>
     <div className="coupon-code-detail-credential"><div className="coupon-code-detail-credential-main"><span>券码</span><Typography.Text copyable>{ticket.redeemCode}</Typography.Text></div><Space size={8}><Popover trigger="click" placement="bottomRight" content={<div className="coupon-code-qr-popover"><div id={qrId(ticket)}><QRCode value={receiveUrl('code=' + encodeURIComponent(ticket.redeemCode))} size={176} /></div><Button block icon={<DownloadOutlined />} onClick={() => downloadQrCode(qrId(ticket), ticket.redeemCode + '-二维码')}>下载二维码</Button></div>}><Button>查看二维码</Button></Popover><Button icon={<CopyOutlined />} onClick={() => void copyCodeLink()}>复制领取链接</Button></Space></div>
     {children}
