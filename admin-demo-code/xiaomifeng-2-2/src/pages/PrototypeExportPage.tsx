@@ -1,4 +1,4 @@
-import { Empty, Typography } from 'antd';
+import { Empty } from 'antd';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CouponStore } from '../mock/coupons';
 import CouponListPage from './CouponListPage';
@@ -14,6 +14,7 @@ type Props = { page: string; store: CouponStore; setStore: Dispatch<SetStateActi
 const couponViews: Record<string, CouponPrototypeView | undefined> = {
   'coupon-list': undefined,
   'coupon-create': 'create',
+  'coupon-authorization': 'authorization',
   'coupon-directed': 'directed',
   'coupon-public': 'public',
   'coupon-detail': 'detail',
@@ -31,7 +32,7 @@ export default function PrototypeExportPage({ page, store, setStore }: Props) {
   if (Object.hasOwn(couponViews, page)) {
     content = <CouponListPage key={page} store={store} setStore={setStore} initialView={couponViews[page]} />;
   } else if (page === 'coupon-usage' || page === 'coupon-issued') {
-    content = <CouponRecordsPage key={page} store={store} setStore={setStore} initialTab={page === 'coupon-issued' ? 'issue' : 'ledger'} lockTabs />;
+    content = <CouponRecordsPage key={page} store={store} setStore={setStore} />;
   } else if (isIssuerPage) {
     content = <CouponIssuerCenterPage key={page} store={store} setStore={setStore} initialTab={page === 'issuer-records' ? '发放记录' : '发券'} lockTabs />;
   } else if (page === 'order-coupon-detail') {
@@ -44,7 +45,6 @@ export default function PrototypeExportPage({ page, store, setStore }: Props) {
 
   return <main className={`prototype-export-workspace${isPopupPage ? ' prototype-export-isolated' : ''}`} data-prototype-page={page}>
     {isPopupPage && <div className="prototype-stage-mask" aria-hidden="true" />}
-    {isIssuerPage && <header className="prototype-issuer-header"><Typography.Title level={4}>{page === 'issuer-records' ? '发放记录' : '发券'}</Typography.Title><Typography.Text type="secondary">系统管理员，admin</Typography.Text></header>}
     {content}
   </main>;
 }

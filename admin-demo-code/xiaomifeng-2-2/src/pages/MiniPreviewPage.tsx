@@ -8,7 +8,7 @@ const titles: Record<string, string> = {
   redeem: '兑换体验券',
   wallet: '我的券包',
   checkout: '下单选券',
-  product: '商品详情与选套餐',
+  product: '下单选券',
   mine: '我的',
   order: '订单详情',
 };

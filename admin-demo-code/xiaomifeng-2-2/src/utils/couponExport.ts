@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 export function downloadCouponCodes(records: CouponIssueRecord[], batchNo?: string) {
   if (!records.length) return;
-  const rows = [['唯一券号/兑换码', '优惠券名称', '使用规则', '领取时间', '截止时间', '专属领取链接', '二维码内容'], ...records.map((row) => [row.redeemCode, row.couponName, row.benefit, row.issuedAt, row.expiresAt, receiveUrl(`code=${encodeURIComponent(row.redeemCode)}`), receiveUrl(`code=${encodeURIComponent(row.redeemCode)}`)])];
+  const rows = [['唯一券号/兑换码', '发放人ID', '优惠券名称', '使用规则', '领取时间', '截止时间', '专属领取链接', '二维码内容'], ...records.map((row) => [row.redeemCode, row.distributedById || '', row.couponName, row.benefit, row.issuedAt, row.expiresAt, receiveUrl(`code=${encodeURIComponent(row.redeemCode)}`, row.distributedById), receiveUrl(`code=${encodeURIComponent(row.redeemCode)}`, row.distributedById)])];
   const csv = '\uFEFF' + rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
   downloadUrl(URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })), `${batchNo || records[0].couponName}-券码与链接.csv`, true);
 }
@@ -76,17 +76,17 @@ export async function downloadExperienceCouponZip(records: CouponIssueRecord[], 
   const root = createRoot(host);
   const entries: ZipEntry[] = [];
   const safeName = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_');
-  const rows = [['体验券编号', '唯一券码', '优惠券名称', '使用规则', '领取链接', '二维码文件'], ...records.map((record) => {
+  const rows = [['体验券编号', '唯一券码', '发放人ID', '优惠券名称', '使用规则', '领取链接', '二维码文件'], ...records.map((record) => {
     const serial = record.serialNo || record.redeemCode;
-    const link = receiveUrl(`code=${encodeURIComponent(record.redeemCode)}`);
-    return [serial, record.redeemCode, record.couponName, record.benefit, link, `二维码/${safeName(serial)}.png`];
+    const link = receiveUrl(`code=${encodeURIComponent(record.redeemCode)}`, record.distributedById);
+    return [serial, record.redeemCode, record.distributedById || '', record.couponName, record.benefit, link, `二维码/${safeName(serial)}.png`];
   })];
   const csv = new TextEncoder().encode('\uFEFF' + rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(',')).join('\n'));
   entries.push({ name: '线下发放清单.csv', data: csv });
   try {
     for (const record of records) {
       const serial = safeName(record.serialNo || record.redeemCode);
-      const link = receiveUrl(`code=${encodeURIComponent(record.redeemCode)}`);
+      const link = receiveUrl(`code=${encodeURIComponent(record.redeemCode)}`, record.distributedById);
       flushSync(() => root.render(createElement(QRCode, { key: record.id, value: link, size: 256, bordered: false, type: 'canvas' })));
       await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
       const canvas = host.querySelector('canvas');
@@ -100,13 +100,17 @@ export async function downloadExperienceCouponZip(records: CouponIssueRecord[], 
   downloadUrl(URL.createObjectURL(createZip(entries)), `${safeName(couponName)}-线下发放券码.zip`, true);
 }
 function downloadUrl(url: string, name: string, revoke = false) { const link = document.createElement('a'); link.href = url; link.download = name; link.click(); if (revoke) setTimeout(() => URL.revokeObjectURL(url), 1000); }
-export function receiveUrl(query: string) {
+export function receiveUrl(query: string, issuerId?: string) {
+  const resolvedIssuerId = issuerId || 'current-admin';
+  const fullQuery = !/[?&]issuerId=/.test(query)
+    ? `${query}${query ? '&' : ''}issuerId=${encodeURIComponent(resolvedIssuerId)}`
+    : query;
   const url = new URL(location.href);
   if (document.documentElement.dataset.prototypeViewer === 'true' && /\/pages\/[^/]+\.html$/.test(url.pathname)) {
     url.pathname = url.pathname.replace(/\/pages\/[^/]+\.html$/, '/pages/mini-receive.html');
-    url.hash = `/demo/export/mini-receive?${query}`;
+    url.hash = `/demo/export/mini-receive?${fullQuery}`;
   } else {
-    url.hash = `/coupon-receive?${query}`;
+    url.hash = `/coupon-receive?${fullQuery}`;
   }
   return url.toString();
 }

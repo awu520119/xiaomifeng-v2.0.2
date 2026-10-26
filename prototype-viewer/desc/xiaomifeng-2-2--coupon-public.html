@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>公开领取</title>
+  <title>公开发放</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,11 +406,11 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="公开领取-PRD">公开领取 PRD</h1>
+<h1 id="公开发放-PRD">公开发放 PRD</h1>
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-22</p>
 </blockquote>
-<p><em>需求场景：获授权的运营人员取得价格券的通用领取二维码和链接，供用户自主领取优惠券。</em></p>
+<p><em>需求场景：获授权的运营人员可公开发放通用领取二维码和链接，供用户自主领取优惠券。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -425,20 +425,20 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-22</td>
-<td>初版；补齐领取身份、提交校验与重复领取口径</td>
+<td>初版</td>
 <td>用户</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一公开领取权限说明">一、公开领取—权限说明</h2>
+<h2 id="一公开发放权限说明">一、公开发放—权限说明</h2>
 <ol>
 <li><strong>权限控制</strong>：<ul>
 <li>须具有「营销管理」下「优惠券管理」的「发放」功能权限。</li>
-<li>须有该券的「发券权限」。</li>
+<li><strong>数据权限</strong>：平台和租户管理员可以定向发放所有券；其他用户只可以定向发放被授权的券。</li>
 </ul>
 </li>
 </ol>
-<h2 id="二公开领取详情字段说明">二、公开领取—详情字段说明</h2>
+<h2 id="二公开发放详情字段说明">二、公开发放—详情字段说明</h2>
 <ol>
 <li>
 <p><strong>优惠券</strong>：自动带出所选券名称。</p>
@@ -447,28 +447,43 @@ main.desc pre.desc-code > code {
 <p><strong>券类型</strong>：自动带出满减券或折扣券标签。</p>
 </li>
 <li>
-<p><strong>公开领取二维码</strong>：对应该券的通用领取入口。</p>
+<p><strong>公开发放二维码</strong>：对应该券的通用领取入口。</p>
 <ul>
 <li>同一券重复打开时复用现有通用入口。</li>
+<li>创建或重复打开入口不生成用户券，不扣减发放额度，也不启动有效期。</li>
+<li>二维码对应的入口携带当前发放账号 ID；用户通过该入口领取成功后，用户券和领取记录保留该发放人 ID。</li>
 </ul>
 </li>
 <li>
 <p><strong>领取链接</strong>：与二维码指向同一领取入口，只读展示。</p>
+<ul>
+<li>领取链接携带与二维码一致的发放人 ID，不因重复打开入口而改变。</li>
+</ul>
 </li>
 </ol>
-<h2 id="三公开领取领取与操作说明">三、公开领取—领取与操作说明</h2>
+<h2 id="三公开发放领取与操作说明">三、公开发放—领取与操作说明</h2>
 <ol>
 <li>
-<p><strong>下载二维码</strong>：下载当前入口二维码，供线上分享或线下展示。</p>
+<p><strong>下载二维码和复制领取链接</strong>：支持下载当前入口二维码或复制领取链接，供线上分享或线下展示。</p>
 </li>
 <li>
-<p><strong>复制领取链接</strong>：复制当前只读链接。</p>
-</li>
-<li>
-<p>**领取校验：</p>
+<p><strong>领取校验</strong>：</p>
 <ul>
-<li><strong>领取校验</strong>：券模板为「发放中」且剩余量大于 0；若不满足，则提示对应原因。</li>
-<li><strong>重复领取</strong>：本期不设置每人限领；同一账号再次成功领取时生成另一张用户券，每张分别占用额度并起算有效期。</li>
+<li>用户提交领取时，校验券模板状态为「发放中」且剩余量大于 0；不满足时提示对应原因，不生成用户券、不扣减额度。</li>
+<li>本期不设置每人限领；同一账号再次领取成功时，生成另一张用户券并单独占用额度、起算有效期。</li>
+</ul>
+</li>
+<li>
+<p><strong>领取生效</strong>：领取成功后生成一张绑定当前用户的券，并扣减一张共用发放额度。</p>
+<ul>
+<li>每张用户券按实际领取时间与配置的有效天数分别确定截止时间。</li>
+<li>用户券、领取明细及券使用记录均写入该公开入口的发放人 ID。</li>
+</ul>
+</li>
+<li>
+<p><strong>停发与恢复</strong>：券模板暂停或剩余量为 0 时，原入口继续保留但停止新增领取。</p>
+<ul>
+<li>暂停的券恢复发放且仍有剩余额度后，原入口恢复领取。</li>
 </ul>
 </li>
 </ol>
@@ -476,7 +491,7 @@ main.desc pre.desc-code > code {
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#公开领取-PRD" data-toc-id="公开领取-PRD">公开领取 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一公开领取权限说明" data-toc-id="一公开领取权限说明">一、公开领取—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二公开领取详情字段说明" data-toc-id="二公开领取详情字段说明">二、公开领取—详情字段说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三公开领取领取与操作说明" data-toc-id="三公开领取领取与操作说明">三、公开领取—领取与操作说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#公开发放-PRD" data-toc-id="公开发放-PRD">公开发放 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一公开发放权限说明" data-toc-id="一公开发放权限说明">一、公开发放—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二公开发放详情字段说明" data-toc-id="二公开发放详情字段说明">二、公开发放—详情字段说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三公开发放领取与操作说明" data-toc-id="三公开发放领取与操作说明">三、公开发放—领取与操作说明</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

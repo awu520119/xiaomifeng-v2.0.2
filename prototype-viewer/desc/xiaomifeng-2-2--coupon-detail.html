@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-22</p>
 </blockquote>
-<p><em>需求场景：运营人员查看优惠券已保存的基础信息和优惠规则，并配置该券可发放账号。</em></p>
+<p><em>需求场景：运营人员查看优惠券创建配置的只读详情，并配置该券可发放账号。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -425,116 +425,68 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-22</td>
-<td>初版；明确范围展示与授权取消结果</td>
+<td>初稿</td>
 <td>用户</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一优惠券详情权限说明">一、优惠券详情—权限说明</h2>
+<h2 id="一权限说明">一、权限说明</h2>
 <ol>
-<li>
-<p><strong>页面入口</strong>：点击优惠券列表券名称或「详情」，打开只读详情抽屉。</p>
-<ul>
-<li>须具有对应查看权限。</li>
-</ul>
-</li>
-<li>
-<p><strong>信息结构</strong>：顶部展示券名称、类型、发放状态和优惠内容，正文按「基础信息」「优惠规则」「配置权限」分组。</p>
-</li>
-</ol>
-<h2 id="二优惠券详情基础信息">二、优惠券详情—基础信息</h2>
-<ol>
-<li>
-<p><strong>优惠券名称</strong>：展示该券当前名称。</p>
-</li>
-<li>
-<p><strong>优惠券类型</strong>：展示与列表一致的类型标签。</p>
-</li>
-<li>
-<p><strong>发放状态</strong>：使用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」定义的模板状态。</p>
-</li>
-<li>
-<p><strong>优惠内容</strong>：由该券优惠规则形成摘要。</p>
-<ul>
-<li><strong>价格券</strong>：展示满减或折扣内容。</li>
-<li><strong>体验券</strong>：展示配置对应的体验内容。</li>
-</ul>
-</li>
-<li>
-<p><strong>创建时间</strong>：展示创建时间，缺失时展示「—」。</p>
-</li>
-<li>
-<p><strong>有效期</strong>：展示「领取后 {有效天数} 天可用」。</p>
-</li>
-<li>
-<p><strong>发放总量</strong>：展示配置总量，单位张。</p>
-</li>
-<li>
-<p><strong>已领取</strong>：展示成功绑定用户的券张数，统计口径引用<a href="优惠券列表PRD-20261022.md">《优惠券列表 PRD》</a>「状态与计算口径」。</p>
-</li>
-</ol>
-<h2 id="三优惠券详情优惠规则">三、优惠券详情—优惠规则</h2>
-<ol>
-<li>
-<p><strong>使用门槛</strong>：价格券展示金额，门槛为 0 时展示「无门槛」。</p>
-</li>
-<li>
-<p><strong>优惠金额/折扣</strong>：满减券展示优惠金额，折扣券展示折扣。</p>
-<ul>
-<li>值来自该券已保存配置。</li>
-</ul>
-</li>
-<li>
-<p><strong>可用范围</strong>：价格券未限制主题时展示「全部可用」；若配置指定主题，则展示已选主题名称。</p>
-</li>
-<li>
-<p><strong>适用拍摄点</strong>：展示对应配置的拍摄点。</p>
-</li>
-<li>
-<p><strong>适用主题</strong>：体验券展示已配置的体验主题。</p>
-</li>
-<li>
-<p><strong>使用规则</strong>：原文展示已保存使用规则，保留换行。</p>
-<ul>
-<li>历史缺失时展示「—」。</li>
-</ul>
-</li>
-<li>
-<p><strong>字段边界</strong>：不单独展示体验次数，不增加创建表单不存在的可编辑配置项。</p>
-<ul>
-<li>优惠内容为只读摘要，不是新增配置字段。</li>
+<li><strong>页面入口</strong>：从优惠券列表点击券名称或「详情」打开「优惠券详情」抽屉。<ul>
+<li>需具有对应查看权限。</li>
 </ul>
 </li>
 </ol>
-<h2 id="四优惠券详情配置权限">四、优惠券详情—配置权限</h2>
+<h2 id="二基础信息">二、基础信息</h2>
+<ol>
+<li>见原型，回显<strong>优惠券名称</strong>和**优惠券类型</li>
+</ol>
+<h2 id="三优惠规则">三、优惠规则</h2>
 <ol>
 <li>
-<p><strong>授权账号</strong>：展示当前获该券发放授权的账号，格式为「{账号}（{姓名}）」。</p>
+<p>见原型，回显对应的<strong>优惠内容</strong>：</p>
 <ul>
-<li><strong>多个账号</strong>：逐项展示。</li>
-<li><strong>无授权账号</strong>：展示「暂未授权账号，当前不可发放」。</li>
+<li>满减券：展示「使用门槛」和「满减金额」。</li>
+<li>折扣券：展示「使用门槛」和「折扣」。</li>
+<li>体验券权益：展示「可兑换 1 次体验」。</li>
 </ul>
 </li>
 <li>
-<p><strong>配置操作</strong>：有发券权限配置功能权限时提供「配置」，打开授权账号多选。</p>
+<p><strong>可用范围</strong>：展示创建时选择的「全部可用」或「指定主题」。</p>
 <ul>
-<li>候选项以账号和姓名识别人员，可搜索、增加或移除。</li>
+<li>选择「全部可用」时展示全部适用含义。</li>
+<li>选择「指定主题」时展示适用拍摄点和适用主题。</li>
+</ul>
+</li>
+</ol>
+<h2 id="四有效期与发放">四、有效期与发放</h2>
+<ol>
+<li>见原型，回显<strong>有效期</strong>、<strong>发放总量</strong>和 <strong>已领取</strong>数量。</li>
+</ol>
+<h2 id="五使用规则">五、使用规则</h2>
+<ol>
+<li><strong>使用规则</strong>：展示创建时保存的原文并保留换行；历史配置缺失时展示「—」。</li>
+</ol>
+<h2 id="六配置权限">六、配置权限</h2>
+<ol>
+<li>
+<p><strong>授权账号</strong>：展示当前获得该券发放授权的账号，格式为「{账号}（{姓名}）」。</p>
+<ul>
+<li>多个账号逐项展示；无授权账号时展示「暂未授权账号，当前不可发放」。</li>
 </ul>
 </li>
 <li>
-<p><strong>保存授权</strong>：允许清空全部账号。</p>
-<ul>
-<li><strong>保存结果</strong>：立即更新详情与发放权限。</li>
-<li><strong>清空结果</strong>：任何账号均不能凭单券授权发放该券，已有用户券不受影响。</li>
-<li><strong>取消结果</strong>：点击「取消」或关闭配置弹窗，不保存本次选择，保留原授权账号。</li>
-</ul>
+<p><strong>配置操作</strong>：具有发券权限配置功能权限时，可搜索、增加或移除授权账号。</p>
+</li>
+<li>
+<p><strong>保存结果</strong>：保存后立即更新详情与发放权限；清空授权后，任何账号均不能继续发放该券，已有用户券不受影响。取消或关闭配置不保存本次修改。</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券详情-PRD" data-toc-id="优惠券详情-PRD">优惠券详情 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一优惠券详情权限说明" data-toc-id="一优惠券详情权限说明">一、优惠券详情—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二优惠券详情基础信息" data-toc-id="二优惠券详情基础信息">二、优惠券详情—基础信息</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三优惠券详情优惠规则" data-toc-id="三优惠券详情优惠规则">三、优惠券详情—优惠规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四优惠券详情配置权限" data-toc-id="四优惠券详情配置权限">四、优惠券详情—配置权限</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券详情-PRD" data-toc-id="优惠券详情-PRD">优惠券详情 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一权限说明" data-toc-id="一权限说明">一、权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二基础信息" data-toc-id="二基础信息">二、基础信息</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三优惠规则" data-toc-id="三优惠规则">三、优惠规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四有效期与发放" data-toc-id="四有效期与发放">四、有效期与发放</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#五使用规则" data-toc-id="五使用规则">五、使用规则</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#六配置权限" data-toc-id="六配置权限">六、配置权限</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

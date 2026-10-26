@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { CouponStore } from '../mock/coupons';
 import { resolveCouponCode } from '../mock/couponFlow';
-import { canIssueCoupon, couponExpiryAt, couponLocalTime, createTicket, effectiveCouponStatus, maskPhone, receiveLimitError, shootingProducts } from '../mock/coupons';
+import { canIssueCoupon, couponExpiryAt, couponLocalTime, createTicket, effectiveCouponStatus, issuerAwareRedeemCode, maskPhone, receiveLimitError, shootingProducts } from '../mock/coupons';
 type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>> };
 export default function CouponReceivePage({ store, setStore }: Props) {
   const [params] = useSearchParams(); const navigate = useNavigate(); const planId = params.get('planId');
@@ -29,12 +29,15 @@ export default function CouponReceivePage({ store, setStore }: Props) {
         if (!canIssueCoupon(coupon, store.tickets)) { message.error('该券已停用、失效或发放名额已满'); return; }
         if (limit) { message.error(limit); return; }
         if (coupon.kind === '体验权益券') {
-          const code = store.tickets.find((row) => row.couponId === coupon.id && !row.phoneDigits && row.status !== '已作废');
+          const code = store.tickets.find((row) => row.couponId === coupon.id && !row.phoneDigits && !row.distributedById && row.status !== '已作废');
           if (!code) { message.error('体验券已领完'); return; }
           const issuedAt = couponLocalTime();
-          setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === code.id ? { ...row, phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, source: '扫码领取', claimPlanId: plan!.id, status: '待使用' } : row) })); setResultId(code.id);
+          const issuerId = plan!.operatorId || params.get('issuerId') || undefined;
+          setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === code.id ? { ...row, redeemCode: issuerAwareRedeemCode(row.redeemCode, issuerId), distributedById: issuerId, distributedAt: couponLocalTime(), phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, source: '扫码领取', claimPlanId: plan!.id, status: '待使用' } : row) })); setResultId(code.id);
         } else {
-          const ticket = { ...createTicket(coupon, '扫码领取', values.phone), claimPlanId: plan!.id };
+          const baseTicket = createTicket(coupon, '扫码领取', values.phone);
+          const issuerId = plan!.operatorId || params.get('issuerId') || undefined;
+          const ticket = { ...baseTicket, redeemCode: issuerAwareRedeemCode(baseTicket.redeemCode, issuerId), distributedById: issuerId, distributedAt: couponLocalTime(), claimPlanId: plan!.id };
           setStore((current) => ({ ...current, tickets: [ticket, ...current.tickets] })); setResultId(ticket.id);
         }
       } else {
@@ -44,7 +47,8 @@ export default function CouponReceivePage({ store, setStore }: Props) {
         if (['已作废', '已过期', '已使用', '已使用（退款）'].includes(effectiveCouponStatus(codeTicket))) { message.error('该券码已失效或作废，不能领取'); return; }
         if (limit) { message.error(limit); return; }
         const issuedAt = couponLocalTime();
-        setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === codeTicket.id ? { ...row, phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, status: '待使用' } : row) })); setResultId(codeTicket.id);
+        const issuerId = codeTicket.distributedById || params.get('issuerId') || undefined;
+        setStore((current) => ({ ...current, tickets: current.tickets.map((row) => row.id === codeTicket.id ? { ...row, redeemCode: issuerAwareRedeemCode(row.redeemCode, issuerId), distributedById: issuerId, distributedAt: row.distributedAt || couponLocalTime(), phone: maskPhone(values.phone), phoneDigits: values.phone, issuedAt, expiresAt: couponExpiryAt(issuedAt, row.validityDays || coupon.validityDays), validityDays: row.validityDays || coupon.validityDays, status: '待使用' } : row) })); setResultId(codeTicket.id);
       }
       message.destroy();
     } finally { setBusy(false); }

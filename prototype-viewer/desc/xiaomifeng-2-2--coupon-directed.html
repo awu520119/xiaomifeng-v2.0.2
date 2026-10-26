@@ -425,16 +425,20 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-22</td>
-<td>初版；精简权限与表单说明</td>
+<td>初版</td>
 <td>用户</td>
 </tr>
 </tbody>
 </table>
 <h2 id="一定向发放权限说明">一、定向发放—权限说明</h2>
 <ol>
-<li><strong>权限控制</strong>：须同时具有「优惠券管理」的「发放」功能权限和所选券的「发券权限」。</li>
+<li><strong>权限控制</strong>：<ul>
+<li>须具有「营销管理」下「优惠券管理」的「发放」功能权限。</li>
+<li><strong>数据权限</strong>：平台和租户管理员可以定向发放所有券；其他用户只可以定向发放被授权的券。</li>
+</ul>
+</li>
 </ol>
-<h2 id="二定向发放表单字段">二、定向发放—表单字段</h2>
+<h2 id="二定向发放新增表单字段">二、定向发放—新增表单字段</h2>
 <ol>
 <li>
 <p><strong>优惠券</strong>：只读，自动带出所选券名称。</p>
@@ -442,15 +446,29 @@ main.desc pre.desc-code > code {
 <li>
 <p><strong>券类型</strong>：只读标签，展示「满减券」或「折扣券」。</p>
 </li>
+</ol>
+<h2 id="三定向发放提交与结果">三、定向发放—提交与结果</h2>
+<ol>
 <li>
-<p><strong>接收手机号</strong>：多行输入接收用户的手机号。</p>
+<p><strong>提交校验</strong>：</p>
+<ul>
+<li>点击「确认发放」时，按解析后的手机号条数再次校验发放权限、券模板状态和剩余发放量；重复手机号按出现次数分别发放并扣减额度。</li>
+<li>任一校验失败时保留当前输入并提示原因。</li>
+<li>提交成功时使用当前登录账号 ID作为本次发放人 ID，写入每张用户券及对应发放记录。</li>
+</ul>
+</li>
+<li>
+<p><strong>发放结果</strong>：成功页仅展示本次发放成功数量。</p>
+<ul>
+<li>如本次发放生成券码或领取凭证，券码、二维码和领取链接携带本次发放人 ID；用户券及券使用记录沿用该 ID。</li>
+</ul>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#定向发放-PRD" data-toc-id="定向发放-PRD">定向发放 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一定向发放权限说明" data-toc-id="一定向发放权限说明">一、定向发放—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二定向发放表单字段" data-toc-id="二定向发放表单字段">二、定向发放—表单字段</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#定向发放-PRD" data-toc-id="定向发放-PRD">定向发放 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一定向发放权限说明" data-toc-id="一定向发放权限说明">一、定向发放—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二定向发放新增表单字段" data-toc-id="二定向发放新增表单字段">二、定向发放—新增表单字段</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三定向发放提交与结果" data-toc-id="三定向发放提交与结果">三、定向发放—提交与结果</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

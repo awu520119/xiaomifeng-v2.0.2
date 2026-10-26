@@ -48,6 +48,7 @@ export type CouponIssueRecord = {
   minSpend: number; discountAmount: number; discountRate: number;
   totalUses: number; usedTimes: number; usageHistory: CouponUseRecord[];
   orderNo?: string; shootingPoint?: string; batchNo?: string; claimPlanId?: string; lockedOrderId?: string;
+  distributedById?: string; distributedAt?: string;
 };
 export type CouponClaimPlan = { id: string; couponId: string; allowedPhones: string[]; createdAt: string; totalLimit?: number; perUserLimit?: number; endsAt?: string; status?: '启用' | '已停用'; operatorId?: string; operatorName?: string };
 export type CouponBatch = { id: string; couponId: string; source: '定向发放' | '专属券码'; quantity: number; createdAt: string; operator: string; operatorId?: string; origin?: string };
@@ -62,19 +63,25 @@ export function normalizeCouponStore(value: CouponStore): CouponStore {
       ? Math.ceil((new Date(legacy.endsAt.replace(' ', 'T')).getTime() - new Date(legacy.startsAt.replace(' ', 'T')).getTime()) / 86400000)
       : 30;
     const { startsAt: _startsAt, endsAt: _endsAt, ...rest } = legacy;
-    return { ...rest, validityDays: Math.max(1, duration) } as CouponTemplate;
-  });
+    return { ...rest, validityDays: Math.max(1, duration), rightsCount: rest.kind === '体验权益券' ? 1 : rest.rightsCount } as CouponTemplate;
+  }).map((coupon) => coupon.kind === '体验权益券' ? { ...coupon, rightsCount: 1, benefit: couponRuleText({ ...coupon, rightsCount: 1 }) } : coupon);
   const validityByCoupon = new Map(templates.map((coupon) => [coupon.id, coupon.validityDays]));
   const tickets = value.tickets.map((ticket) => {
     const validityDays = ticket.validityDays || validityByCoupon.get(ticket.couponId) || 30;
     // 已领取券保留原截止时间；未领取的券码领取后再开始计时。
     const issuedAt = ticket.issuedAt || '';
     const { startsAt: _startsAt, ...rest } = ticket as CouponIssueRecord & { startsAt?: string };
-    return { ...rest, validityDays, expiresAt: ticket.expiresAt || (issuedAt ? couponExpiryAt(issuedAt, validityDays) : '') };
+    const experience = ticket.couponKind === '体验权益券';
+    const claimPlan = rest.claimPlanId ? value.plans.find((plan) => plan.id === rest.claimPlanId) : undefined;
+    const batch = rest.batchNo ? value.batches?.find((item) => item.id === rest.batchNo) : undefined;
+    const distributedById = rest.distributedById || claimPlan?.operatorId || batch?.operatorId;
+    const usageHistory = experience ? rest.usageHistory.slice(0, 1) : rest.usageHistory;
+    return { ...rest, redeemCode: issuerAwareRedeemCode(rest.redeemCode, distributedById), distributedById, validityDays, expiresAt: ticket.expiresAt || (issuedAt ? couponExpiryAt(issuedAt, validityDays) : ''), benefit: experience ? '可兑换 1 次体验' : rest.benefit, totalUses: experience ? 1 : rest.totalUses, usedTimes: experience ? Math.min(1, rest.usedTimes) : rest.usedTimes, usageHistory };
   });
   const accountRights = (value.accountRights || []).map((right) => {
     const { startsAt: _startsAt, ...rest } = right as ExperienceAccountRight & { startsAt?: string };
-    return rest;
+    const used = (rest.usageHistory?.length || 0) > 0 || rest.remainingUses <= 0;
+    return { ...rest, totalUses: 1, remainingUses: used ? 0 : 1, usageHistory: rest.usageHistory?.slice(0, 1) };
   });
   return { ...value, templates, tickets, accountRights };
 }
@@ -90,6 +97,12 @@ export function couponExpiryAt(issuedAt: string, validityDays: number) {
 }
 export function uniqueCouponId(prefix = 'CN') { return `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${Array.from(crypto.getRandomValues(new Uint32Array(3)), (value) => value.toString(16).padStart(8, '0')).join('').toUpperCase()}`; }
 export function maskPhone(phone: string) { return `${phone.slice(0, 3)}****${phone.slice(-4)}`; }
+export function issuerAwareRedeemCode(code: string, issuerId?: string) {
+  if (!issuerId) return code;
+  const prefix = issuerId.toUpperCase();
+  if (code.startsWith(`${prefix}::`)) return code;
+  return `${prefix}::${code}`;
+}
 export function parsePhones(value: string) { return value.split(/[\s,，;；]+/).map((row) => row.trim()).filter(Boolean); }
 export function phoneListError(phones: string[]) {
   if (!phones.length) return '请输入手机号';
@@ -97,7 +110,7 @@ export function phoneListError(phones: string[]) {
   return undefined;
 }
 export function couponRuleText(coupon: Pick<CouponTemplate, 'kind' | 'minSpend' | 'discountAmount' | 'discountRate' | 'rightsCount'>) {
-  if (coupon.kind === '体验权益券') return `可兑换 ${coupon.rightsCount} 次体验`;
+  if (coupon.kind === '体验权益券') return '可兑换 1 次体验';
   if (coupon.kind === '满减券') return `满 ${coupon.minSpend} 元减 ${coupon.discountAmount} 元`;
   if (coupon.kind === '抵扣券') return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}抵扣 ${coupon.discountAmount} 元`;
   return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}享 ${coupon.discountRate} 折`;
@@ -124,7 +137,7 @@ export function createTicket(coupon: CouponTemplate, source: IssueSource, phone?
   return { id: code, couponId: coupon.id, couponName: coupon.name, couponKind: coupon.kind, benefit: coupon.benefit, redeemCode: code,
     source, phone: phone ? maskPhone(phone) : '', phoneDigits: phone, status: phone ? '待使用' : '未领取', generatedAt: couponLocalTime(), issuedAt,
     expiresAt: issuedAt ? couponExpiryAt(issuedAt, coupon.validityDays) : '', validityDays: coupon.validityDays, productIds: [...coupon.productIds], shootingPoints: [...coupon.shootingPoints], availableRange: [...coupon.availableRange],
-    minSpend: coupon.minSpend, discountAmount: coupon.discountAmount, discountRate: coupon.discountRate, totalUses: coupon.kind === '体验权益券' ? coupon.rightsCount : 1, usedTimes: 0, usageHistory: [] };
+    minSpend: coupon.minSpend, discountAmount: coupon.discountAmount, discountRate: coupon.discountRate, totalUses: 1, usedTimes: 0, usageHistory: [] };
 }
 export function ticketProducts(ticket: Pick<CouponIssueRecord, 'productIds' | 'shootingPoints' | 'availableRange'>) {
   return shootingProducts.filter((row) => (!ticket.productIds.length || ticket.productIds.includes(row.id))

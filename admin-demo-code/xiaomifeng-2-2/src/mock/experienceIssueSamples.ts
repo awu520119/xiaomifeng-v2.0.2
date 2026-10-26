@@ -12,19 +12,18 @@ export function withExperienceIssueSamples(store: CouponStore): CouponStore {
   if (store.templates.some((coupon) => coupon.id === couponId)) return { ...store, demoSeeds };
 
   const coupon: CouponTemplate = {
-    id: couponId, name: '雁荡山活动双次体验券', kind: '体验权益券', benefit: '指定主题体验 2 次',
+    id: couponId, name: '雁荡山活动体验券', kind: '体验权益券', benefit: '指定主题体验 1 次',
     validityDays: 30, createdAt: dateTimeOffset(-8),
     productIds: ['SP003', 'SP004'], shootingPoints: ['雁荡山'], availableRange: ['雁荡云端', '飞檐走壁'],
-    rightsCount: 2, totalLimit: 12, perUserLimit: 1, minSpend: 0, discountAmount: 0, discountRate: 10,
-    sponsor: '平台', status: '启用', description: '景区活动体验券示例，确认后将两次体验权益发到账户。',
+    rightsCount: 1, totalLimit: 12, perUserLimit: 1, minSpend: 0, discountAmount: 0, discountRate: 10,
+    sponsor: '平台', status: '启用', description: '景区活动体验券示例，确认后将一次体验权益发到账户。',
   };
-  const scenarios: Array<{ source: IssueSource; phone: string; state: 'pending' | 'credited' | 'partial' | 'used' | 'void' }> = [
+  const scenarios: Array<{ source: IssueSource; phone: string; state: 'pending' | 'credited' | 'used' | 'void' }> = [
     { source: '定向发放', phone: '13800000021', state: 'pending' },
     { source: '券码兑换', phone: '13800000022', state: 'pending' },
     { source: '定向发放', phone: '13800000023', state: 'credited' },
-    { source: '券码兑换', phone: '13800000024', state: 'partial' },
-    { source: '定向发放', phone: '13800000025', state: 'used' },
-    { source: '券码兑换', phone: '13800000026', state: 'void' },
+    { source: '定向发放', phone: '13800000024', state: 'used' },
+    { source: '券码兑换', phone: '13800000025', state: 'void' },
   ];
   const rights: ExperienceAccountRight[] = [];
   const tickets = scenarios.map((scenario, index) => {
@@ -35,13 +34,14 @@ export function withExperienceIssueSamples(store: CouponStore): CouponStore {
     ticket.expiresAt = couponExpiryAt(ticket.issuedAt, ticket.validityDays);
     if (scenario.source === '定向发放') ticket.batchNo = 'DI-DEMO-YANDANG';
     if (scenario.state === 'void') ticket.status = '已作废';
-    if (['credited', 'partial', 'used'].includes(scenario.state)) {
-      ticket.usedTimes = ticket.totalUses; ticket.status = '已使用';
-      const used = scenario.state === 'used' ? 2 : scenario.state === 'partial' ? 1 : 0;
+    if (['credited', 'used'].includes(scenario.state)) {
+      const used = scenario.state === 'used' ? 1 : 0;
+      ticket.usedTimes = used;
+      if (used) ticket.status = '已使用';
       rights.push({
         id: `RIGHT-DEMO-YANDANG-${index + 1}`, sourceTicketId: ticket.id, couponId,
         couponName: coupon.name, phone: ticket.phone, phoneDigits: scenario.phone,
-        productIds: [...coupon.productIds], totalUses: 2, remainingUses: 2 - used,
+        productIds: [...coupon.productIds], totalUses: 1, remainingUses: 1 - used,
         expiresAt: ticket.expiresAt, grantedAt: dateTimeOffset(-2), operator: '景区运营员',
         usageHistory: Array.from({ length: used }, (_, useIndex) => {
           const product = shootingProducts[useIndex + 2];

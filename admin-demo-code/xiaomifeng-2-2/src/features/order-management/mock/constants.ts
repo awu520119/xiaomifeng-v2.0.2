@@ -32,6 +32,7 @@ export function toPremiumOrder(order: CouponOrder, store: CouponStore): Order {
     paymentWay: paid && order.payAmount > 0 ? '本地演示支付' : undefined,
     transactionId: undefined, payer: '—', receiverSummary: '—', payerMchid: undefined,
     couponName, couponKind: right ? '体验权益券' : ticket?.couponKind,
+    couponSerialNo: (right || ticket?.couponKind === '体验权益券') ? (ticket?.serialNo || ticket?.redeemCode) : undefined,
     couponDiscountAmount: couponName ? order.discountAmount : undefined,
     shootInfo: { themeName: product.theme, scenicName: product.point, shootPoint: product.point },
     flowLogs: [

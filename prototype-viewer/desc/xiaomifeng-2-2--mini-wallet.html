@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-25</p>
 </blockquote>
-<p><em>需求场景：用户集中查看本人领取的优惠券、当前使用状态和有效期，并进入券详情或兑换入口。</em></p>
+<p><em>需求场景：用户查看本人优惠券、使用状态和有效期，并进入详情或兑换入口。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -425,62 +425,66 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-25</td>
-<td>收敛券卡与入口说明，保留状态分组、排序及操作边界</td>
-<td>用户</td>
+<td>初版</td>
+<td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="页面结构">页面结构</h2>
+<h2 id="一入口">一、入口</h2>
 <ol>
 <li>
-<p><strong>页面入口</strong>：从「我的」点击「优惠券」，或从领取、兑换结果点击「查看我的券包」进入。</p>
+<p><strong>进入券包</strong>：从「我的」页面点击「优惠券」入口进入。</p>
 </li>
 <li>
-<p><strong>数据范围</strong>：仅展示当前用户已领取或定向发放到账的券，不展示未领取券码。</p>
-</li>
-<li>
-<p><strong>状态页签</strong>：提供「待使用」「使用中」「已失效」，默认「待使用」，各页签展示对应数量。</p>
-<ul>
-<li>「已失效」收纳「已使用」「已使用（退款）」「已过期」「已作废」，券卡仍展示具体状态。</li>
-<li>状态含义见<a href="券使用记录PRD-20261022.md">券使用记录 PRD</a>。</li>
-</ul>
-</li>
-<li>
-<p><strong>排列</strong>：「待使用」按截止时间从近到远排列；其他页签按获取时间从新到旧排列。</p>
-</li>
-<li>
-<p><strong>空态</strong>：当前页签无券时展示「暂无{页签名称}的券」，提示可通过领取链接、二维码或兑换码获取。</p>
+<p><strong>展示范围</strong>：仅展示当前用户已领取或定向发放到账的用户券，不展示未领取券码。</p>
 </li>
 </ol>
-<h2 id="券卡与操作">券卡与操作</h2>
+<h2 id="二查看券包">二、查看券包</h2>
 <ol>
 <li>
-<p><strong>券卡字段</strong>：展示优惠权益、券类型、当前状态、券名称及实际有效期信息。</p>
+<p><strong>切换页签</strong>：提供「待使用」「使用中」「已使用」「已失效」，默认打开「待使用」。</p>
 <ul>
-<li>有效期展示具体截止时间；适用范围仅在详情中查看。</li>
+<li>「已使用」包含「已使用」「已使用（退款）」。</li>
+<li>「已失效」包含「已过期」「已作废」。</li>
+<li>各页签展示对应数量。</li>
 </ul>
 </li>
 <li>
-<p><strong>使用规则</strong>：券卡底部提供默认收起的「使用规则」，展开后展示完整内容，再次点击收起，箭头随展开状态变化。</p>
-</li>
-<li>
-<p><strong>查看详情</strong>：点击券卡打开<a href="小程序券详情PRD-20261022.md">详情弹层</a>，不进入独立页面。</p>
+<p><strong>查看券卡</strong>：展示优惠权益、券类型、当前状态、券名称和有效期。</p>
 <ul>
-<li>「已失效」券仍可点击券卡查看详情，不另设「查看详情」按钮。</li>
+<li>「待使用」按截止时间从近到远排列；其他页签按获取时间从新到旧排列。</li>
 </ul>
 </li>
 <li>
-<p><strong>去使用</strong>：仅「待使用」券提供；本期点击后提示「去使用将跳转到首页」，不直接进入下单。</p>
+<p><strong>展开规则</strong>：点击「使用规则」展开，再次点击收起。</p>
 </li>
 <li>
-<p><strong>兑换优惠券</strong>：仅在「待使用」页签内容底部固定展示，点击进入<a href="小程序兑换页PRD-20261022.md">兑换页</a>。</p>
+<p><strong>查看详情</strong>：点击券卡打开<a href="小程序券详情PRD-20261022.md">券详情</a>弹层；已失效券仍可查看。</p>
+</li>
+<li>
+<p><strong>无券时</strong>：展示「暂无{页签名称}的券」，提示可通过领取链接、二维码或兑换码获取。</p>
+</li>
+</ol>
+<h2 id="三券包操作">三、券包操作</h2>
+<ol>
+<li>
+<p><strong>去使用</strong>：仅「待使用」券提供；点击后按适用范围跳转：</p>
+<ul>
+<li><strong>适用范围为全部</strong>：跳转到首页。</li>
+<li><strong>多个适用拍摄点属于同一景区</strong>，跳转到该景区首页。</li>
+<li><strong>适用范围为一个拍摄点</strong>：跳转到该拍摄点页面。</li>
+<li><strong>适用范围为一个主题时</strong>：跳转到该主题详情页。</li>
+</ul>
+</li>
+<li>
+<p><strong>兑换优惠券</strong>：仅「待使用」页签底部提供「兑换优惠券」，点击进入<a href="小程序兑换页PRD-20261022.md">兑换页</a>。</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序券包-PRD" data-toc-id="小程序券包-PRD">小程序券包 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面结构" data-toc-id="页面结构">页面结构</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#券卡与操作" data-toc-id="券卡与操作">券卡与操作</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序券包-PRD" data-toc-id="小程序券包-PRD">小程序券包 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一入口" data-toc-id="一入口">一、入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二查看券包" data-toc-id="二查看券包">二、查看券包</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三券包操作" data-toc-id="三券包操作">三、券包操作</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

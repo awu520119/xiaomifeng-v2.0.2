@@ -831,6 +831,15 @@ body,
 .coupon-code-drawer .ant-table-pagination { flex: 0 0 auto; margin: auto 0 0 !important; padding-top: 12px; }
 .coupon-code-detail-modal .ant-modal-body { padding: 16px 24px; }
 .coupon-code-detail { color: var(--admin-color-text); }
+.coupon-code-detail-hero { margin: -2px 0 16px; padding: 16px; border: 1px solid #b8e5d8; border-radius: 12px; background: linear-gradient(135deg, #e8f8f3 0%, #ffffff 78%); }
+.coupon-code-detail-hero-tags { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.coupon-code-detail-hero-tags .ant-tag { margin: 0; }
+.coupon-code-detail-kind { color: #087a6d; border-color: #8bd7c5; background: #d9f4ec; }
+.coupon-code-detail-name { display: block; margin-top: 12px; color: #1f2937; font-size: 20px; line-height: 28px; font-weight: 700; overflow-wrap: anywhere; }
+.coupon-code-detail-serial { display: grid; gap: 2px; margin-top: 14px; padding: 10px 12px; border-left: 3px solid #4ebaa5; border-radius: 0 8px 8px 0; background: rgba(255,255,255,.78); }
+.coupon-code-detail-serial span { color: #63887f; font-size: 11px; line-height: 17px; }
+.coupon-code-detail-serial strong { color: #087a6d; font-size: 23px; line-height: 31px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.coupon-edit-drawer .ant-form-item:has(input[placeholder="请输入可兑换次数"]) .ant-input-number { pointer-events: none; background: #f5f6f8; }
 .coupon-code-detail-overview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 14px; }
 .coupon-code-detail-heading > span { display: block; margin-top: 2px; color: var(--admin-color-text-secondary); font-size: 13px; line-height: 20px; }
 .coupon-code-detail-heading strong { display: block; color: var(--admin-color-text); font-size: 16px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -1214,6 +1223,13 @@ html:has(.issuer-mobile-shell), body:has(.issuer-mobile-shell), #root:has(.issue
 .issuer-sticky-action .ant-btn { height: 44px; border-radius: 6px; }
 .issuer-result-view { padding-top: 38px; }
 .issuer-result-card { border: 1px solid #e9edf3; border-radius: 8px; box-shadow: none; }
+.issuer-result-card .ant-card-body { padding: 0; }
+.issuer-result-summary { display: grid; gap: 6px; padding: 16px; border-bottom: 1px solid #f0f2f5; }
+.issuer-result-summary strong { color: #262b33; font-size: 16px; line-height: 24px; overflow-wrap: anywhere; }
+.issuer-result-summary span { color: #727b87; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+.issuer-result-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
+.issuer-result-code > span { flex: 0 0 auto; color: #9097a1; font-size: 11px; line-height: 17px; }
+.issuer-result-code .ant-typography { min-width: 0; color: #414852; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; text-align: right; }
 .issuer-result-view > .ant-btn { border-radius: 6px; }
 .issuer-public-qr { margin: 12px 0 16px; padding: 20px; border-color: #e9edf3; }
 .issuer-public-facts { display: grid; grid-template-columns: 100px 1fr; gap: 8px 10px; margin-bottom: 18px; padding: 13px 14px; border: 1px solid #e9edf3; border-radius: 8px; background: #fff; font-size: 12px; }
@@ -1305,9 +1321,6 @@ html:has(.issuer-mobile-shell), body:has(.issuer-mobile-shell), #root:has(.issue
 
 .prototype-export-workspace { min-height: 100vh; padding: 20px; background: var(--admin-color-background); }
 .prototype-export-workspace:has(.issuer-mobile-shell) { padding: 0 16px; }
-.prototype-issuer-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: min(100%, 480px); margin: 0 auto; padding: 18px 16px 6px; }
-.prototype-issuer-header h4.ant-typography { margin: 0; font-size: 18px; }
-.prototype-issuer-header .ant-typography-secondary { font-size: 12px; }
 html[data-prototype-viewer] .app-sider { display: none !important; }
 @media (max-width: 520px) { .prototype-export-workspace { padding: 12px; } }
 
@@ -1357,6 +1370,7 @@ html[data-prototype-viewer] .mini-scan-overlay { background: rgba(0, 0, 0, 0.6) 
 .issuer-record-filters .ant-segmented-item-label { min-height: 32px; padding: 0 8px; font-size: 13px; line-height: 20px; }
 .issuer-record-content .issuer-history-group { margin-top: 24px; }
 .issuer-record-content .issuer-history-group:first-of-type { margin-top: 0; }
+.issuer-record-filters .ant-segmented-item-label { padding-right: 4px; padding-left: 4px; font-size: 12px; white-space: nowrap; }
 .issuer-record-content .issuer-history-heading { min-height: 22px; margin-bottom: 10px; font-size: 14px; line-height: 20px; }
 .issuer-history-heading .ant-tag { min-height: 20px; font-size: 12px; line-height: 18px; }
 .issuer-history-card { margin-bottom: 10px; border-color: #e7ebf0; border-radius: 10px; }
@@ -1406,6 +1420,179 @@ html[data-prototype-viewer] .mini-scan-overlay { background: rgba(0, 0, 0, 0.6) 
 .issuer-public-qr { margin: 16px 0 20px; padding: 20px; border-radius: 10px; }
 .issuer-public-facts { gap: 10px 12px; margin-bottom: 20px; padding: 16px; border-color: #e7ebf0; border-radius: 10px; font-size: 12px; line-height: 18px; }
 
+.issuer-code-filters { width: 100%; min-height: 40px; margin-bottom: 12px; padding: 3px; border-radius: 8px; background: #eef1f5; }
+.issuer-code-filters .ant-segmented-item-label { min-height: 32px; padding: 0 8px; font-size: 13px; line-height: 32px; }
+.issuer-code-search { height: 42px; margin-bottom: 12px; border-radius: 7px; }
+.issuer-code-list { display: grid; gap: 8px; }
+.issuer-code-row { display: flex; align-items: center; width: 100%; min-height: 66px; gap: 10px; padding: 10px 12px; border: 1px solid #e7ebf0; border-radius: 9px; background: #fff; text-align: left; cursor: pointer; }
+.issuer-code-row > span:first-child { display: grid; flex: 1; min-width: 0; gap: 3px; }
+.issuer-code-row strong { color: #303640; font-size: 14px; line-height: 20px; }
+.issuer-code-row small { color: #89919c; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.issuer-code-row .ant-tag { flex: 0 0 auto; margin: 0; }
+.issuer-code-chevron { color: #9aa1ab; font-size: 20px; }
+.issuer-code-more { min-height: 44px; margin-top: 12px; }
+.issuer-code-facts { display: grid; gap: 0; margin-bottom: 14px; padding: 2px 16px; border: 1px solid #e7ebf0; border-radius: 9px; background: #fff; }
+.issuer-code-facts > div { display: grid; gap: 4px; padding: 12px 0; }
+.issuer-code-facts > div + div { border-top: 1px solid #f0f2f5; }
+.issuer-code-facts span, .issuer-code-credential > span { color: #89919c; font-size: 12px; line-height: 18px; }
+.issuer-code-facts strong { color: #414852; font-size: 14px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
+.issuer-code-credential { display: grid; gap: 6px; margin-bottom: 16px; padding: 14px 16px; border: 1px solid #e7ebf0; border-radius: 9px; background: #fff; }
+.issuer-code-credential .ant-typography { font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+.issuer-code-qr { margin: 12px 0; }
+.issuer-code-download, .issuer-code-copy { min-height: 44px; margin-top: 10px; }
+.issuer-code-direct-form { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e7ebf0; }
+.issuer-code-direct-form .ant-form-item { margin-bottom: 12px; }
+.issuer-code-direct-form .ant-input { height: 44px; }
+.issuer-code-direct-form > .ant-btn { min-height: 44px; }
+
+/* 发券中心：首屏保留决策信息，记录以最近活动组成统一时间流。 */
+.issuer-coupon-card .ant-card-body { padding: 16px; }
+.issuer-coupon-name { margin-top: 8px; font-size: 16px; line-height: 24px; }
+.issuer-coupon-benefit { min-height: 0; margin: 8px 0 10px; padding: 0; background: none; color: #2869c9; font-size: 18px; line-height: 26px; }
+.issuer-coupon-benefit strong { font-weight: 650; }
+.issuer-coupon-keyfacts { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0; color: #687382; font-size: 12px; line-height: 20px; }
+.issuer-coupon-keyfacts strong { color: #303640; font-size: 13px; line-height: 20px; }
+.issuer-coupon-extra { margin-top: 8px; border-top: 1px solid #edf0f4; }
+.issuer-coupon-extra summary { display: flex; align-items: center; justify-content: space-between; min-height: 40px; color: #626d7a; font-size: 12px; line-height: 18px; cursor: pointer; list-style: none; }
+.issuer-coupon-extra summary::-webkit-details-marker { display: none; }
+.issuer-coupon-extra summary .anticon { color: #929ba7; font-size: 11px; transition: transform .18s ease; }
+.issuer-coupon-extra[open] summary .anticon { transform: rotate(180deg); }
+.issuer-coupon-extra > div { padding: 4px 0 10px; }
+.issuer-coupon-extra > div > span { color: #929ba7; font-size: 12px; line-height: 18px; }
+.issuer-coupon-extra p { margin: 4px 0 10px; color: #485363; font-size: 12px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.issuer-coupon-extra p:last-child { margin-bottom: 0; }
+.issuer-card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.issuer-card-actions:has(> .ant-btn:only-child) { grid-template-columns: minmax(0, 1fr); }
+.issuer-card-actions .ant-btn { min-height: 44px; }
+.issuer-record-content { padding-top: 16px; }
+.issuer-record-filters { min-height: 44px; margin-bottom: 12px; }
+.issuer-record-filters .ant-segmented-item-label { display: flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 3px; font-size: 13px; line-height: 18px; }
+.issuer-activity-list { display: grid; gap: 10px; }
+.issuer-activity-card { margin: 0; }
+.issuer-activity-card .ant-card-body { padding: 14px 16px; }
+.issuer-activity-head, .issuer-activity-main, .issuer-activity-meta, .issuer-activity-detail { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.issuer-activity-head > strong { min-width: 0; color: #303640; font-size: 14px; line-height: 22px; overflow-wrap: anywhere; }
+.issuer-source-tag { flex: 0 0 auto; margin: 0; border: 0; border-radius: 5px; background: #eef2f7; color: #596b80; font-size: 11px; line-height: 20px; }
+.issuer-activity-main { margin-top: 10px; color: #66717e; font-size: 13px; line-height: 20px; }
+.issuer-activity-main > strong, .issuer-activity-main > span strong { color: #303640; font-size: 15px; font-weight: 600; }
+.issuer-activity-main .ant-tag { flex: 0 0 auto; margin: 0; }
+.issuer-activity-meta { justify-content: flex-start; margin-top: 8px; color: #89929e; font-size: 12px; line-height: 18px; }
+.issuer-activity-meta time { color: #687382; font-variant-numeric: tabular-nums; }
+.issuer-activity-detail { flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf0f4; color: #89929e; font-size: 11px; line-height: 18px; }
+.issuer-activity-detail > span:last-child { min-width: 0; margin-left: auto; }
+.issuer-activity-detail .ant-typography { color: #647489; font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }
+.issuer-activity-card .issuer-record-details { margin-top: 10px; }
+.issuer-activity-card .issuer-record-details summary { min-height: 44px; }
+.issuer-code-filters { min-height: 44px; }
+.issuer-code-filters .ant-segmented-item-label { min-height: 36px; padding: 0 4px; font-size: 12px; line-height: 36px; }
+.issuer-code-mode { width: 100%; min-height: 44px; margin-bottom: 16px; padding: 3px; border-radius: 8px; background: #eef1f5; }
+.issuer-code-mode .ant-segmented-item-label { min-height: 36px; padding: 0 8px; font-size: 14px; line-height: 36px; }
+.issuer-code-mode-content > .ant-typography { display: block; margin-bottom: 12px; color: #687382; font-size: 12px; line-height: 20px; }
+.issuer-code-mode-content > .ant-btn { min-height: 44px; }
+.issuer-code-mode-content .issuer-code-credential { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 12px 0 0; padding: 10px 12px; }
+.issuer-code-mode-content .issuer-code-credential .ant-typography { flex: 1; min-width: 0; }
+.issuer-code-mode-content .issuer-code-credential .ant-btn { min-height: 44px; padding: 0 4px; }
+.issuer-code-direct-form { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* 二次降噪：列表保留判断信息，单张追溯信息按需展开。 */
+.issuer-coupon-list { gap: 10px; }
+.issuer-activity-main { margin-top: 6px; }
+.issuer-activity-meta { margin-top: 5px; }
+.issuer-activity-card .issuer-record-details { margin-top: 8px; }
+.issuer-ticket-detail-content { display: grid; gap: 8px; padding: 6px 0 2px; color: #424b57; font-size: 12px; line-height: 20px; }
+.issuer-ticket-detail-content > div { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
+.issuer-ticket-detail-content > div > span { flex: 0 0 auto; color: #89929e; }
+.issuer-ticket-detail-content strong { font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.issuer-ticket-detail-content .ant-typography { min-width: 0; font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+.issuer-code-row { min-height: 52px; }
+.issuer-code-validity { display: block; margin-top: 10px; color: #687382; font-size: 12px; line-height: 20px; }
+.issuer-action-heading:has(+ .issuer-coupon-rules) { margin-bottom: 8px; }
+.issuer-action-heading .issuer-coupon-benefit { margin: 2px 0 0; }
+.issuer-public-qr { margin-top: 8px; margin-bottom: 8px; }
+.issuer-action-rules { margin-top: 8px; margin-bottom: 12px; }
+
+/* 券名负责识别，权益使用独立色块；记录卡沿用同一层级。 */
+.issuer-coupon-name { margin-top: 12px; color: #4b5563; font-size: 14px; line-height: 21px; font-weight: 500; }
+.issuer-benefit-panel { display: flex; align-items: center; min-height: 48px; margin: 12px 0 11px; padding: 9px 12px; border-left: 3px solid; border-radius: 0 7px 7px 0; font-size: 18px; line-height: 26px; overflow-wrap: anywhere; }
+.issuer-benefit-panel strong { font-weight: 650; }
+.issuer-benefit-experience { color: #087a6d; border-color: #5bc7b7; background: #effaf7; }
+.issuer-benefit-reduction { color: #af531b; border-color: #f0af79; background: #fff6ef; }
+.issuer-benefit-discount { color: #6046b5; border-color: #bba8ed; background: #f7f4ff; }
+.issuer-activity-head > strong { color: #4b5563; font-size: 13px; line-height: 20px; font-weight: 500; }
+.issuer-record-benefit { min-height: 40px; margin: 10px 0 9px; padding: 7px 10px; font-size: 16px; line-height: 23px; }
+.issuer-record-benefit + .issuer-activity-main { margin-top: 0; }
+.issuer-action-heading > .issuer-benefit-panel { width: 100%; margin: 7px 0 0; }
+
+/* 券名独立成标题，权益以更鲜明的券面承载。 */
+.issuer-benefit-panel { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; min-height: 78px; margin: 12px 0; padding: 12px 15px; border: 1px solid var(--offer-border); border-radius: 10px; background: linear-gradient(112deg, var(--offer-light), #fff 96%); color: var(--offer-strong); overflow: hidden; }
+.issuer-benefit-panel::after { position: absolute; z-index: -1; top: -64px; right: -36px; width: 116px; height: 116px; border: 23px solid var(--offer-glow); border-radius: 50%; content: ''; }
+.issuer-benefit-experience { --offer-strong: #087a6d; --offer-light: #e8f8f3; --offer-border: #b8e5d8; --offer-glow: rgba(45, 179, 148, .13); }
+.issuer-benefit-reduction { --offer-strong: #ad4f18; --offer-light: #fff1e6; --offer-border: #f4d2b8; --offer-glow: rgba(231, 139, 64, .14); }
+.issuer-benefit-discount { --offer-strong: #6045ae; --offer-light: #f3edff; --offer-border: #d8c9f5; --offer-glow: rgba(143, 108, 215, .13); }
+.issuer-benefit-label { color: color-mix(in srgb, var(--offer-strong) 72%, #fff); font-size: 11px; line-height: 16px; letter-spacing: .5px; }
+.issuer-benefit-value { position: relative; z-index: 1; font-size: 21px; line-height: 29px; font-weight: 700; overflow-wrap: anywhere; }
+.issuer-benefit-no-label { gap: 0; }
+.issuer-record-benefit.issuer-benefit-no-label { min-height: 48px; }
+.issuer-coupon-name { margin-top: 13px; font-size: 14px; line-height: 21px; }
+.issuer-coupon-info { display: grid; gap: 7px; margin-top: 12px; }
+.issuer-coupon-info .issuer-coupon-extra { margin: 0; border: 1px solid #edf0f4; border-radius: 7px; background: #fff; }
+.issuer-coupon-info .issuer-coupon-extra summary { min-height: 38px; padding: 0 10px; }
+.issuer-coupon-info .issuer-coupon-extra p { margin: 0; padding: 0 10px 10px; }
+.issuer-record-benefit { min-height: 62px; margin: 10px 0 9px; padding: 9px 12px; }
+.issuer-record-benefit .issuer-benefit-value { font-size: 17px; line-height: 23px; }
+.issuer-record-benefit .issuer-benefit-label { font-size: 10px; line-height: 14px; }
+.issuer-action-benefit { width: 100%; margin: 11px 0 0; }
+.issuer-action-heading > .issuer-action-benefit { margin-top: 11px; }
+.issuer-action-info { display: grid; gap: 9px; margin: 12px 0 18px; }
+.issuer-info-block { padding: 12px 14px; border: 1px solid #e7ebf0; border-radius: 9px; background: #fff; }
+.issuer-info-block h5 { margin: 0 0 6px; color: #788391; font-size: 12px; line-height: 18px; font-weight: 500; }
+.issuer-info-block p { margin: 0; color: #374151; font-size: 13px; line-height: 21px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.issuer-info-rules { padding: 0; }
+.issuer-info-rules summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 14px; color: #596575; font-size: 12px; line-height: 18px; cursor: pointer; list-style: none; }
+.issuer-info-rules summary::-webkit-details-marker { display: none; }
+.issuer-info-rules summary .anticon { color: #929ba7; font-size: 11px; transition: transform .18s ease; }
+.issuer-info-rules[open] summary .anticon { transform: rotate(180deg); }
+.issuer-info-rules p { padding: 0 14px 13px; }
+.issuer-result-card > .ant-card-body { display: block; margin: 0; padding: 0; }
+.issuer-result-card .issuer-result-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 0; padding: 18px; border-bottom: 0; }
+.issuer-result-card:has(.issuer-result-code) .issuer-result-summary { border-bottom: 1px solid #edf0f4; }
+.issuer-result-summary .issuer-result-name { color: #262b33; font-size: 17px; line-height: 25px; font-weight: 600; overflow-wrap: anywhere; }
+.issuer-result-expiry { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.issuer-result-expiry span { flex: 0 0 auto; color: #89929e; font-size: 12px; line-height: 20px; }
+.issuer-result-expiry time { color: #394554; font-size: 14px; line-height: 21px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.issuer-result-card .issuer-result-code { display: flex; flex-wrap: wrap; gap: 5px 12px; margin: 0; padding: 12px 18px; }
+.issuer-action-view:has(.issuer-code-filters) .issuer-action-heading { margin-bottom: 8px; }
+.issuer-code-benefit { min-height: 72px; margin: 8px 0 16px; }
+.issuer-code-filters .ant-segmented-item-label { font-size: 14px; }
+.issuer-code-hero { width: 100%; margin: 0 0 14px; padding: 16px; border: 1px solid #e4ebeb; border-radius: 10px; background: #fff; }
+.issuer-code-hero-tags { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.issuer-code-hero-tags .ant-tag { margin: 0; }
+.issuer-code-coupon-name { display: block; color: #263238; font-size: 17px; line-height: 25px; font-weight: 650; overflow-wrap: anywhere; }
+.issuer-code-serial { display: grid; gap: 3px; margin-top: 14px; padding: 10px 12px; border-left: 3px solid #65c6b5; border-radius: 0 7px 7px 0; background: #eef9f6; }
+.issuer-code-serial span { color: #63887f; font-size: 11px; line-height: 17px; }
+.issuer-code-serial strong { color: #087a6d; font-size: 22px; line-height: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .3px; overflow-wrap: anywhere; }
+.issuer-code-serial .ant-btn { align-self: start; min-height: 32px; padding: 0; color: #087a6d; font-size: 12px; }
+.issuer-code-availability { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 8px; margin-top: 12px; }
+.issuer-code-availability > div { display: grid; gap: 2px; min-width: 0; padding: 9px 10px; border: 1px solid #d8eee8; border-radius: 7px; background: rgba(255,255,255,.76); }
+.issuer-code-availability span { color: #63887f; font-size: 11px; line-height: 17px; }
+.issuer-code-availability strong { color: #087a6d; font-size: 15px; line-height: 22px; font-weight: 650; overflow-wrap: anywhere; }
+.issuer-code-qr-group { display: grid; gap: 6px; }
+.issuer-code-mode-content > .issuer-code-credential { margin: 0 0 8px; }
+.issuer-code-mode-content .issuer-code-qr { margin: 0 0 8px; padding: 12px; }
+.issuer-code-public-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.issuer-code-public-actions .ant-btn { min-height: 42px; }
+.issuer-public-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.issuer-public-actions .ant-btn { min-height: 44px; }
+
+/* 公开领取明细作为紧凑信息行展示，避免展开后留下大块空白。 */
+.issuer-record-claims { gap: 6px; padding: 8px 10px; }
+.issuer-record-claim + .issuer-record-claim { padding-top: 8px; }
+.issuer-record-claim-heading { margin-bottom: 2px; }
+.issuer-record-recipient { margin-bottom: 6px; }
+.issuer-history-facts { gap: 5px 12px; }
+.issuer-history-facts > div { gap: 1px; }
+.issuer-record-claim .issuer-history-code { min-height: 0; margin-top: 6px; padding-top: 6px; }
+
 @media (max-width: 375px) {
   .issuer-app-frame { padding: 12px 12px 28px; }
   .issuer-tabs .ant-segmented-item-label { padding-right: 6px; padding-left: 6px; }
@@ -1414,4 +1601,100 @@ html[data-prototype-viewer] .mini-scan-overlay { background: rgba(0, 0, 0, 0.6) 
   .issuer-coupon-keyfacts,
   .issuer-history-facts { gap: 10px 12px; }
   .issuer-detail-box { gap: 12px; padding: 14px; }
+  .issuer-activity-card .ant-card-body { padding: 14px; }
+  .issuer-record-filters .ant-segmented-item-label { padding: 0 1px; font-size: 12px; }
 }
+
+/* 发券中心跨页面视觉规范：卡片、券面、摘要、标签与操作。 */
+.issuer-mobile-shell { --issuer-card-border: #e7ebf0; --issuer-card-radius: 10px; --issuer-space: 12px; }
+.issuer-mobile-shell .issuer-coupon-card,
+.issuer-mobile-shell .issuer-history-card,
+.issuer-mobile-shell .issuer-result-card,
+.issuer-mobile-shell .issuer-code-hero,
+.issuer-mobile-shell .issuer-info-block,
+.issuer-mobile-shell .issuer-code-credential,
+.issuer-mobile-shell .issuer-public-qr { border: 1px solid var(--issuer-card-border); border-radius: var(--issuer-card-radius); background-color: #fff; box-shadow: none; }
+.issuer-mobile-shell .issuer-coupon-card .ant-card-body,
+.issuer-mobile-shell .issuer-history-card .ant-card-body { padding: 16px; }
+.issuer-mobile-shell .issuer-benefit-panel { gap: 0; min-height: 76px; margin: 10px 0; padding: 12px 15px; }
+.issuer-mobile-shell .issuer-record-benefit { min-height: 48px; margin: 8px 0; padding: 8px 12px; }
+.issuer-mobile-shell .issuer-kind-tag,
+.issuer-mobile-shell .issuer-source-tag,
+.issuer-mobile-shell .coupon-status-tag { min-height: 22px; margin: 0; padding: 1px 7px; border-radius: 4px; font-size: 12px; line-height: 18px; white-space: nowrap; }
+.issuer-mobile-shell .issuer-source-tag { border: 1px solid #e5eaf0; background: #eef2f7; color: #596b80; }
+.issuer-action-head-tags { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+.issuer-mobile-shell .issuer-action-heading { width: 100%; gap: 8px; margin: 0 0 10px; }
+.issuer-mobile-shell .issuer-action-heading h4.ant-typography { margin: 0; font-size: 17px; line-height: 25px; }
+.issuer-mobile-shell .issuer-action-heading > .issuer-benefit-panel { margin: 0; }
+.issuer-mobile-shell .issuer-coupon-name { margin-top: 10px; font-size: 15px; line-height: 23px; }
+.issuer-card-unavailable { display: block; margin-top: 7px; color: #8a5660; font-size: 12px; line-height: 18px; }
+.issuer-availability,
+.issuer-code-availability { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 8px; margin: 0 0 12px; }
+.issuer-code-availability { margin: 12px 0 0; }
+.issuer-availability > div,
+.issuer-code-availability > div { display: grid; gap: 2px; min-width: 0; padding: 9px 10px; border: 1px solid #e5eaf0; border-radius: 8px; background: #fff; }
+.issuer-code-availability > div { border-color: #d8eee8; background: #f8fcfb; }
+.issuer-availability span,
+.issuer-code-availability span { color: #7a8592; font-size: 11px; line-height: 17px; }
+.issuer-availability strong,
+.issuer-code-availability strong { color: #303b48; font-size: 14px; line-height: 21px; font-weight: 650; overflow-wrap: anywhere; }
+.issuer-code-availability strong { color: #087a6d; }
+.issuer-mobile-shell .issuer-code-hero .issuer-availability > div { border-color: #e5eaf0; background: #fff; }
+.issuer-mobile-shell .issuer-code-hero .issuer-availability span { color: #7a8592; }
+.issuer-mobile-shell .issuer-code-hero .issuer-availability strong { color: #303b48; }
+.issuer-mobile-shell .issuer-phone-form .ant-input::placeholder,
+.issuer-mobile-shell .issuer-code-direct-form .ant-input::placeholder { color: #a2aab5; font-size: 13px; }
+.issuer-mobile-shell .issuer-action-info { gap: 8px; margin: 10px 0 14px; }
+.issuer-mobile-shell .issuer-info-block { padding: 11px 13px; }
+.issuer-mobile-shell .issuer-info-rules { padding: 0; }
+.issuer-mobile-shell .issuer-info-rules summary { min-height: 44px; padding: 0 13px; }
+.issuer-mobile-shell .issuer-info-rules p { padding: 0 13px 12px; }
+.issuer-mobile-shell .issuer-tabs,
+.issuer-mobile-shell .issuer-record-filters,
+.issuer-mobile-shell .issuer-code-mode { min-height: 44px; padding: 4px; border: 0; border-radius: 8px; background: #edf1f5; }
+.issuer-mobile-shell .issuer-tabs .ant-segmented-item-label,
+.issuer-mobile-shell .issuer-record-filters .ant-segmented-item-label,
+.issuer-mobile-shell .issuer-code-mode .ant-segmented-item-label { display: flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 5px; font-size: 13px; line-height: 20px; }
+.issuer-mobile-shell .issuer-record-filters { margin-bottom: 12px; }
+.issuer-mobile-shell .issuer-code-mode { margin-bottom: 10px; }
+.issuer-mobile-shell .issuer-card-actions .ant-btn,
+.issuer-mobile-shell .issuer-public-actions .ant-btn,
+.issuer-mobile-shell .issuer-code-public-actions .ant-btn,
+.issuer-mobile-shell .issuer-code-direct-form > .ant-btn,
+.issuer-mobile-shell .issuer-result-view > .ant-btn { min-height: 44px; }
+.issuer-mobile-shell .issuer-public-actions,
+.issuer-mobile-shell .issuer-code-public-actions { gap: 8px; }
+.issuer-mobile-shell .issuer-public-qr,
+.issuer-mobile-shell .issuer-code-mode-content .issuer-code-qr { gap: 6px; margin: 0 0 10px; padding: 12px; }
+.issuer-mobile-shell .issuer-public-qr .ant-typography { font-size: 12px; line-height: 18px; text-align: center; }
+.issuer-mobile-shell .issuer-code-mode-content > .issuer-code-credential { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; margin: 0 0 10px; padding: 9px 12px; }
+.issuer-code-mode-content > .issuer-code-credential > span:first-child { align-self: center; }
+.issuer-code-mode-content > .issuer-code-credential > .ant-typography { grid-column: 1 / -1; grid-row: 2; white-space: normal; overflow-wrap: anywhere; }
+.issuer-code-mode-content > .issuer-code-credential > .ant-btn { grid-column: 2; grid-row: 1; }
+.issuer-mobile-shell .issuer-record-details summary { min-height: 44px; }
+.issuer-mobile-shell .issuer-record-claims { gap: 8px; padding: 10px; }
+.issuer-claim-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; margin-bottom: 7px; color: #89929e; font-size: 12px; line-height: 20px; }
+.issuer-claim-head strong { margin-left: 5px; color: #303640; font-size: 14px; overflow-wrap: anywhere; }
+.issuer-claim-head .ant-tag { flex: 0 0 auto; }
+.issuer-record-claim .issuer-history-facts { gap: 6px 12px; }
+.issuer-record-claim .issuer-history-facts > div { gap: 2px; }
+.issuer-record-claim .issuer-history-facts time { color: #4b535e; font-size: 12px; line-height: 18px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.issuer-mobile-shell .issuer-record-claim .issuer-history-code { margin-top: 8px; padding-top: 8px; }
+
+@media (max-width: 375px) {
+  .issuer-mobile-shell .issuer-coupon-card .ant-card-body,
+  .issuer-mobile-shell .issuer-history-card .ant-card-body { padding: 14px; }
+  .issuer-record-claim .issuer-history-facts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 359px) {
+  .issuer-mobile-shell .issuer-record-filters .ant-segmented-item-label { padding: 0 1px; font-size: 12px; }
+}
+
+/* 发放记录采用两级摘要：第一行识别对象与状态，第二行展示时间。 */
+.issuer-mobile-shell .issuer-activity-list,
+.issuer-mobile-shell .issuer-activity-card { min-width: 0; }
+.issuer-mobile-shell .issuer-activity-main { min-width: 0; margin-top: 8px; color: #89929e; font-size: 12px; line-height: 18px; }
+.issuer-mobile-shell .issuer-activity-main > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.issuer-mobile-shell .issuer-activity-main .ant-tag { flex: 0 0 auto; margin: 0; }
+.issuer-mobile-shell .issuer-activity-meta { gap: 6px; margin-top: 5px; color: #89929e; font-size: 12px; line-height: 18px; }
+.issuer-mobile-shell .issuer-activity-meta time { color: #687382; font-variant-numeric: tabular-nums; }

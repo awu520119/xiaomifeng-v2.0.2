@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>定向发放记录</title>
+  <title>发券权限</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -406,11 +406,11 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="定向发放记录-PRD">定向发放记录 PRD</h1>
+<h1 id="发券权限-PRD">发券权限 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-22</p>
+<p>版本 v1.0　·　日期 2026-10-26</p>
 </blockquote>
-<p><em>需求场景：运营人员按券或接收手机号追溯定向发放结果，确认发放人、发放时间和关联订单。</em></p>
+<p><em>需求场景：运营人员为单张优惠券配置可发放账号。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -424,53 +424,39 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-22</td>
+<td>2026-10-26</td>
 <td>初版</td>
 <td>用户</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一定向发放记录权限说明">一、定向发放记录—权限说明</h2>
-<ol>
-<li><strong>权限控制</strong>：<ul>
-<li>须具有「营销管理」下「优惠券管理」的「查询」/「编辑」功能权限。</li>
-<li><strong>数据权限</strong>：被授权发券用户只能看被授权的券定向使用记录。平台管理员和租户管理员可看全部</li>
-</ul>
-</li>
-</ol>
-<h2 id="二定向发放记录筛选项说明">二、定向发放记录—筛选项说明</h2>
+<h2 id="一发券权限">一、发券权限</h2>
 <ol>
 <li>
-<p><strong>券名称、手机号</strong>：关键词输入，按券名称或接收用户手机号包含关键词匹配，支持清空。</p>
-</li>
-<li>
-<p><strong>发放时间</strong>：日期范围，以成功定向发放时间查询，包含开始日和结束日全天，支持清空。</p>
-</li>
-</ol>
-<h2 id="三定向发放记录列表说明">三、定向发放记录—列表说明</h2>
-<ol>
-<li>
-<p><strong>发放人</strong>：主要展示发放账号，姓名在账号下方辅助展示。</p>
+<p><strong>打开入口</strong>：在优惠券列表的单张优惠券操作中选择「发券权限」，打开「发券权限」弹窗。</p>
 <ul>
-<li>沿用发放时记录的人员身份。</li>
+<li>弹窗展示优惠券名称和券类型。</li>
 </ul>
 </li>
 <li>
-<p><strong>体验券编号</strong>：记录券名称、券类型。</p>
+<p><strong>授权账号</strong>：多选可发放该券的账号，选项展示「账号（姓名）」。</p>
 <ul>
-<li>体验券展示独立「TY-」连续编号。</li>
-<li>满减和折扣券展示「—」。</li>
+<li>无授权账号时，保存后该券不可由其他账号发放；平台管理员和超级管理员仍按系统权限规则处理。</li>
 </ul>
 </li>
 <li>
-<p><strong>排序</strong>：按发放时间倒序。</p>
+<p><strong>发放校验</strong>：</p>
+<ul>
+<li>账号须同时具有系统「发券」功能权限和该券的发券权限，才可发放该券。</li>
+<li>权限被撤销后，已发放的用户券不受影响；该账号不能继续发放该券。</li>
+</ul>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#定向发放记录-PRD" data-toc-id="定向发放记录-PRD">定向发放记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一定向发放记录权限说明" data-toc-id="一定向发放记录权限说明">一、定向发放记录—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二定向发放记录筛选项说明" data-toc-id="二定向发放记录筛选项说明">二、定向发放记录—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三定向发放记录列表说明" data-toc-id="三定向发放记录列表说明">三、定向发放记录—列表说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发券权限-PRD" data-toc-id="发券权限-PRD">发券权限 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一发券权限" data-toc-id="一发券权限">一、发券权限</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

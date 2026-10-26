@@ -1,26 +1,16 @@
 {
   "projectName": "形影随拍后台 · Ant Design 原型查看器",
-  "lastSyncAt": "2026-10-26 07:42:03",
+  "lastSyncAt": "2026-10-27 00:00:34",
   "tree": [
     {
       "id": "xiaomifeng-2-2--marketing",
       "title": "营销管理",
-      "order": 1,
+      "order": 2,
       "children": [
-        {
-          "id": "xiaomifeng-2-2--coupon-management",
-          "title": "优惠券列表",
-          "order": 1,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-list",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-management.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券列表PRD-20261022.md",
-          "children": []
-        },
         {
           "id": "xiaomifeng-2-2--coupon-create",
           "title": "创建优惠券",
-          "order": 2,
+          "order": 1,
           "templateType": "drawer",
           "routeHash": "#/demo/export/coupon-create",
           "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-create.html",
@@ -28,9 +18,29 @@
           "children": []
         },
         {
+          "id": "xiaomifeng-2-2--coupon-management",
+          "title": "优惠券列表",
+          "order": 2,
+          "templateType": "screen",
+          "routeHash": "#/demo/export/coupon-list",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-management.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券列表PRD-20261022.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--coupon-authorization",
+          "title": "发券权限",
+          "order": 3,
+          "templateType": "drawer",
+          "routeHash": "#/demo/export/coupon-authorization",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-authorization.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/发券权限PRD-20261022.md",
+          "children": []
+        },
+        {
           "id": "xiaomifeng-2-2--coupon-directed",
           "title": "定向发放",
-          "order": 3,
+          "order": 4,
           "templateType": "screen",
           "routeHash": "#/demo/export/coupon-directed",
           "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-directed.html",
@@ -39,22 +49,12 @@
         },
         {
           "id": "xiaomifeng-2-2--coupon-public",
-          "title": "公开领取",
-          "order": 4,
+          "title": "公开发放",
+          "order": 5,
           "templateType": "screen",
           "routeHash": "#/demo/export/coupon-public",
           "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-public.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/公开领取PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-detail",
-          "title": "优惠券详情",
-          "order": 5,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/coupon-detail",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-detail.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券详情PRD-20261022.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/公开发放PRD-20261022.md",
           "children": []
         },
         {
@@ -78,23 +78,23 @@
           "children": []
         },
         {
-          "id": "xiaomifeng-2-2--coupon-records",
-          "title": "券使用记录",
+          "id": "xiaomifeng-2-2--coupon-detail",
+          "title": "优惠券详情",
           "order": 8,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-usage",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-records.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/券使用记录PRD-20261022.md",
+          "templateType": "drawer",
+          "routeHash": "#/demo/export/coupon-detail",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-detail.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券详情PRD-20261022.md",
           "children": []
         },
         {
-          "id": "xiaomifeng-2-2--coupon-issued-records",
-          "title": "定向发放记录",
+          "id": "xiaomifeng-2-2--coupon-records",
+          "title": "优惠券记录",
           "order": 9,
           "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-issued",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-issued-records.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/定向发放记录PRD-20261022.md",
+          "routeHash": "#/demo/export/coupon-usage",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-records.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券记录PRD-20261022.md",
           "children": []
         },
         {
@@ -195,7 +195,7 @@
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-checkout?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-checkout.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序下单选券设计说明.md",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序下单选券PRD-20261026.md",
           "children": []
         },
         {

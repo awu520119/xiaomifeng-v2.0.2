@@ -20,6 +20,15 @@ const operatorProfile = (value: string) => {
   if (value === '景区运营员') return { account: 'scenic-operator', name: value };
   return { account: value || 'admin', name: value || '系统管理员' };
 };
+const issuerOf = (ticket: CouponIssueRecord, store: CouponStore) => {
+  const batchOperator = store.batches?.find((batch) => batch.id === ticket.batchNo)?.operator;
+  const claimPlan = ticket.claimPlanId ? store.plans.find((plan) => plan.id === ticket.claimPlanId) : undefined;
+  const value = ticket.distributedById || batchOperator || claimPlan?.operatorId || claimPlan?.operatorName || '系统管理员';
+  const matched = couponIssuerOptions.find((issuer) => issuer.id === value);
+  if (matched) return { account: matched.account, name: matched.name };
+  if (claimPlan?.operatorName && value === claimPlan.operatorId) return { account: claimPlan.operatorId || 'admin', name: claimPlan.operatorName };
+  return operatorProfile(value);
+};
 const serialNo = (ticket: CouponIssueRecord, store: CouponStore) => ticket.serialNo || `TY-${String(store.tickets.filter((item) => item.couponKind === '体验权益券').findIndex((item) => item.id === ticket.id) + 1).padStart(6, '0')}`;
 const orderOf = (ticket: CouponIssueRecord, store: CouponStore) => ticket.lockedOrderId || ticket.orderNo || (store.accountRights || []).find((right) => right.sourceTicketId === ticket.id)?.orderNo || ticket.usageHistory.at(-1)?.orderNo;
 
@@ -61,11 +70,13 @@ function LedgerRecords({ store, setStore }: Props) {
       { title: '序号', width: 64, render: (_: unknown, __: CouponIssueRecord, index: number) => (currentPage - 1) * pageSize + index + 1 },
       { title: '券名称', dataIndex: 'couponName', width: 180 },
       { title: '券类型', width: 90, render: (_, ticket) => kindTag(ticket.couponKind) },
+      { title: '发放人', width: 145, render: (_, ticket) => { const issuer = issuerOf(ticket, store); return <div className="coupon-operator-cell"><span>{issuer.account}</span><Typography.Text type="secondary">{issuer.name}</Typography.Text></div>; } },
       { title: '使用状态', width: 125, render: (_, ticket) => statusTag(stateOf(ticket)) },
       { title: '持券用户', dataIndex: 'phone', width: 130 },
       { title: '获取时间', dataIndex: 'issuedAt', width: 160, render: (value: string) => value?.slice(0, 16) || '—' },
       { title: '关联订单号', width: 200, render: (_, ticket) => { const order = orderOf(ticket, store); return order ? <Typography.Text ellipsis={{ tooltip: order }} copyable>{order}</Typography.Text> : '—'; } },
       { title: '获取方式', width: 105, render: (_, ticket) => sourceName(ticket.source) },
+      { title: '体验券编号', width: 145, render: (_, ticket) => ticket.source === '券码兑换' && ticket.couponKind === '体验权益券' ? serialNo(ticket, store) : '—' },
       { title: '有效期', width: 220, render: (_, ticket) => <div><div>领取后 {ticket.validityDays} 天可用</div><Typography.Text type="secondary">截止：{ticket.expiresAt || '—'}</Typography.Text></div> },
       { title: '操作', fixed: 'right', width: 80, render: (_, ticket) => canVoidTicket(ticket) && !ticket.lockedOrderId ? <Popconfirm title="作废该券？" description="该券将不能继续使用，历史记录保留。" onConfirm={() => voidTicket(ticket)}><Button type="link" danger>作废</Button></Popconfirm> : <Button type="link" disabled>作废</Button> },
     ]} /></div>

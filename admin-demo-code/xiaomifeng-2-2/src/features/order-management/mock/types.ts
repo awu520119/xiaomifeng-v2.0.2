@@ -45,6 +45,7 @@ export interface Order {
   couponName?: string;
   couponKind?: string;
   couponDiscountAmount?: number;
+  couponSerialNo?: string;
   shootInfo?: { themeName?: string; scenicName?: string; shootPoint?: string; route?: string; clipTemplate?: string; motionDesc?: string; peopleCount?: string; flightTaskId?: string; flightTaskIds?: string[]; droneSn?: string };
   flowLogs?: Array<{ time: string; title: string }>;
   businessDate: string;

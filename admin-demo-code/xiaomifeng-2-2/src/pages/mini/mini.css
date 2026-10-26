@@ -195,6 +195,7 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-product-hero button { margin: 16px 0 0 16px; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.65); border-radius: 50%; background: rgba(0,0,0,.16); font-size: 28px; }
 .mini-product-hero span { display: block; padding: 28px 20px 0; font-size: 17px; font-weight: 600; }
 .mini-product-content { flex: 1; padding: 22px 16px 24px; overflow: auto; }
+.mini-product-context { margin: -10px 0 16px; color: var(--mini-blue); font-size: 12px; line-height: 18px; }
 .mini-product-content h1 { display: flex; justify-content: space-between; margin: 0 0 20px; font-size: 22px; line-height: 30px; }
 .mini-product-content h1 small { color: #909aa6; font-size: 12px; font-weight: 400; white-space: nowrap; }
 .mini-creator { display: flex; align-items: center; gap: 10px; padding-bottom: 22px; border-bottom: 1px solid var(--mini-line); }

@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-25</p>
 </blockquote>
-<p><em>需求场景：用户查看本人订单的套餐、状态与实际优惠，并处理待支付订单。</em></p>
+<p><em>需求场景：用户查看订单、优惠及支付状态。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -424,68 +424,32 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-25</td>
-<td>收敛订单展示与操作说明，保留金额、支付及取消规则</td>
-<td>用户</td>
+<td>2026-10-26</td>
+<td>初版</td>
+<td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="页面结构">页面结构</h2>
+<h2 id="一订单信息">一、订单信息</h2>
 <ol>
 <li>
-<p><strong>页面入口</strong>：从<a href="小程序下单选券设计说明.md">下单完成结果</a>、「我的」订单快捷入口或「全部订单」进入。</p>
-</li>
-<li>
-<p><strong>订单摘要</strong>：展示当前订单状态、套餐摘要、拍摄点和订单信息。</p>
+<p><strong>使用优惠券</strong>：：</p>
 <ul>
-<li>等待拍摄履约的订单展示「待拍摄」。</li>
-<li>当前用户没有可展示订单时，展示无订单内容，不提供支付或取消操作。</li>
+<li>展示对应使用的优惠券名称（优惠券类型）；未使用时展示「未使用优惠券」。</li>
 </ul>
 </li>
 <li>
-<p><strong>订单信息</strong>：展示「订单类型」「订单号」「订单时间」「手机号」。</p>
-<ul>
-<li>订单类型为「套餐订单」，手机号脱敏展示。</li>
-</ul>
+<p><strong>优惠金额</strong>：展示该订单实际优惠金额。</p>
 </li>
 <li>
-<p><strong>使用优惠</strong>：订单关联价格券或体验权益时，展示对应券名称；未关联时不展示此字段。</p>
-</li>
-<li>
-<p><strong>金额信息</strong>：展示「优惠金额」「支付金额」，单位元，保留两位小数。</p>
-<ul>
-<li>使用当前订单记录的优惠和应付结果，不使用券模板面额替代实际优惠。</li>
-<li>支付金额为商品金额扣减本单优惠后的结果；体验权益订单支付金额为 0。</li>
-</ul>
-</li>
-</ol>
-<h2 id="待支付操作">待支付操作</h2>
-<ol>
-<li>
-<p><strong>操作范围</strong>：仅「待支付」订单展示「取消」「立即支付」。</p>
-</li>
-<li>
-<p><strong>取消</strong>：取消成功后订单展示「已取消」，释放本单占用的价格券。</p>
-<ul>
-<li>若券仍有效，则恢复「待使用」；若已超过截止时间，则展示「已过期」。</li>
-</ul>
-</li>
-<li>
-<p><strong>立即支付</strong>：支付时再次校验订单和所选价格券是否可用。</p>
-<ul>
-<li>成功后订单展示「待拍摄」，价格券记录实际优惠并进入「已使用」。</li>
-<li>失败时展示原因，不展示支付成功结果。</li>
-</ul>
-</li>
-<li>
-<p><strong>体验权益订单</strong>：下单后直接展示「待拍摄」，完成体验服务后才计入权益实际使用。</p>
+<p><strong>实付金额</strong>：展示订单实际支付金额。</p>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序订单详情-PRD" data-toc-id="小程序订单详情-PRD">小程序订单详情 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面结构" data-toc-id="页面结构">页面结构</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#待支付操作" data-toc-id="待支付操作">待支付操作</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序订单详情-PRD" data-toc-id="小程序订单详情-PRD">小程序订单详情 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一订单信息" data-toc-id="一订单信息">一、订单信息</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

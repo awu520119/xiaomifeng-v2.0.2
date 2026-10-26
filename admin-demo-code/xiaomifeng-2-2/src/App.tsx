@@ -68,7 +68,7 @@ export default function App() {
 
   const miniCommercePaths = ['/mini-preview/product', '/mini-preview/checkout', '/mini-preview/order'];
   const selectedKey = miniCommercePaths.includes(location.pathname) ? '/mini-preview/product' : location.pathname.startsWith('/mini-preview/') ? location.pathname : ['/coupon-directed', '/coupon-public', '/coupon-batches', '/coupon-issues', '/coupon-redemptions', '/coupon-records'].includes(location.pathname) ? '/coupon-records' : location.pathname === '/operation-logs' ? '/operation-logs' : location.pathname === '/orders' ? '/orders' : location.pathname === '/issuer-center' ? '/issuer-center' : location.pathname.startsWith('/ops/') ? location.pathname : '/coupons';
-  const pageTitles: Record<string, string> = { '/coupons': '优惠券管理', '/coupon-records': '优惠券记录', '/coupon-issues': '优惠券记录', '/coupon-redemptions': '优惠券记录', '/issuer-center': '发券中心', '/operation-logs': '操作日志', '/orders': '订单列表', '/ops/dashboard': '运维工作台', '/ops/alerts': '告警中心', '/ops/schedule': '值班排班', '/ops/work-orders': '运维工单', '/ops/solutions': '处置方案库', '/mini-preview/receive': '领取优惠券', '/mini-preview/redeem': '兑换体验券', '/mini-preview/wallet': '我的券包', '/mini-preview/checkout': '商品详情与选购', '/mini-preview/product': '商品详情与选购', '/mini-preview/mine': '我的', '/mini-preview/order': '商品详情与选购' };
+  const pageTitles: Record<string, string> = { '/coupons': '优惠券管理', '/coupon-records': '优惠券记录', '/coupon-issues': '优惠券记录', '/coupon-redemptions': '优惠券记录', '/issuer-center': '发券中心', '/operation-logs': '操作日志', '/orders': '订单列表', '/ops/dashboard': '运维工作台', '/ops/alerts': '告警中心', '/ops/schedule': '值班排班', '/ops/work-orders': '运维工单', '/ops/solutions': '处置方案库', '/mini-preview/receive': '领取优惠券', '/mini-preview/redeem': '兑换体验券', '/mini-preview/wallet': '我的券包', '/mini-preview/checkout': '下单选券', '/mini-preview/product': '下单选券', '/mini-preview/mine': '我的', '/mini-preview/order': '订单详情' };
   const pageTitle = pageTitles[location.pathname] || pageTitles[selectedKey];
   const miniPage = location.pathname === '/coupon-receive' ? 'receive' : location.pathname === '/coupon-my' ? 'wallet' : location.pathname === '/coupon-order' ? 'checkout' : location.pathname.startsWith('/mini/') ? location.pathname.slice('/mini/'.length) : '';
   if (['receive', 'redeem', 'wallet', 'checkout', 'product', 'mine', 'order'].includes(miniPage)) return <CouponMiniApp key={miniPage} page={miniPage as 'receive' | 'redeem' | 'wallet' | 'checkout' | 'product' | 'mine' | 'order'} store={store} setStore={setStore} />;
@@ -126,7 +126,7 @@ export default function App() {
               icon: <MobileOutlined />,
               label: '用户端小程序',
               children: [
-                { key: '/mini-preview/product', label: '商品详情与选购' },
+                { key: '/mini-preview/product', label: '下单选券' },
                 { key: '/mini-preview/mine', label: '我的' },
                 { key: '/mini-preview/receive', label: '领取优惠券' },
                 { key: '/mini-preview/redeem', label: '兑换体验券' },

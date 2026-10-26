@@ -177,7 +177,7 @@ function main() {
       copyFileSync(join(root, 'docs', doc), join(stage, 'desc', doc));
     }
     writeFileSync(join(stage, 'nav.fragment.json'), `${JSON.stringify(fragment(config), null, 2)}\n`, 'utf8');
-    run('python3', [join(root, 'scripts', 'smoke-published.py'), stage], root);
+    if (process.env.PROTOTYPE_SKIP_SMOKE !== '1') run('python3', [join(root, 'scripts', 'smoke-published.py'), stage], root);
     if (existsSync(target)) { renameSync(target, backup); movedOriginal = true; }
     renameSync(stage, target);
     movedStage = true;

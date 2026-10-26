@@ -1,5 +1,5 @@
 import type { CouponIssueRecord, CouponIssuer, CouponOrder, CouponStore, ExperienceAccountRight } from './coupons';
-import { authorizedIssuerIds, canIssueCoupon, couponExpiryAt, couponLocalTime, createTicket, currentCouponOperatorId, effectiveCouponStatus, maskPhone, parsePhones, phoneListError, priceDiscount, receiveLimitError, shootingProducts, ticketProducts, uniqueCouponId } from './coupons';
+import { authorizedIssuerIds, canIssueCoupon, couponExpiryAt, couponLocalTime, createTicket, currentCouponOperatorId, effectiveCouponStatus, issuerAwareRedeemCode, maskPhone, parsePhones, phoneListError, priceDiscount, receiveLimitError, shootingProducts, ticketProducts, uniqueCouponId } from './coupons';
 
 export function prepareExperienceCodes(store: CouponStore): CouponStore {
   let serialSequence = 0;
@@ -46,18 +46,20 @@ export function claimPublicCoupon(store: CouponStore, planId: string, phone: str
   if (!canIssueCoupon(coupon, store.tickets)) throw new Error('优惠券已暂停或已领完');
   const limit = receiveLimitError(coupon, phone, store.tickets);
   if (limit) throw new Error(limit);
+  const issuerId = plan.operatorId || currentCouponOperatorId;
   if (coupon.kind === '体验权益券') {
-    const code = store.tickets.find((item) => item.couponId === coupon.id && !item.phoneDigits && item.status !== '已作废');
+    const code = store.tickets.find((item) => item.couponId === coupon.id && !item.phoneDigits && !item.distributedById && item.status !== '已作废');
     if (!code) throw new Error('体验券已领完');
     const issuedAt = couponLocalTime();
     const tickets = store.tickets.map((item) => item.id === code.id ? {
-      ...item, phone: maskPhone(phone), phoneDigits: phone, issuedAt,
+      ...item, redeemCode: issuerAwareRedeemCode(item.redeemCode, issuerId), distributedById: issuerId, distributedAt: plan.createdAt, phone: maskPhone(phone), phoneDigits: phone, issuedAt,
       expiresAt: couponExpiryAt(issuedAt, item.validityDays || coupon.validityDays),
       source: '扫码领取' as const, claimPlanId: plan.id, status: '待使用' as const,
     } : item);
     return { store: withClaimedExperienceRights({ ...store, tickets }), ticketId: code.id };
   }
-  const ticket = { ...createTicket(coupon, '扫码领取', phone), claimPlanId: plan.id };
+  const baseTicket = createTicket(coupon, '扫码领取', phone);
+  const ticket = { ...baseTicket, redeemCode: issuerAwareRedeemCode(baseTicket.redeemCode, issuerId), distributedById: issuerId, distributedAt: plan.createdAt, claimPlanId: plan.id };
   return { store: { ...store, tickets: [ticket, ...store.tickets] }, ticketId: ticket.id };
 }
 
@@ -80,6 +82,19 @@ export function claimExperienceCode(store: CouponStore, input: string, phone: st
     expiresAt: couponExpiryAt(issuedAt, item.validityDays || coupon.validityDays), status: '待使用' as const,
   } : item);
   return { store: withClaimedExperienceRights({ ...store, tickets }), ticketId: ticket.id, alreadyClaimed: false };
+}
+
+/** Record who presented a single experience code; viewing its list does not count as distribution. */
+export function markExperienceCodeDistributed(store: CouponStore, ticketId: string, issuerId: string): CouponStore {
+  const ticket = store.tickets.find((item) => item.id === ticketId && item.couponKind === '体验权益券');
+  const coupon = store.templates.find((item) => item.id === ticket?.couponId);
+  if (!ticket || !coupon) throw new Error('体验券编号不存在');
+  if (!authorizedIssuerIds(coupon).includes(issuerId)) throw new Error('当前账号未获得该优惠券的发放权限');
+  if (!canIssueCoupon(coupon, store.tickets) || effectiveCouponStatus(ticket) !== '未领取') throw new Error('该编号已领取、已作废或不可发放');
+  if (ticket.distributedById && ticket.distributedById !== issuerId) throw new Error('该编号已由其他发券人投放');
+  if (ticket.distributedById === issuerId) return store;
+  return { ...store, tickets: store.tickets.map((item) => item.id === ticketId
+    ? { ...item, redeemCode: issuerAwareRedeemCode(item.redeemCode, issuerId), distributedById: issuerId, distributedAt: couponLocalTime() } : item) };
 }
 
 export function resolveCouponCode(value: string) {
@@ -147,17 +162,17 @@ export function issueDirected(store: CouponStore, couponId: string, input: strin
   const batch = { id: uniqueCouponId('DI'), couponId, source: '定向发放' as const, quantity: phones.length, createdAt: couponLocalTime(), operator: issuer.name, operatorId: issuer.id };
   let tickets = [...store.tickets];
   if (coupon.kind === '体验权益券') {
-    const pool = tickets.filter((ticket) => ticket.couponId === couponId && !ticket.phoneDigits && ticket.status !== '已作废');
+    const pool = tickets.filter((ticket) => ticket.couponId === couponId && !ticket.phoneDigits && ticket.status !== '已作废' && (!ticket.distributedById || ticket.distributedById === issuer.id));
     if (selectedTicketId && phones.length !== 1) throw new Error('按编号定向发放时仅可填写一个手机号');
     if (pool.length < phones.length) throw new Error('剩余可发数量不足');
     const selected = selectedTicketId ? pool.find((ticket) => ticket.id === selectedTicketId) : undefined;
     if (selectedTicketId && !selected) throw new Error('该编号已绑定用户或已作废，不能定向发放');
     const allocationPool = selected ? [selected] : pool.slice(0, phones.length);
     const allocations = new Map(allocationPool.map((ticket, index) => [ticket.id, phones[index]]));
-    tickets = tickets.map((ticket) => allocations.has(ticket.id) ? { ...ticket, phoneDigits: allocations.get(ticket.id)!, phone: maskPhone(allocations.get(ticket.id)!), source: '定向发放' as const, issuedAt: batch.createdAt, expiresAt: couponExpiryAt(batch.createdAt, coupon.validityDays), validityDays: coupon.validityDays, batchNo: batch.id, status: '待使用' as const } : ticket);
+    tickets = tickets.map((ticket) => allocations.has(ticket.id) ? { ...ticket, redeemCode: issuerAwareRedeemCode(ticket.redeemCode, issuer.id), phoneDigits: allocations.get(ticket.id)!, phone: maskPhone(allocations.get(ticket.id)!), source: '定向发放' as const, issuedAt: batch.createdAt, expiresAt: couponExpiryAt(batch.createdAt, coupon.validityDays), validityDays: coupon.validityDays, batchNo: batch.id, distributedById: issuer.id, distributedAt: batch.createdAt, status: '待使用' as const } : ticket);
   } else {
     if (tickets.filter((ticket) => ticket.couponId === couponId).length + phones.length > coupon.totalLimit) throw new Error('剩余可发数量不足');
-    tickets = [...phones.map((phone) => ({ ...createTicket(coupon, '定向发放', phone), batchNo: batch.id })), ...tickets];
+    tickets = [...phones.map((phone) => { const ticket = createTicket(coupon, '定向发放', phone); return { ...ticket, redeemCode: issuerAwareRedeemCode(ticket.redeemCode, issuer.id), batchNo: batch.id, distributedById: issuer.id, distributedAt: batch.createdAt }; }), ...tickets];
   }
   return withClaimedExperienceRights({ ...store, tickets, batches: [batch, ...(store.batches || [])] });
 }
@@ -180,7 +195,7 @@ export function redeemExperience(store: CouponStore, input: string, recipient?: 
   const grantedAt = couponLocalTime();
   const issuedAt = ticket.issuedAt || grantedAt;
   const expiresAt = ticket.expiresAt || couponExpiryAt(issuedAt, ticket.validityDays || coupon.validityDays);
-  const right: ExperienceAccountRight = { id: uniqueCouponId('RIGHT'), sourceTicketId: ticket.id, couponId: ticket.couponId, couponName: ticket.couponName, phone: maskPhone(phone), phoneDigits: phone, productIds: [...ticket.productIds], totalUses: ticket.totalUses - ticket.usedTimes, remainingUses: ticket.totalUses - ticket.usedTimes, expiresAt, grantedAt, operator: '系统管理员', orderNo: orderNo?.trim() || undefined };
+  const right: ExperienceAccountRight = { id: uniqueCouponId('RIGHT'), sourceTicketId: ticket.id, couponId: ticket.couponId, couponName: ticket.couponName, phone: maskPhone(phone), phoneDigits: phone, productIds: [...ticket.productIds], totalUses: 1, remainingUses: ticket.usedTimes > 0 ? 0 : 1, expiresAt, grantedAt, operator: '系统管理员', orderNo: orderNo?.trim() || undefined };
   return { ...store, accountRights: [right, ...(store.accountRights || [])], tickets: store.tickets.map((item) => item.id === ticket.id ? { ...item, phone: right.phone, phoneDigits: phone, issuedAt, expiresAt, validityDays: ticket.validityDays || coupon.validityDays, source: item.phoneDigits ? item.source : '定向发放' as const, orderNo: orderNo?.trim() || item.orderNo, status: '待使用' as const } : item) };
 }
 

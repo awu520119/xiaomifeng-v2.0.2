@@ -32,7 +32,8 @@ try {
   assert.throws(() => flow.issueDirected(store, experience.id, '13800000001,13800000002,13800000003,13800000004'), /不足/);
   const originalCodes = store.tickets.map((ticket) => ticket.redeemCode);
   store = flow.issueDirected(store, experience.id, '13800000001');
-  assert.equal(store.tickets.length, 3); assert.deepEqual(store.tickets.map((ticket) => ticket.redeemCode), originalCodes);
+  assert.equal(store.tickets.length, 3); assert.notDeepEqual(store.tickets.map((ticket) => ticket.redeemCode), originalCodes);
+  assert.match(store.tickets.find((ticket) => ticket.phoneDigits).redeemCode, /^CURRENT-ADMIN::/);
   assert.equal(data.remainingQuota(experience, store.tickets), 2);
   const duplicates = flow.issueDirected(flow.prepareExperienceCodes(base), experience.id, '13800000001,13800000001');
   assert.equal(duplicates.tickets.filter((ticket) => ticket.phoneDigits === '13800000001').length, 2);
@@ -68,6 +69,15 @@ try {
   assert.equal(byCode.store.accountRights.find((item) => item.sourceTicketId === byCode.ticketId)?.phoneDigits, '13800000007');
   assert.equal(flow.claimExperienceCode(byCode.store, claimBase.tickets[0].redeemCode, '13800000007').alreadyClaimed, true);
   assert.throws(() => flow.claimExperienceCode(byCode.store, claimBase.tickets[0].redeemCode, '13800000008'), /已被领取/);
+  const presented = flow.markExperienceCodeDistributed(claimBase, claimBase.tickets[1].id, data.currentCouponOperatorId);
+  assert.equal(presented.tickets[1].distributedById, data.currentCouponOperatorId);
+  assert.equal(presented.tickets[1].phoneDigits, undefined);
+  assert.equal(flow.markExperienceCodeDistributed(presented, presented.tickets[1].id, data.currentCouponOperatorId), presented);
+  assert.throws(() => flow.markExperienceCodeDistributed(presented, presented.tickets[1].id, 'issuer-wanglin'), /权限/);
+  const claimedPresented = flow.claimExperienceCode(presented, presented.tickets[1].redeemCode, '13800000011').store;
+  assert.equal(claimedPresented.tickets[1].distributedById, data.currentCouponOperatorId);
+  assert.equal(claimedPresented.tickets[1].phoneDigits, '13800000011');
+  assert.notEqual(flow.claimPublicCoupon(presented, 'PLAN-EXP', '13800000012').ticketId, presented.tickets[1].id);
   console.log('✓ 发券授权、自动备码、编号精确绑定、额度、重复手机号逐条发券、扫码链接、指定账户与订单关联、核销防重、权益有效期及履约统计');
 
   const price = { ...data.initialCouponTemplates[2], id: 'TEST-PRICE', kind: '满减券', minSpend: 20, discountAmount: 10 };

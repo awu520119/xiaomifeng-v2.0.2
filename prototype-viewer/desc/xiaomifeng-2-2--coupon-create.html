@@ -425,8 +425,8 @@ main.desc pre.desc-code > code {
 <tr>
 <td>v1.0</td>
 <td>2026-10-22</td>
-<td>初版；体验券支持配置可兑换次数，统一三类券的可用范围选择</td>
-<td>用户</td>
+<td>初版</td>
+<td>awu</td>
 </tr>
 </tbody>
 </table>
@@ -472,16 +472,14 @@ main.desc pre.desc-code > code {
 </ul>
 </li>
 <li>
-<p><strong>体验券权益</strong>：数字输入，必填，正整数，配置该券可兑换的体验次数，展示为「可兑换 {次数} 次体验」。</p>
-<ul>
-<li>新建默认 1 次；历史体验券编辑时保留原配置。</li>
-</ul>
+<p><strong>体验券权益</strong>：固定展示「可兑换 1 次体验」。</p>
 </li>
 <li>
 <p><strong>可用范围</strong>：三类券均展示，单选，必填，默认「全部可用」。</p>
 <ul>
 <li><strong>全部可用</strong>：适用于全部拍摄点和主题。</li>
-<li><strong>指定主题</strong>：可切换「指定主题」，选择拍摄点-选择可用的主题。</li>
+<li><strong>指定主题</strong>：先选择一个拍摄点，再选择该拍摄点下一个或多个可用主题；拍摄点和主题均为必选。</li>
+<li><strong>切换拍摄点</strong>：切换后清空原已选主题，并要求重新选择新拍摄点下的主题。</li>
 </ul>
 </li>
 </ol>

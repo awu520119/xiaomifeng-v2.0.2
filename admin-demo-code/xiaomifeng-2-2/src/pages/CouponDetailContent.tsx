@@ -1,6 +1,5 @@
 import { Button, Descriptions, Space, Tag, Typography } from 'antd';
 import type { CouponIssuer, CouponKind, CouponStore, CouponTemplate } from '../mock/coupons';
-import { shootingProducts } from '../mock/coupons';
 
 type Props = {
   coupon: CouponTemplate;
@@ -16,9 +15,10 @@ const statusTone = (status: string) => ({ '发放中': 'active', '未开始': 'u
 
 export default function CouponDetailContent({ coupon, store, status, authorizedIssuers, onConfigureAuthorization }: Props) {
   const claimed = store.tickets.filter((ticket) => ticket.couponId === coupon.id && ticket.phoneDigits).length;
-  const products = shootingProducts.filter((product) => !coupon.productIds.length || coupon.productIds.includes(product.id));
-  const points = coupon.kind === '体验权益券' ? [...new Set(products.map((product) => product.shootingPoint))] : coupon.shootingPoints;
-  const themes = coupon.kind === '体验权益券' ? [...new Set(products.map((product) => product.theme))] : coupon.availableRange;
+  const allPoints = coupon.shootingPoints.includes('全部拍摄点');
+  const allThemes = coupon.availableRange.includes('全部可用');
+  const points = allPoints ? '全部拍摄点' : coupon.shootingPoints.join('、') || '—';
+  const themes = allThemes ? '全部主题' : coupon.availableRange.join('、') || '—';
 
   return <div className="coupon-detail-content">
     <div className="coupon-detail-hero">
@@ -28,27 +28,36 @@ export default function CouponDetailContent({ coupon, store, status, authorizedI
     <section className="coupon-order-detail-section">
       <h3><span />基础信息</h3>
       <Descriptions size="small" column={2}>
+        <Descriptions.Item label="优惠券名称">{coupon.name}</Descriptions.Item>
         <Descriptions.Item label="优惠券类型">{kindLabel(coupon.kind)}</Descriptions.Item>
-        <Descriptions.Item label="创建时间">{coupon.createdAt?.slice(0, 16) || '—'}</Descriptions.Item>
-        <Descriptions.Item label="有效期">领取后 {coupon.validityDays} 天可用</Descriptions.Item>
-        <Descriptions.Item label="发放总量">{coupon.totalLimit} 张</Descriptions.Item>
-        <Descriptions.Item label="已领取">{claimed} 张</Descriptions.Item>
       </Descriptions>
     </section>
     <section className="coupon-order-detail-section">
       <h3><span />优惠规则</h3>
       <Descriptions size="small" column={2}>
-        {coupon.kind === '体验权益券' ? <>
-          <Descriptions.Item label="适用拍摄点">{points.join('、') || '—'}</Descriptions.Item>
-          <Descriptions.Item label="适用主题">{themes.join('、') || '—'}</Descriptions.Item>
-        </> : <>
+        {coupon.kind === '体验权益券' ? <Descriptions.Item label="可兑换次数">{coupon.rightsCount || 1} 次体验</Descriptions.Item> : <>
           <Descriptions.Item label="使用门槛">{coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}</Descriptions.Item>
           <Descriptions.Item label={coupon.kind === '折扣券' ? '折扣' : '优惠金额'}>{coupon.kind === '折扣券' ? `${coupon.discountRate} 折` : `${coupon.discountAmount} 元`}</Descriptions.Item>
-          <Descriptions.Item label="可用范围">{themes.join('、') || '全部可用'}</Descriptions.Item>
-          <Descriptions.Item label="适用拍摄点">{points.join('、')}</Descriptions.Item>
         </>}
-        <Descriptions.Item label="使用规则" span={2}>{coupon.description || '—'}</Descriptions.Item>
+        <Descriptions.Item label="可用范围">{allThemes ? '全部可用' : '指定主题'}</Descriptions.Item>
+        {!allThemes && <>
+          <Descriptions.Item label="适用拍摄点">{points}</Descriptions.Item>
+          <Descriptions.Item label="适用主题">{themes}</Descriptions.Item>
+        </>}
       </Descriptions>
+    </section>
+    <section className="coupon-order-detail-section">
+      <h3><span />有效期与发放</h3>
+      <Descriptions size="small" column={2}>
+        <Descriptions.Item label="有效期">领取后 {coupon.validityDays} 天可用</Descriptions.Item>
+        <Descriptions.Item label="发放总量">{coupon.totalLimit} 张</Descriptions.Item>
+        <Descriptions.Item label="创建时间">{coupon.createdAt?.slice(0, 16) || '—'}</Descriptions.Item>
+        <Descriptions.Item label="已领取">{claimed} 张</Descriptions.Item>
+      </Descriptions>
+    </section>
+    <section className="coupon-order-detail-section">
+      <h3><span />使用规则</h3>
+      <Typography.Paragraph className="coupon-detail-rule-text">{coupon.description || '—'}</Typography.Paragraph>
     </section>
     <section className="coupon-order-detail-section coupon-detail-permission-section">
       <div className="coupon-detail-section-heading"><h3><span />配置权限</h3><Button type="link" onClick={onConfigureAuthorization}>配置</Button></div>

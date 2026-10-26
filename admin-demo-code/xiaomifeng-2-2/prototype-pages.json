@@ -7,7 +7,7 @@
     {
       "id": "marketing",
       "title": "营销管理",
-      "order": 1
+      "order": 2
     },
     {
       "id": "orders",
@@ -33,7 +33,7 @@
       "hash": "#/demo/export/coupon-list",
       "mode": "screen",
       "parent": "marketing",
-      "order": 1
+      "order": 2
     },
     {
       "id": "coupon-create",
@@ -42,8 +42,18 @@
       "hash": "#/demo/export/coupon-create",
       "mode": "drawer",
       "parent": "marketing",
-      "order": 2,
+      "order": 1,
       "dialogTitle": "创建优惠券"
+    },
+    {
+      "id": "coupon-authorization",
+      "title": "发券权限",
+      "doc": "发券权限PRD-20261022.md",
+      "hash": "#/demo/export/coupon-authorization",
+      "mode": "drawer",
+      "parent": "marketing",
+      "order": 3,
+      "dialogTitle": "发券权限"
     },
     {
       "id": "coupon-directed",
@@ -52,18 +62,18 @@
       "hash": "#/demo/export/coupon-directed",
       "mode": "screen",
       "parent": "marketing",
-      "order": 3,
+      "order": 4,
       "dialogTitle": "定向发放"
     },
     {
       "id": "coupon-public",
-      "title": "公开领取",
-      "doc": "公开领取PRD-20261022.md",
+      "title": "公开发放",
+      "doc": "公开发放PRD-20261022.md",
       "hash": "#/demo/export/coupon-public",
       "mode": "screen",
       "parent": "marketing",
-      "order": 4,
-      "dialogTitle": "公开领取"
+      "order": 5,
+      "dialogTitle": "公开发放"
     },
     {
       "id": "coupon-detail",
@@ -72,7 +82,7 @@
       "hash": "#/demo/export/coupon-detail",
       "mode": "drawer",
       "parent": "marketing",
-      "order": 5,
+      "order": 8,
       "dialogTitle": "优惠券详情"
     },
     {
@@ -97,18 +107,9 @@
     },
     {
       "id": "coupon-records",
-      "title": "券使用记录",
-      "doc": "券使用记录PRD-20261022.md",
+      "title": "优惠券记录",
+      "doc": "优惠券记录PRD-20261022.md",
       "hash": "#/demo/export/coupon-usage",
-      "mode": "screen",
-      "parent": "marketing",
-      "order": 8
-    },
-    {
-      "id": "coupon-issued-records",
-      "title": "定向发放记录",
-      "doc": "定向发放记录PRD-20261022.md",
-      "hash": "#/demo/export/coupon-issued",
       "mode": "screen",
       "parent": "marketing",
       "order": 9
@@ -183,7 +184,7 @@
     {
       "id": "mini-checkout",
       "title": "确认订单",
-      "doc": "小程序下单选券设计说明.md",
+      "doc": "小程序下单选券PRD-20261026.md",
       "hash": "#/demo/export/mini-checkout?phone=13800000001",
       "mode": "screen",
       "device": "mobile",

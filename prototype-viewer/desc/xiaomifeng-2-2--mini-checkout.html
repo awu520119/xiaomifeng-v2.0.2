@@ -410,7 +410,7 @@ main.desc pre.desc-code > code {
 <blockquote>
 <p>版本 v1.0　·　日期 2026-10-25</p>
 </blockquote>
-<p><em>需求场景：用户选定拍摄套餐后，查看可用优惠券并确认优惠后的支付金额。</em></p>
+<p><em>需求场景：用户选定套餐后确认金额，并按需使用优惠券完成下单或支付。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -424,88 +424,58 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-25</td>
-<td>收敛页面与选券说明，保留优惠计算、提交校验及结果规则</td>
-<td>用户</td>
+<td>2026-10-26</td>
+<td>初版</td>
+<td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="页面结构">页面结构</h2>
+<h2 id="一确认订单">一、确认订单</h2>
 <ol>
 <li>
-<p><strong>页面入口</strong>：从「商品详情与选购」的套餐选择弹层进入「确认订单」，带入已选套餐。</p>
+<p><strong>入口</strong>：</p>
 <ul>
-<li>本页展示套餐、拍摄点与金额，不再提供主题或套餐切换。</li>
+<li>选定套餐/确定下单后进入。</li>
 </ul>
 </li>
 <li>
-<p><strong>金额信息</strong>：展示「商品金额」「优惠金额」「应付金额」，金额单位为元，保留两位小数。</p>
+<p><strong>展示金额</strong>：</p>
 <ul>
-<li>商品金额取已选套餐价格；应付金额为商品金额减去本次优惠金额，最低为 0。</li>
-<li>底部展示可用优惠券数量、已减金额、应付金额及提交按钮。</li>
+<li>展示商品金额、优惠金额和应付金额。应付金额为商品金额减优惠金额，最低为 0。</li>
+</ul>
+</li>
+<li>
+<p><strong>无可用券</strong>：</p>
+<ul>
+<li>保留确认订单页，优惠金额为 0，仅展示「暂无可用优惠券」，直接按商品金额提交。</li>
 </ul>
 </li>
 </ol>
-<h2 id="优惠券选择">优惠券选择</h2>
+<h2 id="二选择优惠券可选">二、选择优惠券（可选）</h2>
 <ol>
 <li>
-<p><strong>打开选券</strong>：点击底部优惠券入口，打开「选择优惠券」弹层。</p>
-</li>
-<li>
-<p><strong>可用券</strong>：展示当前用户持有且适用于所选套餐的价格券及体验权益。</p>
+<p><strong>打开选券</strong>：展示可用券数量，点击后打开「选择优惠券」弹层。</p>
 <ul>
-<li>价格券须未使用、未作废、未过期、未被其他待支付订单占用，并满足使用门槛和适用范围。</li>
-<li>体验权益须在有效期内、有剩余次数且适用于所选套餐。</li>
+<li>仅展示当前用户持有、未使用、未作废、未过期且适用于当前套餐的券；</li>
+<li>价格券还须满足使用门槛，体验券每张只能兑换一次体验。</li>
 </ul>
 </li>
 <li>
-<p><strong>推荐与单选</strong>：可用券按本单优惠金额从高到低排列，未指定选择时默认选中优惠最大的券。</p>
-<ul>
-<li>用户可改选一张或选择「不使用优惠券」，价格券与体验权益不能叠加。</li>
-</ul>
+<p><strong>选择逻辑</strong>：默认选中优惠金额最高的一张，用户可改选或选择「不使用优惠券」；价格券与体验权益不能叠加。</p>
 </li>
 <li>
-<p><strong>优惠计算</strong>：满减券优惠取配置的减免金额；折扣券优惠为商品金额 ×（1 − 折扣 ÷ 10），四舍五入保留两位小数。</p>
-<ul>
-<li>优惠金额不超过商品金额；选择体验权益时，本单优惠等于商品金额。</li>
-</ul>
-</li>
-<li>
-<p><strong>不可用券</strong>：在「不可用优惠券」折叠区展示不可用价格券及原因，不允许选中。</p>
-</li>
-<li>
-<p><strong>选择反馈</strong>：选择后即时更新订单金额，弹层底部展示「已选 {数量} 张」「已减 ¥{优惠金额}」及「确定」。</p>
-<ul>
-<li>点击「确定」关闭弹层；选择「不使用优惠券」时，数量和优惠金额均为 0。</li>
-</ul>
+<p><strong>金额更新</strong>：选择后即时更新优惠金额和应付金额；满减、折扣按券配置计算，优惠金额不超过商品金额。</p>
 </li>
 </ol>
-<h2 id="提交与结果">提交与结果</h2>
+<h2 id="三提交订单">三、提交订单</h2>
 <ol>
-<li>
-<p><strong>提交校验</strong>：提交时再次校验所选券或体验权益。</p>
-<ul>
-<li>若所选券已不可用，则提示「所选优惠券已不可用，请重新选择」，不完成本次下单支付。</li>
-</ul>
-</li>
-<li>
-<p><strong>价格券或无券订单</strong>：应付金额大于 0 时，按钮为「确认支付」；成功后进入订单详情，订单展示「待拍摄」，价格券记录本单实际使用结果。</p>
-</li>
-<li>
-<p><strong>体验权益订单</strong>：应付金额为 0 时，按钮为「确认下单」；成功后直接进入「待拍摄」，预占一次体验权益。</p>
-<ul>
-<li>完成体验服务后计入实际使用，不因权益到账就标记为「已使用」。</li>
-</ul>
-</li>
-<li>
-<p><strong>订单详情</strong>：下单成功后展示内容及后续操作见<a href="小程序订单详情PRD-20261022.md">小程序订单详情 PRD</a>。</p>
-</li>
+<li><strong>提交校验</strong>：提交时再次校验所选券；失败时提示「所选优惠券已不可用，请重新选择」，不生成订单。</li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序下单选券-PRD" data-toc-id="小程序下单选券-PRD">小程序下单选券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#页面结构" data-toc-id="页面结构">页面结构</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#优惠券选择" data-toc-id="优惠券选择">优惠券选择</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#提交与结果" data-toc-id="提交与结果">提交与结果</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#小程序下单选券-PRD" data-toc-id="小程序下单选券-PRD">小程序下单选券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一确认订单" data-toc-id="一确认订单">一、确认订单</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二选择优惠券可选" data-toc-id="二选择优惠券可选">二、选择优惠券（可选）</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三提交订单" data-toc-id="三提交订单">三、提交订单</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

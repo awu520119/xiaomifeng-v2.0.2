@@ -20,7 +20,7 @@ export function MyCouponsPage({ store }: { store: CouponStore }) {
   return <MiniShell title="我的优惠券">
     <Space.Compact style={{ width: '100%', marginBottom: 16 }}><Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="输入演示手机号" maxLength={11} /><Button type="primary" onClick={() => setParams(phone ? { phone } : {})}>查看</Button></Space.Compact>
     {rights.length > 0 && <section><Typography.Title level={5}>账户体验权益</Typography.Title>{rights.map((right) => <Card key={right.id} size="small" style={{ marginBottom: 12 }} title={right.couponName} extra={<Tag>{rightStatus(right)}</Tag>}>
-      <Typography.Paragraph>可用 {right.remainingUses} 次，已体验 {right.usageHistory?.length || 0} 次，总计 {right.totalUses} 次</Typography.Paragraph>
+      <Typography.Paragraph>体验权益：{right.remainingUses > 0 ? '待使用' : '已使用'}</Typography.Paragraph>
       <Typography.Paragraph type="secondary">{shootingProducts.filter((product) => right.productIds.includes(product.id)).map((product) => product.name).join('、')}<br />有效至：{right.expiresAt || '原券已失效'}</Typography.Paragraph>
       {['可使用', '部分使用'].includes(rightStatus(right)) && <Button type="primary" size="small" onClick={() => navigate(`/coupon-order?phone=${right.phoneDigits}&rightId=${right.id}`)}>去体验</Button>}
     </Card>)}</section>}
@@ -33,7 +33,7 @@ export function MyCouponsPage({ store }: { store: CouponStore }) {
     <Drawer title="优惠券详情" width={480} open={Boolean(detail)} onClose={() => setDetailId(null)}>{detail && <Descriptions column={1} items={[
       { key: 'name', label: '优惠券', children: detail.couponName }, { key: 'id', label: '券码', children: detail.redeemCode }, { key: 'rule', label: '优惠内容', children: detail.benefit }, { key: 'scope', label: '适用范围', children: ticketProducts(detail).map((product) => product.name).join('、') }, { key: 'valid', label: '有效期', children: detail.expiresAt ? `领取后 ${detail.validityDays} 天可用，截止时间：${detail.expiresAt}` : `领取后 ${detail.validityDays} 天可用` }, { key: 'state', label: '状态', children: couponUsageStatus(detail, store) },
     ]} />}</Drawer>
-    <Modal title="出示兑换码" open={Boolean(qrTicket)} onCancel={() => setQrId(null)} footer={null}>{qrTicket && <div className="coupon-qr-result"><QRCode value={receiveUrl(`code=${encodeURIComponent(qrTicket.redeemCode)}`)} size={220} /><Typography.Text copyable>{qrTicket.redeemCode}</Typography.Text><Typography.Text type="secondary">由工作人员确认后，将权益发放到当前用户账户。</Typography.Text></div>}</Modal>
+    <Modal title="出示兑换码" open={Boolean(qrTicket)} onCancel={() => setQrId(null)} footer={null}>{qrTicket && <div className="coupon-qr-result"><QRCode value={receiveUrl(`code=${encodeURIComponent(qrTicket.redeemCode)}`, qrTicket.distributedById)} size={220} /><Typography.Text copyable>{qrTicket.redeemCode}</Typography.Text><Typography.Text type="secondary">由工作人员确认后，将权益发放到当前用户账户。</Typography.Text></div>}</Modal>
   </MiniShell>;
 }
 export function MiniOrderPage({ store, setStore }: Props) {
@@ -63,7 +63,7 @@ export function MiniOrderPage({ store, setStore }: Props) {
     <Space.Compact style={{ width: '100%', marginBottom: 18 }}><Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="输入演示手机号" maxLength={11} /><Button type="primary" onClick={() => setParams(phone ? { phone } : {})}>确认用户</Button></Space.Compact>
     <Typography.Paragraph strong>选择拍摄主题或套餐</Typography.Paragraph><Select style={{ width: '100%', marginBottom: 18 }} value={productId} onChange={setProductId} options={shootingProducts.map((item) => ({ value: item.id, label: `${item.name}，¥${item.price}` }))} />
     <Typography.Paragraph strong>使用优惠券 / 账户体验权益</Typography.Paragraph><Select style={{ width: '100%', marginBottom: 12 }} value={choice || 'none'} onChange={(value) => setChoice(value === 'none' ? undefined : value)} options={[
-      { value: 'none', label: '不使用优惠券' }, ...rights.map((right) => ({ value: right.id, label: `${right.couponName}，可用 ${right.remainingUses} 次` })),
+      { value: 'none', label: '不使用优惠券' }, ...rights.map((right) => ({ value: right.id, label: `${right.couponName}，${right.remainingUses > 0 ? '可使用' : '已使用'}` })),
       ...prices.map((ticket) => { const reason = priceCouponReason(ticket, productId); return { value: ticket.id, disabled: Boolean(reason), label: `${ticket.couponName}，${reason || `优惠 ¥${priceDiscount(ticket, product.price).toFixed(2)}${best?.id === ticket.id ? '（推荐）' : ''}`}` }; }),
     ]} />
     <Typography.Text type="secondary">价格券每单一张；优惠后应付为 0 的券本单不可用。</Typography.Text>
@@ -78,7 +78,7 @@ export function MiniOrderPage({ store, setStore }: Props) {
       { key: 'coupon-kind', label: '券类型', children: <Tag className={`coupon-kind-tag ${couponKindClass}`}>{couponKindLabel}</Tag> },
       { key: 'coupon-state', label: '使用状态', children: <Tag className={`coupon-status-tag coupon-status-tag-${couponUsageStatus(linkedTicket, store) === '已使用' ? 'active' : couponUsageStatus(linkedTicket, store) === '使用中' ? 'progress' : 'pending'}`}>{couponUsageStatus(linkedTicket, store)}</Tag> },
       { key: 'coupon-code', label: linkedTicket.couponKind === '体验权益券' ? '体验券编号 / 券码' : '券码', children: <Typography.Text copyable>{linkedTicket.serialNo ? `${linkedTicket.serialNo} / ` : ''}{linkedTicket.redeemCode}</Typography.Text> },
-      { key: 'coupon-discount', label: linkedRight ? '体验权益' : '优惠金额', children: linkedRight ? `已预占 1 次，剩余 ${linkedRight.remainingUses} 次` : `−¥${order.discountAmount.toFixed(2)}` },
+      { key: 'coupon-discount', label: linkedRight ? '体验权益' : '优惠金额', children: linkedRight ? '本单使用 1 次体验权益' : `−¥${order.discountAmount.toFixed(2)}` },
     ]} /> : <Typography.Text type="secondary">本订单未使用优惠券或体验权益</Typography.Text>}</section><Space wrap>
       {order.status === '待支付' && <><Button type="primary" onClick={() => act(order, 'pay')}>模拟支付成功</Button><Button onClick={() => act(order, 'cancel')}>取消订单</Button><Button onClick={() => act(order, 'cancel')}>模拟超时关闭</Button></>}
       {(order.status === '待使用' || order.status === '部分退款' && !order.fulfilledAt) && <Button type="primary" onClick={() => act(order, 'fulfil')}>模拟完成服务</Button>}
