@@ -15,11 +15,11 @@ type RecordEntry =
   | { kind: 'direct' | 'code' | 'publicTicket'; ticket: CouponIssueRecord; activityAt: string }
   | { kind: 'public'; plan: CouponClaimPlan; coupon?: CouponTemplate; claims: CouponIssueRecord[]; activityAt: string };
 const kindText = (kind: CouponTemplate['kind']) => kind === '体验权益券' ? '体验券' : kind;
-const kindClass = (kind: CouponTemplate['kind']) => kind === '满减券' ? 'issuer-kind-reduction' : kind === '折扣券' ? 'issuer-kind-discount' : 'issuer-kind-experience';
-const statusTone = (value: string) => ({ '发放中': 'active', '已领取': 'active', '已使用': 'active', '未开始': 'upcoming', '未领取': 'pending', '待使用': 'pending', '已暂停': 'pending', '使用中': 'progress', '已使用（退款）': 'refunded', '已结束': 'finished', '已过期': 'expired', '已作废': 'danger' }[value] || 'default');
+const kindClass = (kind: CouponTemplate['kind']) => kind === '特价券' ? 'issuer-kind-special' : kind === '满减券' ? 'issuer-kind-reduction' : kind === '折扣券' ? 'issuer-kind-discount' : 'issuer-kind-experience';
+const statusTone = (value: string) => ({ '发放中': 'active', '已领取': 'active', '已使用': 'active', '未开始': 'upcoming', '未领取': 'pending', '待使用': 'pending', '已暂停': 'pending', '使用中': 'progress', '已结束': 'finished', '已过期': 'expired', '已作废': 'danger' }[value] || 'default');
 const statusTag = (value: string) => <Tag className={`coupon-status-tag coupon-status-tag-${statusTone(value)}`}>{value}</Tag>;
 const kindBenefit = (coupon: CouponTemplate) => coupon.benefit || couponRuleText(coupon);
-const benefitClass = (kind: CouponTemplate['kind']) => `issuer-benefit-panel issuer-benefit-${kind === '满减券' ? 'reduction' : kind === '折扣券' ? 'discount' : 'experience'}`;
+const benefitClass = (kind: CouponTemplate['kind']) => `issuer-benefit-panel issuer-benefit-${kind === '特价券' ? 'special' : kind === '满减券' ? 'reduction' : kind === '折扣券' ? 'discount' : 'experience'}`;
 const benefitBlock = (benefit: string, kind: CouponTemplate['kind'], extraClass = '') =>
   <div className={`${benefitClass(kind)} ${extraClass}`}><strong className="issuer-benefit-value">{benefit}</strong></div>;
 const couponAvailability = (coupon: CouponTemplate, tickets: CouponIssueRecord[]) => <div className="issuer-availability">
@@ -66,7 +66,7 @@ export default function CouponIssuerCenterPage({ store, setStore, initialTab = '
   const activePlanCoupon = activePlan && store.templates.find((item) => item.id === activePlan.couponId);
   const authorizedCoupons = useMemo(() => {
     const available = store.templates.filter((item) => couponKinds.includes(item.kind) && authorizedIssuerIds(item).includes(issuer.id));
-    return (['体验权益券', '满减券', '折扣券'] as const)
+    return (['体验权益券', '满减券', '折扣券', '特价券'] as const)
       .map((kind) => available.find((item) => item.kind === kind))
       .filter((item): item is CouponTemplate => Boolean(item));
   }, [issuer.id, store.templates]);
@@ -80,9 +80,15 @@ export default function CouponIssuerCenterPage({ store, setStore, initialTab = '
     .sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
   const personalPlans = [...ownedPlans].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const directedTickets = personalTickets.filter((item) => item.source === '定向发放');
+  const directedIssuerAccount = (ticket: CouponIssueRecord) => {
+    const batch = store.batches?.find((item) => item.id === ticket.batchNo);
+    const issuerId = ticket.distributedById || batch?.operatorId;
+    const matched = couponIssuerOptions.find((item) => item.id === issuerId || item.name === batch?.operator);
+    return matched?.account || issuerId || batch?.operator || '-';
+  };
   const publicTickets = personalTickets.filter((item) => item.source === '扫码领取' && item.phoneDigits);
   const unlinkedPublicTickets = publicTickets.filter((ticket) => !ticket.claimPlanId || !ownedPlanIds.has(ticket.claimPlanId));
-  const codeClaimTickets = store.tickets.filter((ticket) => ticket.couponKind === '体验权益券' && ticket.source === '券码兑换' && ticket.phoneDigits && ticket.distributedById === issuer.id)
+  const codeClaimTickets = store.tickets.filter((ticket) => ticket.couponKind === '体验权益券' && ticket.source === '券码兑换' && ticket.phoneDigits)
     .sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
   const codeTickets = store.tickets.filter((ticket) => ticket.couponId === selectedCouponId && ticket.couponKind === '体验权益券'
     && (ticket.phoneDigits || effectiveCouponStatus(ticket) !== '已作废'));
@@ -249,7 +255,9 @@ export default function CouponIssuerCenterPage({ store, setStore, initialTab = '
       <div className="issuer-activity-head"><strong>{ticket.couponName}</strong><Tag className="issuer-source-tag">{sourceLabel}</Tag></div>
       {benefitBlock(ticket.benefit, ticket.couponKind, 'issuer-record-benefit')}
       <div className="issuer-activity-main"><span>{isDirected ? '发给' : '领取用户'} {ticket.phone || '—'}</span>{statusTag(ticketUsageStatus(ticket))}</div>
-      <div className="issuer-activity-meta"><span>{isDirected ? '发放时间' : '领取时间'}</span><time>{ticket.issuedAt.slice(0, 16) || '—'}</time></div>
+      {isDirected
+        ? <div className="issuer-history-facts issuer-directed-record-facts"><div><span>发放人账号</span><strong>{directedIssuerAccount(ticket)}</strong></div><div><span>发放时间</span><time>{ticket.issuedAt.slice(0, 16) || '—'}</time></div></div>
+        : <div className="issuer-activity-meta"><span>领取时间</span><time>{ticket.issuedAt.slice(0, 16) || '—'}</time></div>}
       <details className="issuer-record-details issuer-ticket-details"><summary><span>查看券信息</span><DownOutlined /></summary><div className="issuer-ticket-detail-content"><div><span>有效截止</span><strong>{ticket.expiresAt || '—'}</strong></div>{ticket.couponKind === '体验权益券' && <div><span>体验券编号</span><Typography.Text copyable>{ticket.serialNo || ticket.redeemCode}</Typography.Text></div>}</div></details>
     </Card>;
   };

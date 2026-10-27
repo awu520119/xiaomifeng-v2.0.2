@@ -13,7 +13,7 @@ const operatorOptions = Array.from(new Map(initialOperationLogs.map((log) => [lo
 const operationTypeTone = (type: OperationType) => ({ 新增: 'create', 编辑: 'edit', 删除: 'delete', 执行: 'execute' }[type]);
 
 function OperationContent({ log }: { log: OperationLog }) {
-  const changeTexts = log.changes.map((change) => `${change.field}：${change.before === '未创建' || change.before === '—' ? change.after : `${change.before} → ${change.after}`}`);
+  const changeTexts = log.changes.map((change) => `${change.field}：${change.after}`);
   const crossTenant = log.targetTenant && log.operatorOrg !== log.targetTenant && log.objectName !== log.targetTenant;
   const actionText = `${log.action}「${log.objectName}」${log.objectSuffix ?? ''}`;
   const fullText = [actionText, ...changeTexts, crossTenant ? `作用租户：${log.targetTenant}` : null].filter(Boolean).join('；');
@@ -23,15 +23,14 @@ function OperationContent({ log }: { log: OperationLog }) {
     trigger={['hover', 'focus']}
     overlayClassName="operation-log-tooltip"
     title={<div className="operation-log-tooltip-content">
-      <div>{actionText}</div>
+      <div className="operation-log-tooltip-title">{actionText}</div>
       {changeTexts.map((change, index) => <div key={`${change}-${index}`}>{change}</div>)}
       {crossTenant && <div>作用租户：{log.targetTenant}</div>}
     </div>}
   >
     <div className="operation-log-content" tabIndex={0} aria-label={fullText}>
-      <span>{log.action}「<strong className="operation-log-object">{log.objectName}</strong>」{log.objectSuffix}</span>
-      {changeTexts.length > 0 && <span className="operation-log-content-changes">；{changeTexts.join('；')}</span>}
-      {crossTenant && <span className="operation-log-target-tenant">；作用租户：{log.targetTenant}</span>}
+      <div className="operation-log-content-title">{log.action}「<strong className="operation-log-object">{log.objectName}</strong>」{log.objectSuffix}</div>
+      {(changeTexts.length > 0 || crossTenant) && <div className="operation-log-content-details">{changeTexts.map((change, index) => <span key={`${change}-${index}`} className="operation-log-content-changes">{change}</span>)}{crossTenant && <span className="operation-log-target-tenant">作用租户：{log.targetTenant}</span>}</div>}
     </div>
   </Tooltip>;
 }
@@ -48,21 +47,24 @@ export default function OperationLogsPage() {
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [datePickerKey, setDatePickerKey] = useState(0);
   const [operationType, setOperationType] = useState<OperationType>();
+  const [module, setModule] = useState<string>();
   const [operatorId, setOperatorId] = useState<string>();
   const [currentPage, setCurrentPage] = useState(1);
-  const hasFilters = !!dateRange || !!operationType || !!operatorId;
+  const hasFilters = !!dateRange || !!operationType || !!operatorId || !!module;
 
   const rows = useMemo(() => initialOperationLogs.filter((item) => (
     (!operationType || item.operationType === operationType)
+    && (!module || item.module === module)
     && (!operatorId || item.operatorId === operatorId)
     && (!dateRange || (item.time.slice(0, 10) >= dateRange[0] && item.time.slice(0, 10) <= dateRange[1]))
-  )).sort((a, b) => b.time.localeCompare(a.time)), [dateRange, operationType, operatorId]);
+  )).sort((a, b) => b.time.localeCompare(a.time)), [dateRange, operationType, operatorId, module]);
 
   const reset = () => {
     setDateRange(null);
     setDatePickerKey((key) => key + 1);
     setOperationType(undefined);
     setOperatorId(undefined);
+    setModule(undefined);
     setCurrentPage(1);
   };
 
@@ -77,6 +79,7 @@ export default function OperationLogsPage() {
             }} />
           </div>
           <Select<OperationType> className="operation-log-type-select" aria-label="操作类型" allowClear placeholder="操作类型" value={operationType} options={operationTypes.map((type) => ({ label: type, value: type }))} onChange={(value) => { setOperationType(value); setCurrentPage(1); }} />
+          <Select<string> aria-label="操作模块" allowClear placeholder="操作模块" value={module} style={{ width: 140 }} options={[...new Set(initialOperationLogs.map((log) => log.module))].map((value) => ({ value, label: value }))} onChange={(value) => { setModule(value); setCurrentPage(1); }} />
           <Select<string> className="operation-log-operator-select" aria-label="操作人账号" showSearch optionFilterProp="label" allowClear placeholder="操作人账号" notFoundContent="没有匹配的账号" value={operatorId} options={operatorOptions} onChange={(value) => { setOperatorId(value); setCurrentPage(1); }} />
           <Button type="link" icon={<ReloadOutlined />} disabled={!hasFilters} onClick={reset}>重置</Button>
         </div>

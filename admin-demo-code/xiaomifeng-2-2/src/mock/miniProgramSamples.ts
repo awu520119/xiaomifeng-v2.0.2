@@ -1,9 +1,9 @@
 import type { CouponStore } from './coupons';
 import { createTicket } from './coupons';
 
-const seedId = 'mini-coupon-review-v6';
+const seedId = 'mini-coupon-review-v7';
 
-/** 满减券、折扣券和体验券落在同一演示账号，便于展示券包与结算。 */
+/** 四类券落在同一演示账号，便于展示券包与结算。 */
 export function withMiniProgramSamples(store: CouponStore): CouponStore {
   if (store.demoSeeds?.includes(seedId)) return store;
   const phone = '13800000001';
@@ -15,13 +15,15 @@ export function withMiniProgramSamples(store: CouponStore): CouponStore {
     'CN-DEMO-MINI-EXPIRED-DISCOUNT',
     'CN-DEMO-MINI-EXPIRED-EXPERIENCE',
     'CN-DEMO-MINI-VOID-REDUCTION',
+    'CN-DEMO-MINI-SPECIAL',
+    'CN-DEMO-MINI-REDUCTION-LOCKED',
   ]);
   const existingTickets = store.tickets.filter((item) => !oldMiniTicketIds.has(item.id)).map((item) => item.id === 'CN-DEMO-EXPERIENCE-001' ? { ...item, couponName: '指定主题兑换券', benefit: '指定主题体验 1 次', totalUses: 1, usedTimes: 0, status: '待使用' as const, usageHistory: [] } : item);
   const accountRights = (store.accountRights || []).map((right) => right.sourceTicketId === 'CN-DEMO-EXPERIENCE-001' ? { ...right, couponName: '指定主题兑换券', totalUses: 1, remainingUses: 1, usageHistory: [] } : right);
-  const priceTemplates = templates.filter((item) => ['满减券', '折扣券'].includes(item.kind));
+  const priceTemplates = (['满减券', '折扣券', '特价券'] as const).map((kind) => templates.find((item) => item.kind === kind)!);
   const tickets = priceTemplates.map((coupon) => {
     const ticket = createTicket(coupon, '定向发放', phone);
-    ticket.id = ticket.redeemCode = `CN-DEMO-MINI-${coupon.kind === '满减券' ? 'REDUCTION' : 'DISCOUNT'}`;
+    ticket.id = ticket.redeemCode = `CN-DEMO-MINI-${coupon.kind === '满减券' ? 'REDUCTION' : coupon.kind === '折扣券' ? 'DISCOUNT' : 'SPECIAL'}`;
     if (coupon.kind === '折扣券') {
       ticket.minSpend = 100;
       ticket.benefit = '满 100 元享 8 折';
@@ -46,16 +48,21 @@ export function withMiniProgramSamples(store: CouponStore): CouponStore {
 
 /** 现有小程序商品与订单详情的独立演示数据，不覆盖用户新下的订单。 */
 export function withMiniCommerceSamples(store: CouponStore): CouponStore {
-  const commerceSeed = 'mini-commerce-samples-v3';
+  const commerceSeed = 'mini-commerce-samples-v4';
   if (store.demoSeeds?.includes(commerceSeed)) return store;
   const orderId = 'ORDER-DEMO-MINI-COMMERCE-001';
   const phone = '13800000001';
-  const demoTicket = store.tickets.find((item) => item.id === 'CN-DEMO-MINI-REDUCTION' && item.phoneDigits === phone);
+  const lockedTicketId = 'CN-DEMO-MINI-REDUCTION-LOCKED';
+  const reduction = store.templates.find((item) => item.id === 'CP-REDUCTION');
+  const seededTicket = reduction ? createTicket(reduction, '定向发放', phone) : undefined;
+  const lockedTicket = seededTicket ? { ...seededTicket, id: lockedTicketId, redeemCode: lockedTicketId } : undefined;
+  const ticketsWithLockedCoupon = lockedTicket && !store.tickets.some((item) => item.id === lockedTicketId) ? [lockedTicket, ...store.tickets] : store.tickets;
+  const demoTicket = ticketsWithLockedCoupon.find((item) => item.id === lockedTicketId && item.phoneDigits === phone);
   const order = { id: orderId, phone, productId: 'SP009', productName: '曲径通幽推荐版', ticketId: demoTicket?.id, originalAmount: 128, discountAmount: demoTicket ? 20 : 0, payAmount: demoTicket ? 108 : 128, status: '待支付' as const, createdAt: new Date().toLocaleString('sv-SE').replace('T', ' ') };
   const tickets = demoTicket
-    ? store.tickets.map((item) => item.id === demoTicket.id ? { ...item, lockedOrderId: orderId, status: '待使用' as const, usedTimes: 0, usageHistory: [] } : item)
-    : store.tickets;
+    ? ticketsWithLockedCoupon.map((item) => item.id === demoTicket.id ? { ...item, lockedOrderId: orderId, status: '待使用' as const, usedTimes: 0, usageHistory: [] } : item)
+    : ticketsWithLockedCoupon;
   const orders = (store.orders || []).filter((item) => item.id !== orderId);
-  const demoSeeds = (store.demoSeeds || []).filter((seed) => !['mini-commerce-samples-v1', 'mini-commerce-samples-v2'].includes(seed));
+  const demoSeeds = (store.demoSeeds || []).filter((seed) => !['mini-commerce-samples-v1', 'mini-commerce-samples-v2', 'mini-commerce-samples-v3'].includes(seed));
   return { ...store, orders: [order, ...orders], tickets, demoSeeds: [...demoSeeds, commerceSeed] };
 }

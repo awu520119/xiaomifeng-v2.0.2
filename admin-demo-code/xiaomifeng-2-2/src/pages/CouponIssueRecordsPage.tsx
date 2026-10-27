@@ -10,8 +10,8 @@ import { couponUsageStatus, couponUsageStatuses } from '../mock/couponFlow';
 
 type Props = { store: CouponStore; setStore: Dispatch<SetStateAction<CouponStore>>; mode?: 'ledger' | 'issue' };
 const label = (kind: CouponKind) => kind === '体验权益券' ? '体验券' : kind;
-const kindTag = (kind: CouponKind) => <Tag className={`coupon-kind-tag ${kind === '满减券' ? 'coupon-kind-tag-reduction' : kind === '折扣券' ? 'coupon-kind-tag-discount' : 'coupon-kind-tag-experience'}`}>{label(kind)}</Tag>;
-const statusTone = (value: string) => ({ '待使用': 'pending', '使用中': 'progress', '已使用': 'active', '已使用（退款）': 'refunded', '已过期': 'expired', '已作废': 'danger' }[value] || 'default');
+const kindTag = (kind: CouponKind) => <Tag className={`coupon-kind-tag ${kind === '特价券' ? 'coupon-kind-tag-special' : kind === '满减券' ? 'coupon-kind-tag-reduction' : kind === '折扣券' ? 'coupon-kind-tag-discount' : 'coupon-kind-tag-experience'}`}>{label(kind)}</Tag>;
+const statusTone = (value: string) => ({ '待使用': 'pending', '使用中': 'progress', '已使用': 'active', '已过期': 'expired', '已作废': 'danger' }[value] || 'default');
 const statusTag = (value: string) => <Tag className={`coupon-status-tag coupon-status-tag-${statusTone(value)}`}>{value}</Tag>;
 const sourceName = (source: IssueSource) => source === '扫码领取' ? '公开领取' : source === '券码兑换' ? '券码领取' : '定向发放';
 const operatorProfile = (value: string) => {
@@ -21,9 +21,10 @@ const operatorProfile = (value: string) => {
   return { account: value || 'admin', name: value || '系统管理员' };
 };
 const issuerOf = (ticket: CouponIssueRecord, store: CouponStore) => {
+  if (ticket.source !== '定向发放') return { account: '-', name: '' };
   const batchOperator = store.batches?.find((batch) => batch.id === ticket.batchNo)?.operator;
   const claimPlan = ticket.claimPlanId ? store.plans.find((plan) => plan.id === ticket.claimPlanId) : undefined;
-  const value = ticket.distributedById || batchOperator || claimPlan?.operatorId || claimPlan?.operatorName || '系统管理员';
+  const value = ticket.distributedById || batchOperator || '-';
   const matched = couponIssuerOptions.find((issuer) => issuer.id === value);
   if (matched) return { account: matched.account, name: matched.name };
   if (claimPlan?.operatorName && value === claimPlan.operatorId) return { account: claimPlan.operatorId || 'admin', name: claimPlan.operatorName };
@@ -70,7 +71,7 @@ function LedgerRecords({ store, setStore }: Props) {
       { title: '序号', width: 64, render: (_: unknown, __: CouponIssueRecord, index: number) => (currentPage - 1) * pageSize + index + 1 },
       { title: '券名称', dataIndex: 'couponName', width: 180 },
       { title: '券类型', width: 90, render: (_, ticket) => kindTag(ticket.couponKind) },
-      { title: '发放人', width: 145, render: (_, ticket) => { const issuer = issuerOf(ticket, store); return <div className="coupon-operator-cell"><span>{issuer.account}</span><Typography.Text type="secondary">{issuer.name}</Typography.Text></div>; } },
+      { title: '发放人', width: 145, render: (_, ticket) => { const issuer = issuerOf(ticket, store); return <div className="coupon-operator-cell"><span>{issuer.account}</span>{issuer.name && <Typography.Text type="secondary">{issuer.name}</Typography.Text>}</div>; } },
       { title: '使用状态', width: 125, render: (_, ticket) => statusTag(stateOf(ticket)) },
       { title: '持券用户', dataIndex: 'phone', width: 130 },
       { title: '获取时间', dataIndex: 'issuedAt', width: 160, render: (value: string) => value?.slice(0, 16) || '—' },

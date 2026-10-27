@@ -12,9 +12,11 @@
     "xiaomifeng-2-2--issuer-center",
     "xiaomifeng-2-2--issuer-records",
     "xiaomifeng-2-2--mini-checkout",
+    "xiaomifeng-2-2--mini-coupon-detail",
     "xiaomifeng-2-2--mini-order",
     "xiaomifeng-2-2--mini-receive",
     "xiaomifeng-2-2--mini-redeem",
+    "xiaomifeng-2-2--mini-theme-list",
     "xiaomifeng-2-2--mini-wallet",
     "xiaomifeng-2-2--operation-logs",
     "xiaomifeng-2-2--order-list"

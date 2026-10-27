@@ -406,9 +406,9 @@ main.desc pre.desc-code > code {
     <div class="desc-content">
       <main class="desc">
         <div class="desc-body">
-<h1 id="券使用记录-PRD">券使用记录 PRD</h1>
+<h1 id="优惠券记录-PRD">优惠券记录 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-22</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
 <p><em>需求场景：运营人员查询每张已领取用户券的持有人、获取方式和当前使用状态，并执行允许的作废操作。</em></p>
 <h2 id="变更记录">变更记录</h2>
@@ -424,28 +424,25 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-22</td>
+<td>2026-10-27</td>
 <td>初版</td>
 <td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一券使用记录权限说明">一、券使用记录—权限说明</h2>
+<h2 id="一优惠券记录权限说明">一、优惠券记录—权限说明</h2>
 <ol>
 <li><strong>权限控制</strong>：<ul>
-<li>须具有「营销管理」下「优惠券管理」的「查询」/「编辑」功能权限。</li>
-<li><strong>作废</strong>：须具有「营销管理」下「优惠券管理」的「作废」权限。</li>
-<li><strong>数据权限</strong>：被授权发券用户只能查看被授权券的使用记录；平台管理员和租户管理员可查看全部记录。</li>
+<li>须具有「优惠券记录」-「查询」功能权限。</li>
+<li>须具有该券的发券权限。</li>
+<li><strong>作废</strong>：须具有「优惠券管理」-「编辑」权限。</li>
 </ul>
 </li>
 </ol>
-<h2 id="二券使用记录筛选项说明">二、券使用记录—筛选项说明</h2>
+<h2 id="二优惠券记录筛选项说明">二、优惠券记录—筛选项说明</h2>
 <ol>
 <li>
 <p><strong>券名称、券码、手机号关键词搜索</strong>：关键词输入。按任一对应字段包含关键词匹配。</p>
-<ul>
-<li>手机号支持完整号码查询，页面按脱敏结果展示。</li>
-</ul>
 </li>
 <li>
 <p><strong>日期筛选</strong>：日期范围。以用户券实际绑定时间查询，包含所选开始日和结束日全天。</p>
@@ -457,15 +454,15 @@ main.desc pre.desc-code > code {
 <p><strong>获取方式筛选</strong>：单选。「定向发放」「公开领取」「券码领取」，支持清空。</p>
 </li>
 <li>
-<p><strong>使用状态筛选</strong>：单选。包括待使用、使用中、已使用、已使用（退款）、已过期、已作废，支持清空。</p>
+<p><strong>使用状态筛选</strong>：单选。包括待使用、使用中、已使用、已过期、已作废，支持清空。</p>
 </li>
 </ol>
-<h2 id="三券使用记录列表说明">三、券使用记录—列表说明</h2>
+<h2 id="三优惠券记录列表说明">三、优惠券记录—列表说明</h2>
 <ol>
 <li>
 <p><strong>发放人</strong>：主要展示发放账号 ID，账号名称在下方辅助展示。</p>
 <ul>
-<li>沿用用户券发放或领取时记录的人员身份；发放人 ID 作为记录归属依据，账号名称仅用于辅助识别。</li>
+<li>仅定向发放展示发放账号 ID 和名称；公开发放及券码领取无法追踪发放人，展示「-」。</li>
 </ul>
 </li>
 <li>
@@ -491,10 +488,6 @@ main.desc pre.desc-code > code {
 <tr>
 <td>「已使用」</td>
 <td>价格券已经用于成功支付；或体验券已完成对应体验服务</td>
-</tr>
-<tr>
-<td>「已使用（退款）」</td>
-<td>已使用的价格券发生退款且不满足返还条件，券保持使用终态</td>
 </tr>
 <tr>
 <td>「已过期」</td>
@@ -524,7 +517,7 @@ main.desc pre.desc-code > code {
 <p><strong>体验券编号</strong>：仅体验券展示对应的独立编号。</p>
 <ul>
 <li>体验券展示独立「TY-」连续编号。</li>
-<li>满减和折扣券展示「—」。</li>
+<li>满减、折扣和特价券展示「—」。</li>
 </ul>
 </li>
 <li>
@@ -535,18 +528,25 @@ main.desc pre.desc-code > code {
 <ul>
 <li>点击后确认「确认作废该优惠券？」并提示「作废后用户不可继续使用，且不可恢复。」</li>
 <li>确认成功后状态更新为「已作废」，不可继续使用或再次作废，并保留原发放及领取记录。</li>
-<li>「使用中」「已使用」「已使用（退款）」「已过期」「已作废」状态不提供作废操作。</li>
+<li>「使用中」「已使用」「已过期」「已作废」状态不提供作废操作。</li>
 </ul>
 </li>
 <li>
 <p><strong>排序</strong>：按获取时间倒序。</p>
+</li>
+<li>
+<p><strong>退款与状态</strong>：</p>
+<ul>
+<li>体验券全额退款后返还原用户，仍有效时恢复「待使用」；</li>
+<li>价格券（满减、折扣、特价）退款未返券时保持「已使用」。</li>
+</ul>
 </li>
 </ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#券使用记录-PRD" data-toc-id="券使用记录-PRD">券使用记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一券使用记录权限说明" data-toc-id="一券使用记录权限说明">一、券使用记录—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二券使用记录筛选项说明" data-toc-id="二券使用记录筛选项说明">二、券使用记录—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三券使用记录列表说明" data-toc-id="三券使用记录列表说明">三、券使用记录—列表说明</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#优惠券记录-PRD" data-toc-id="优惠券记录-PRD">优惠券记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一优惠券记录权限说明" data-toc-id="一优惠券记录权限说明">一、优惠券记录—权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二优惠券记录筛选项说明" data-toc-id="二优惠券记录筛选项说明">二、优惠券记录—筛选项说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三优惠券记录列表说明" data-toc-id="三优惠券记录列表说明">三、优惠券记录—列表说明</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

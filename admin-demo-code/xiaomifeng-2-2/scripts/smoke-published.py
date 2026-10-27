@@ -56,7 +56,7 @@ def main() -> int:
                             raise RuntimeError(f"{page_id} 的遮罩不是黑色 60%")
                     if item.get("templateType") == "drawer":
                         page.get_by_role("dialog").wait_for(state="visible", timeout=15000)
-                        page.locator(".ant-drawer-mask").wait_for(state="visible", timeout=15000)
+                        page.locator(".ant-drawer-mask, .ant-modal-mask").first.wait_for(state="visible", timeout=15000)
                     else:
                         page.wait_for_function("document.querySelector('#root')?.textContent?.trim().length > 0", timeout=15000)
                         sidebars = page.locator(".app-sider")
@@ -86,18 +86,53 @@ def main() -> int:
                             if not page.get_by_role("button", name="返回", exact=True).is_disabled():
                                 raise RuntimeError("券包页返回按钮未禁用")
                             page.locator(".mini-ticket").first.wait_for(state="visible", timeout=15000)
-                            for kind in ["满减券", "折扣券", "体验券"]:
+                            for kind in ["满减券", "折扣券", "特价券", "体验券"]:
                                 if not page.locator(".mini-ticket-kind").filter(has_text=kind).count():
-                                    raise RuntimeError(f"券包缺少{kind}演示券")
+                                    raise RuntimeError(f"券包待使用页缺少{kind}演示券")
+                            page.get_by_role("tab", name=re.compile("使用中")).click()
+                            if not page.locator(".mini-ticket-kind").filter(has_text="满减券").count():
+                                raise RuntimeError("券包使用中页缺少待支付订单占用的满减券")
+                            page.get_by_role("tab", name=re.compile("待使用")).click()
                             experience = page.locator(".mini-ticket-hero.experience").first
                             box = experience.bounding_box()
                             if not box or box["x"] + box["width"] > page.locator(".mini-ticket").first.bounding_box()["x"] + page.locator(".mini-ticket").first.bounding_box()["width"]:
                                 raise RuntimeError("体验权益文案超出券卡")
+                        elif page_id == "mini-coupon-detail":
+                            dialog = page.get_by_role("dialog", name="优惠券详情", exact=True)
+                            dialog.wait_for(state="visible", timeout=15000)
+                            if page.locator(".mini-sheet-overlay .mini-ticket-detail-sheet").count() != 1:
+                                raise RuntimeError("优惠券详情目录未只展示券详情弹层")
+                            if dialog.locator("button").count():
+                                raise RuntimeError("优惠券详情目录仍保留可操作按钮")
+                            page.locator(".mini-sheet-overlay").click(position={"x": 8, "y": 8})
+                            if not dialog.is_visible():
+                                raise RuntimeError("优惠券详情目录可通过遮罩关闭")
+                        elif page_id == "mini-theme-list":
+                            cards = page.locator(".mini-theme-card")
+                            if cards.count() < 2 or page.get_by_text("预计到手", exact=False).count() < cards.count():
+                                raise RuntimeError("主题列表缺少主题卡或预计到手价")
+                            page.get_by_role("tab", name="雁荡山", exact=True).click()
+                            if not page.locator(".mini-theme-card").count():
+                                raise RuntimeError("主题列表切换拍摄点后未展示主题")
+                            page.locator(".mini-theme-card").first.click()
+                            page.locator(".mini-product-page").wait_for(state="visible", timeout=15000)
+                            if "主题详情页" not in page.locator(".mini-product-context").inner_text():
+                                raise RuntimeError("点击主题卡后未进入主题详情")
+                            select_package = page.get_by_role("button", name="选套餐", exact=True)
+                            select_package.wait_for(state="visible", timeout=15000)
+                            if not select_package.is_disabled():
+                                raise RuntimeError("从主题列表进入详情后选套餐按钮未禁用")
+                            page.get_by_role("button", name="返回主题列表", exact=True).click()
+                            page.locator(".mini-theme-grid").wait_for(state="visible", timeout=15000)
                         elif page_id == "mini-checkout":
                             if not page.get_by_role("button", name="返回", exact=True).is_disabled():
                                 raise RuntimeError("确认订单页返回按钮未禁用")
+                            if not re.search(r"\d+张可用", page.locator(".mini-footer-coupon").inner_text()):
+                                raise RuntimeError("确认订单可用券数量文案异常")
                             page.locator(".mini-footer-coupon").click()
                             page.get_by_role("dialog", name="选择优惠券").wait_for(state="visible", timeout=15000)
+                            if page.get_by_text("不适用本商品", exact=True).count():
+                                raise RuntimeError("确认订单仍显示旧的不适用商品文案")
                             if page.locator(".mini-choice").count() < 2:
                                 raise RuntimeError("确认订单缺少可选券")
                             page.get_by_role("button", name="确定", exact=True).click()
@@ -113,6 +148,13 @@ def main() -> int:
                         page.get_by_text("原型创建验证券", exact=True).wait_for(state="attached", timeout=15000)
                         if page.locator(".coupon-page").is_visible():
                             raise RuntimeError("创建后露出无关优惠券列表")
+                    if page_id == "coupon-authorization":
+                        page.locator(".coupon-authorization-field .ant-select").click()
+                        options = page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option")
+                        options.first.wait_for(state="attached", timeout=15000)
+                        option_texts = options.all_inner_texts()
+                        if any(value in " ".join(option_texts) for value in ["系统管理员", "超级管理员", "管理员", "平台运营员"]):
+                            raise RuntimeError("默认拥有发券权限的账号仍出现在授权账号选项中")
                     if page_id in {"issuer-center", "issuer-records"}:
                         expected_tab = "发放记录" if page_id == "issuer-records" else "发券"
                         selected = page.locator(".issuer-tabs .ant-segmented-item-selected")
@@ -132,133 +174,26 @@ def main() -> int:
                             cards = page.locator(".issuer-coupon-card")
                             if page.get_by_text("选择优惠券", exact=True).count() or page.locator(".prototype-issuer-header").count():
                                 raise RuntimeError("发券页仍展示重复标题或查看器身份信息")
-                            if cards.count() != 3 or [card.locator(".issuer-kind-tag").inner_text() for card in cards.all()] != ["体验券", "满减券", "折扣券"]:
-                                raise RuntimeError("发券列表未展示三类券各一张")
+                            if cards.count() != 4 or [card.locator(".issuer-kind-tag").inner_text() for card in cards.all()] != ["体验券", "满减券", "折扣券", "特价券"]:
+                                raise RuntimeError("发券列表未展示四类券各一张")
                             if any(card.locator(".issuer-benefit-panel").count() != 1 for card in cards.all()):
                                 raise RuntimeError("发券卡片缺少独立权益区域")
                             if any(card.locator(".issuer-coupon-extra").count() for card in cards.all()):
                                 raise RuntimeError("发券列表卡片仍展示适用范围或使用规则")
-                            if cards.first.get_by_role("button").count() != 1 or cards.first.get_by_role("button", name="查看券码").count() != 1:
-                                raise RuntimeError("体验券未使用查看券码入口")
-                            button_width = cards.first.get_by_role("button", name="查看券码").bounding_box()["width"]
-                            card_width = cards.first.bounding_box()["width"]
-                            if button_width < card_width - 40:
-                                raise RuntimeError("体验券查看券码按钮未铺满卡片内容宽度")
-                            cards.first.get_by_role("button", name="查看券码").click()
-                            filters = page.locator(".issuer-code-filters")
-                            if [item.inner_text().strip() for item in filters.locator(".ant-segmented-item").all()] != ["未领取", "已领取"]:
-                                raise RuntimeError("体验券编号列表未收敛为领券状态双筛选")
-                            if page.locator(".issuer-code-benefit .issuer-benefit-value").count() != 1:
-                                raise RuntimeError("体验券编号列表未展示券权益")
-                            if not page.locator(".issuer-code-row").first.get_by_text("未领取", exact=True).is_visible():
-                                raise RuntimeError("未领取编号缺少统一领取状态")
-                            filters.get_by_text("已领取", exact=True).click()
-                            if not page.locator(".issuer-code-row").first.locator("small").is_visible():
-                                raise RuntimeError("已领取编号缺少领取手机号")
-                            if not page.locator(".issuer-code-row").first.get_by_text("已领取", exact=True).is_visible():
-                                raise RuntimeError("已领取编号仍展示使用状态")
-                            page.locator(".issuer-code-row").first.click()
-                            claimed_hero = page.locator(".issuer-code-hero")
-                            if not claimed_hero.get_by_text("已领取", exact=True).is_visible():
-                                raise RuntimeError("已领取编号详情未使用统一领取状态")
-                            if not claimed_hero.locator(".issuer-code-coupon-name").is_visible() or not claimed_hero.locator(".issuer-code-serial strong").is_visible():
-                                raise RuntimeError("已领取券码详情未突出券名称和编号")
-                            if page.locator(".issuer-code-credential").count() or not claimed_hero.get_by_role("button", name="复制编号").is_visible():
-                                raise RuntimeError("已领取且编号与券码相同的详情仍重复展示券码")
-                            page.get_by_role("button", name="返回券码列表").click()
-                            filters.get_by_text("未领取", exact=True).click()
-                            if page.locator(".issuer-code-row small").count() or page.get_by_text("领取后开始计算有效期").count():
-                                raise RuntimeError("未领取券码列表仍展示重复说明")
-                            page.locator(".issuer-code-row").first.click()
-                            if page.locator(".issuer-code-facts").count() or page.locator(".issuer-code-validity").count() != 1:
-                                raise RuntimeError("未领取券码详情仍展示空领取字段")
-                            open_hero = page.locator(".issuer-code-hero")
-                            if not open_hero.locator(".issuer-code-coupon-name").is_visible() or not open_hero.locator(".issuer-code-serial strong").is_visible():
-                                raise RuntimeError("未领取券码详情未突出券名称和编号")
-                            code_modes = page.locator(".issuer-code-mode .ant-segmented-item")
-                            if [item.inner_text().strip() for item in code_modes.all()] != ["定向发放", "扫码领取"] or code_modes.nth(0).get_attribute("class").find("ant-segmented-item-selected") < 0:
-                                raise RuntimeError("体验券发放方式顺序或默认选中异常")
-                            if page.get_by_text("该编号此前已分享，定向发放前需再次确认。").count():
-                                raise RuntimeError("定向发放表单仍展示已分享提示")
-                            if page.locator("#issuer-experience-code-qr").count():
-                                raise RuntimeError("进入未领取编号详情时提前展示二维码")
+                            experience_action = cards.first.get_by_role("button", name="发放体验券")
+                            if not experience_action.is_visible() or experience_action.is_disabled():
+                                raise RuntimeError("体验券发放入口不可用")
+                            experience_action.click()
+                            page.locator(".issuer-code-hero").wait_for(state="visible", timeout=15000)
+                            if not page.locator(".issuer-code-direct-form").is_visible():
+                                raise RuntimeError("体验券默认未展示定向发放表单")
                             page.locator(".issuer-code-mode").get_by_text("扫码领取", exact=True).click()
-                            if page.get_by_role("button", name="展示领取二维码").count():
-                                raise RuntimeError("未领取券码详情仍要求额外点击展示二维码")
                             page.locator("#issuer-experience-code-qr canvas").wait_for(state="visible", timeout=15000)
-                            page.get_by_text("用户扫码领取后，体验券进入用户券包").wait_for(state="visible", timeout=15000)
-                            page.wait_for_function("() => JSON.parse(localStorage.getItem('xingying-coupon-demo-v3') || '{}').tickets?.some(ticket => ticket.distributedById === 'current-admin' && !ticket.phoneDigits)", timeout=15000)
-                            page.get_by_role("button", name="返回券码列表").click()
-                            if not page.locator(".issuer-code-row").first.get_by_text("未领取", exact=True).is_visible() or page.get_by_text(re.compile(r"未分享|已分享")).count():
-                                raise RuntimeError("分享后的编号仍显示分享状态")
-                            page.locator(".issuer-code-row").nth(1).click()
-                            page.locator(".issuer-code-mode").get_by_text("定向发放", exact=True).click()
-                            if page.locator(".issuer-action-info .issuer-info-block").count() != 2:
-                                raise RuntimeError("体验券定向发放缺少范围或规则")
-                            direct_form_y = page.locator(".issuer-code-direct-form").bounding_box()["y"]
-                            direct_info_y = page.locator(".issuer-action-info").bounding_box()["y"]
-                            if direct_form_y >= direct_info_y:
-                                raise RuntimeError("体验券定向发放未将手机号操作置于范围和规则之前")
-                            code_rules = page.locator(".issuer-info-rules")
-                            if code_rules.locator("p").is_visible():
-                                raise RuntimeError("体验券定向发放规则未默认收起")
-                            code_rules.locator("summary").click()
-                            if not code_rules.locator("p").is_visible():
-                                raise RuntimeError("体验券定向发放规则无法展开")
-                            code_rules.locator("summary").click()
-                            page.get_by_placeholder("请输入 11 位手机号").fill("13800000519")
-                            page.get_by_role("button", name="确认发放").click()
-                            page.get_by_text("发放成功", exact=True).wait_for(state="visible", timeout=15000)
-                            if not page.get_by_text("已发给 138****0519").is_visible():
-                                raise RuntimeError("单张体验券定向发放结果异常")
-                            experience_card = page.locator(".issuer-result-card")
-                            if experience_card.locator(".issuer-result-name").bounding_box()["width"] < experience_card.bounding_box()["width"] - 50:
-                                raise RuntimeError("体验券发放成功页券名仍被挤在窄列")
-                            page.get_by_role("button", name="继续发券").click()
+                            page.get_by_role("button", name="返回发券").click()
                             cards.nth(1).get_by_role("button", name="定向发放").click()
-                            if page.locator(".issuer-detail-box").count() or page.get_by_text("发放后，优惠券将绑定到该手机号账户。").count():
-                                raise RuntimeError("定向发放页仍展示重复摘要或解释")
-                            if page.locator(".issuer-action-heading .issuer-benefit-panel").count() != 1:
-                                raise RuntimeError("定向发放页缺少独立权益区域")
-                            if page.locator(".issuer-action-info .issuer-info-block").count() != 2:
-                                raise RuntimeError("定向发放页缺少范围或规则")
-                            direct_rules = page.locator(".issuer-info-rules")
-                            if direct_rules.locator("p").is_visible():
-                                raise RuntimeError("定向发放规则未默认收起")
-                            direct_rules.locator("summary").click()
-                            if not direct_rules.locator("p").is_visible():
-                                raise RuntimeError("定向发放规则无法展开")
-                            direct_rules.locator("summary").click()
                             page.get_by_placeholder("请输入 11 位手机号").fill("13800000520")
                             page.get_by_role("button", name="确认发放").click()
                             page.get_by_text("发放成功", exact=True).wait_for(state="visible", timeout=15000)
-                            if page.locator(".issuer-result-code").count():
-                                raise RuntimeError("满减券发放结果仍展示内部券码")
-                            result_card = page.locator(".issuer-result-card")
-                            name_box = result_card.locator(".issuer-result-name").bounding_box()
-                            expiry_box = result_card.locator(".issuer-result-expiry").bounding_box()
-                            if not name_box or not expiry_box or name_box["width"] < result_card.bounding_box()["width"] - 50 or expiry_box["y"] <= name_box["y"]:
-                                raise RuntimeError("发放成功页券名与有效期仍被挤在窄列")
-                            page.get_by_role("button", name="继续发券").click()
-                            cards = page.locator(".issuer-coupon-card")
-                            cards.nth(1).get_by_role("button", name="公开发放").click()
-                            if page.get_by_text("公开领取入口已创建").count() or page.get_by_role("button", name="查看发放记录").count():
-                                raise RuntimeError("公开领取页仍有旧文案或按钮")
-                            if page.locator(".issuer-public-facts").count() or page.locator(".issuer-action-heading .ant-tag").count():
-                                raise RuntimeError("公开领取页仍展示重复状态或券概况")
-                            if page.locator(".issuer-action-heading .issuer-benefit-panel").count() != 1:
-                                raise RuntimeError("公开领取页缺少独立权益区域")
-                            if page.locator(".issuer-action-info .issuer-info-block").count() != 2:
-                                raise RuntimeError("公开领取页缺少范围或规则")
-                            public_rules = page.locator(".issuer-info-rules")
-                            if public_rules.locator("p").is_visible():
-                                raise RuntimeError("公开领取规则未默认收起")
-                            public_rules.locator("summary").click()
-                            if not public_rules.locator("p").is_visible():
-                                raise RuntimeError("公开领取规则无法展开")
-                            public_rules.locator("summary").click()
-                            if public_rules.locator("p").is_visible():
-                                raise RuntimeError("公开领取规则无法收起")
                         else:
                             filters = page.locator(".issuer-record-filters")
                             if filters.locator(".ant-segmented-item").count() != 4:
@@ -302,6 +237,24 @@ def main() -> int:
                         frame = page.locator(".issuer-app-frame").bounding_box()
                         if page.evaluate("document.documentElement.scrollWidth > window.innerWidth") or not frame or frame["x"] < 0 or frame["x"] + frame["width"] > 375:
                             raise RuntimeError(f"{page_id} 在 375px 下横向溢出")
+                    if page_id == "mini-order":
+                        coupon_row = page.locator(".mini-order-coupon b")
+                        coupon_row.wait_for(state="visible", timeout=15000)
+                        if "（满减券）" not in coupon_row.inner_text():
+                            raise RuntimeError("小程序订单详情未显示券名称及券类型")
+                        page.evaluate("""() => {
+                            const key = 'xingying-coupon-demo-v3';
+                            const store = JSON.parse(localStorage.getItem(key));
+                            const order = store.orders.find(item => item.id === 'ORDER-DEMO-MINI-COMMERCE-001');
+                            const coupon = store.tickets.find(item => item.id === order.ticketId);
+                            coupon.couponName = '超长优惠券名称用于检查小程序订单详情换行完整显示';
+                            localStorage.setItem(key, JSON.stringify(store));
+                        }""")
+                        page.reload(wait_until="load")
+                        coupon_row = page.locator(".mini-order-coupon b")
+                        coupon_row.get_by_text("超长优惠券名称用于检查小程序订单详情换行完整显示（满减券）", exact=True).wait_for(state="visible", timeout=15000)
+                        if page.evaluate("document.documentElement.scrollWidth > window.innerWidth") or coupon_row.evaluate("node => node.scrollWidth > node.clientWidth"):
+                            raise RuntimeError("小程序订单详情长券名称横向溢出")
                     if page_id == "order-list":
                         dialog = page.get_by_role("dialog", name="订单详情", exact=True)
                         if not page.locator(".order-table-card").is_visible() or dialog.locator(".ant-drawer-close").count():

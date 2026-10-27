@@ -23,6 +23,12 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-receive-hero div { display: grid; gap: 2px; }
 .mini-receive-hero span { color: #a88449; font-size: 12px; }
 .mini-receive-hero strong { color: #5e4b2c; font-size: 20px; line-height: 28px; }
+.mini-design-zone { position: relative; }
+.mini-design-slot-label { position: absolute; z-index: 1; display: inline-flex; align-items: center; min-height: 22px; padding: 0 7px; border: 1px dashed #c7a460; border-radius: 5px; background: rgba(255, 253, 247, .92); color: #9a722e; font-size: 10px; line-height: 18px; letter-spacing: .1px; pointer-events: none; }
+.mini-receive-hero .mini-design-slot-label { top: 10px; right: 16px; }
+.mini-receive-ticket-zone { margin-top: 20px; }
+.mini-receive-ticket-zone .mini-ticket { margin-top: 0; }
+.mini-receive-ticket-zone .mini-design-slot-label { top: 9px; right: 10px; }
 .mini-offer { display: flex; flex-direction: column; align-items: flex-start; margin-top: 22px; padding: 22px 20px; border: 1px solid var(--mini-line); border-radius: 12px; background: #fff; }
 .mini-eyebrow { color: var(--mini-blue); font-size: 12px; line-height: 20px; font-weight: 600; }
 .mini-offer h2 { margin: 14px 0 0; color: var(--mini-ink); font-size: 34px; line-height: 42px; letter-spacing: -.7px; font-weight: 700; }
@@ -66,6 +72,7 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-ticket-top { grid-column: 2; grid-row: 1; display: flex !important; justify-content: space-between; align-items: center; }
 .mini-ticket-kind, .mini-ticket-status { display: inline-flex !important; align-items: center; min-height: 22px; padding: 0 7px; border-radius: 6px; color: var(--mini-muted); font-size: 11px; line-height: 20px; }
 .mini-ticket-kind { font-weight: 600; }
+.mini-ticket-kind.special { background: #e6f4ff; color: #0958a8; }
 .mini-ticket-kind.reduction { background: #fff1e8; color: #cf6a2d; }
 .mini-ticket-kind.discount { background: #eef0ff; color: #5d68bd; }
 .mini-ticket-kind.experience { background: #e7f7f4; color: #238a7c; }
@@ -189,6 +196,32 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 
 /* 商品、我的与订单沿用用户端的中性色、蓝色动作与统一触控规格。 */
 .mini-product-page { background: #fff; }
+.mini-theme-hero { position: relative; min-height: 134px; margin: -20px -16px 0; padding: 52px 20px 16px; overflow: hidden; background-position: center; background-size: cover; color: #fff; }
+.mini-theme-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15, 31, 44, .72), rgba(15, 31, 44, .14)); }
+.mini-theme-hero > div, .mini-theme-hero > small { position: relative; z-index: 1; display: block; }
+.mini-theme-hero span { font-size: 12px; line-height: 18px; opacity: .85; }
+.mini-theme-hero strong { display: block; margin-top: 3px; font-size: 25px; line-height: 33px; }
+.mini-theme-hero small { margin-top: 7px; font-size: 12px; line-height: 18px; opacity: .9; }
+.mini-theme-point-tabs { display: flex; gap: 8px; padding: 14px 0 12px; overflow-x: auto; }
+.mini-theme-point-tabs button { flex: 0 0 auto; min-height: 32px; padding: 0 13px; border: 0; border-radius: 17px; background: #eef1f5; color: #66717e; font-size: 13px; }
+.mini-theme-point-tabs button.active { background: #2776ff; color: #fff; font-weight: 600; }
+.mini-theme-info { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 12px; border-radius: 10px; background: #fff; color: var(--mini-muted); font-size: 12px; }
+.mini-theme-info button { border: 0; background: transparent; color: var(--mini-blue); font-size: 13px; }
+.mini-theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.mini-theme-card { overflow: hidden; border: 1px solid #edf0f4; border-radius: 12px; background: #fff; text-align: left; color: var(--mini-ink); box-shadow: 0 4px 16px rgba(31, 47, 65, .05); }
+.mini-theme-image { position: relative; display: block; aspect-ratio: .92; background-size: cover; background-position: center; }
+.mini-theme-image.theme-image-1 { background-position: 70% center; }
+.mini-theme-image::after { content: ''; position: absolute; inset: 50% 0 0; background: linear-gradient(transparent, rgba(17, 27, 36, .3)); }
+.mini-theme-image em { position: absolute; z-index: 1; top: 8px; left: 8px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 255, 255, .88); color: #9e6623; font-size: 10px; font-style: normal; }
+.mini-theme-card-body { display: grid; gap: 4px; padding: 10px; }
+.mini-theme-card-body > strong { overflow: hidden; font-size: 15px; line-height: 21px; text-overflow: ellipsis; white-space: nowrap; }
+.mini-theme-card-body > small { color: var(--mini-muted); font-size: 11px; line-height: 16px; }
+.mini-theme-price { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 4px; margin-top: 4px; }
+.mini-theme-price > b { color: #e36b2b; font-size: 18px; line-height: 24px; }
+.mini-theme-price > i { color: #97a0aa; font-size: 10px; font-style: normal; }
+.mini-theme-price > em { display: inline-flex; align-items: center; gap: 3px; min-height: 21px; margin-left: 2px; padding: 0 6px; border-radius: 5px; background: linear-gradient(90deg, #eaf3ff, #f4f8ff); color: #3c7bd9; font-size: 10px; line-height: 17px; font-style: normal; white-space: nowrap; }
+.mini-theme-price > em b { color: #2776ff; font-size: 12px; }
+.mini-theme-price > em small { color: #4f83cd; font-size: 10px; }
 .mini-product-hero { position: relative; flex: 0 0 184px; background-size: cover; background-position: center; }
 .mini-product-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 24, 26, .32), transparent 65%); pointer-events: none; }
 .mini-product-hero button, .mini-product-hero span { position: relative; z-index: 1; color: #fff; }
@@ -212,8 +245,12 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-video-card span { position: absolute; top: 8px; left: 8px; padding: 2px 5px; border-radius: 4px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; }
 .mini-video-card b { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 27px; text-shadow: 0 1px 8px #333; }
 .mini-product-bar { position: sticky; bottom: 0; z-index: 3; display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--mini-line); background: #fff; }
-.mini-product-bar span { flex: 0 0 80px; color: var(--mini-muted); font-size: 12px; }
-.mini-product-bar span b { color: var(--mini-blue); font-size: 24px; }
+.mini-product-bar span { display: grid; flex: 1; grid-template-columns: auto auto; align-items: baseline; column-gap: 4px; color: var(--mini-muted); font-size: 12px; }
+.mini-product-bar span b { color: var(--mini-blue); font-size: 22px; }
+.mini-product-bar span small { color: #929ba6; font-size: 10px; }
+.mini-product-bar span em { display: inline-flex; grid-column: 1 / -1; align-items: center; gap: 3px; width: fit-content; min-height: 20px; padding: 0 5px; border-radius: 5px; background: #eef5ff; color: #4f83cd; font-size: 10px; font-style: normal; }
+.mini-product-bar span em strong { color: #2776ff; font-size: 13px; }
+.mini-product-bar span em small { color: #4f83cd; font-size: 10px; }
 .mini-package-sheet { max-height: 62dvh; }
 .mini-package-sheet header { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--mini-line); }
 .mini-package-sheet header strong { text-align: center; }
@@ -224,6 +261,7 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-package strong { margin-bottom: 12px; font-size: 17px; }
 .mini-package span { margin-bottom: 18px; color: var(--mini-blue); font-size: 23px; font-weight: 700; }
 .mini-package small { margin-top: 8px; color: #586574; font-size: 12px; }
+.mini-package .mini-package-estimate { margin-top: -12px; color: #2776ff; font-size: 11px; }
 .mini-package em { position: absolute; top: 0; right: 0; padding: 2px 7px; border-radius: 0 8px 0 7px; background: var(--mini-blue); color: #fff; font-size: 11px; font-style: normal; }
 .mini-checkout-product { display: flex; gap: 12px; }
 .mini-checkout-product img { width: 104px; height: 85px; object-fit: cover; border-radius: 8px; }
@@ -713,3 +751,5 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
     padding-left: 12px;
   }
 }
+
+.mini-order-info .mini-order-coupon b { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }

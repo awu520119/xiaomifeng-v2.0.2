@@ -408,7 +408,7 @@ main.desc pre.desc-code > code {
         <div class="desc-body">
 <h1 id="优惠券列表-PRD">优惠券列表 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-22</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
 <p><em>需求场景：运营人员查询所有创建的优惠券类型、适用范围和发放状态。</em></p>
 <h2 id="变更记录">变更记录</h2>
@@ -424,8 +424,8 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-22</td>
-<td>初版</td>
+<td>2026-10-27</td>
+<td>初版；增加特价券和默认发券权限</td>
 <td>awu</td>
 </tr>
 </tbody>
@@ -433,10 +433,10 @@ main.desc pre.desc-code > code {
 <h2 id="一优惠券列表权限说明">一、优惠券列表—权限说明</h2>
 <ol>
 <li><strong>权限说明</strong>：<ul>
-<li><strong>统一条件</strong>：由【营销管理】-【优惠券管理】-下的权限</li>
+<li><strong>权限控制</strong>：由【优惠券管理】-【优惠券列表】中的权限控制，包括查看、编辑、发放（原定向发放）、配置发券权限</li>
 <li><strong>数据权限</strong>：<ul>
-<li><strong>平台和租户管理员</strong>：默认能看全部的优惠券列表；</li>
-<li>其他账号只能看到被授权的优惠券列表。</li>
+<li><strong>内置角色</strong>：平台、租户管理员、平台运营员默认能看全部的优惠券列表；默认有优惠券列表的全部权限</li>
+<li><strong>其他角色</strong>：其他角色账号只能看到被授权的优惠券的列表。</li>
 </ul>
 </li>
 </ul>
@@ -448,7 +448,7 @@ main.desc pre.desc-code > code {
 <p><strong>券名称</strong>：关键词输入。按券名称包含关键词匹配，支持清空。</p>
 </li>
 <li>
-<p><strong>券类型</strong>：单选。「满减券」「折扣券」「体验券」，支持清空。</p>
+<p><strong>券类型</strong>：单选。「满减券」「折扣券」「特价券」「体验券」，支持清空。</p>
 </li>
 <li>
 <p><strong>状态</strong>：单选。「发放中」「已暂停」「已结束」。</p>
@@ -468,18 +468,18 @@ main.desc pre.desc-code > code {
 <li>
 <p><strong>适用范围</strong>：</p>
 <ul>
-<li>价格券展示适用拍摄点与主题。</li>
-<li>体验券展示配置的可兑换体验主题。</li>
+<li>价格券（满减、折扣、特价）：展示适用拍摄点与主题。</li>
+<li>体验券：展示配置的可兑换体验主题。</li>
 <li>长内容支持查看全文。</li>
 </ul>
 </li>
 <li>
 <p><strong>状态</strong>：展示券模板的发放状态，包括已结束、已暂停、发放中。<br>
-    | 判定条件 | 状态 | 展示颜色 |<br>
-    | --- | --- | --- |<br>
-    | 剩余发放量为 0 | 「已结束」 | 灰色 |<br>
-    | 剩余量大于 0，且已人工暂停 | 「已暂停」 | 橙色 |<br>
-    | 剩余量大于 0，且未暂停 | 「发放中」 | 绿色 |</p>
+| 判定条件 | 展示状态 |<br>
+| :--- | :---: |<br>
+| 剩余发放量 = 0 | 已结束 |<br>
+| 剩余发放量 &gt; 0，且已人工暂停 | 已暂停 |<br>
+| 剩余发放量 &gt; 0，且未暂停 | 发放中 |</p>
 </li>
 <li>
 <p><strong>已领取/总量</strong>：展示已被用户领取的券数量与配置总量。</p>
@@ -488,30 +488,28 @@ main.desc pre.desc-code > code {
 <h2 id="四优惠券列表操作说明">四、优惠券列表—操作说明</h2>
 <ol>
 <li>
-<p><strong>发放</strong>：对应「满减券」和「折扣券」，下拉可选择「定向发放」「公开发放」。</p>
+<p><strong>发放</strong>：对应「满减券」「折扣券」和「特价券」，下拉可选择「定向发放」「公开发放」。</p>
 <ul>
-<li>无权限，或券状态为「已暂停」「已结束」时，「发放」按钮禁用。</li>
-<li>定向发放规则见<a href="定向发放PRD-20261022.md">《定向发放 PRD》</a>；公开发放规则见<a href="公开领取PRD-20261022.md">《公开发放 PRD》</a>。</li>
-<li>「已暂停」/「已结束」时禁用发放。</li>
+<li><strong>无权限，或券状态为「已暂停」「已结束」</strong>：「发放」按钮禁用。</li>
+<li>定向发放规则见<a href="../index.html?node=xiaomifeng-2-2--coupon-directed" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--coupon-directed'},'*');return false;}">《定向发放 PRD》</a>；公开发放规则见<a href="../index.html?node=xiaomifeng-2-2--coupon-public" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--coupon-public'},'*');return false;}">《公开发放 PRD》</a>。</li>
 </ul>
 </li>
 <li>
 <p><strong>查看券码</strong>：对应「体验券」类型。</p>
 <ul>
-<li>券码列表规则见<a href="查看券码PRD-20261022.md">《查看券码 PRD》</a>。</li>
+<li>券码列表规则见<a href="../index.html?node=xiaomifeng-2-2--coupon-codes" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--coupon-codes'},'*');return false;}">《查看券码 PRD》</a>。</li>
 </ul>
 </li>
 <li>
-<p><strong>发券权限</strong>：实际发放须同时满足具有「优惠券管理」-「发券」功能权限和「发券权限」。</p>
+<p><strong>发券权限</strong>：</p>
 <ul>
-<li>平台管理员和超级管理员默认拥有该权限。</li>
-<li>支持添加其他账号发起该券的权限。</li>
-<li>配置规则见<a href="发券权限PRD-20261022.md">《发券权限 PRD》</a>。</li>
+<li>配置规则见<a href="../index.html?node=xiaomifeng-2-2--coupon-authorization" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--coupon-authorization'},'*');return false;}">《发券权限 PRD》</a>。</li>
 </ul>
 </li>
 <li>
-<p><strong>暂停发放</strong>：点击后展示确认「暂停发放这张优惠券？」及说明「暂停后不能继续发放或领取，已领取的券仍按原规则使用。」。</p>
+<p><strong>暂停发放</strong>：</p>
 <ul>
+<li>点击后展示确认「暂停发放这张优惠券？」及说明「暂停后不能继续发放或领取，已领取的券仍按原规则使用。」。</li>
 <li>确认后停止新增发放和领取，保留已领取券。</li>
 </ul>
 </li>

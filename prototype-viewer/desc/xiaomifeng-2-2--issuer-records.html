@@ -408,9 +408,9 @@ main.desc pre.desc-code > code {
         <div class="desc-body">
 <h1 id="发放记录-PRD">发放记录 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-26</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
-<p><em>需求场景：被授权人员查看本人发放和领取结果。</em></p>
+<p><em>需求场景：被授权人员查看优惠券的发放情况。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -424,42 +424,27 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-26</td>
+<td>2026-10-27</td>
 <td>初版</td>
 <td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一权限说明">一、权限说明</h2>
+<h2 id="一权限与范围">一、权限与范围</h2>
 <ol>
-<li>
-<p><strong>权限</strong>：被授权人员具有「发券中心」-「发放记录」权限。</p>
-</li>
-<li>
-<p><strong>数据范围</strong>：只展示当前账号归属的记录，归属以发放人 ID为准：</p>
-<ul>
-<li>定向发放成功的用户券。</li>
-<li>当前账号创建且已有领取的公开发放入口及明细。</li>
-<li>当前账号投放且已被用户领取的体验券编号。</li>
+<li><strong>权限说明</strong>：<ul>
+<li>须有「发券中心」-「可管理」权限；无权限时不可查看。</li>
+<li>仅展示当前账号有权发放的券；平台管理员、租户管理员及平台运营默认可发全部券。</li>
 </ul>
-</li>
-<li>
-<p><strong>权限变化</strong>：发放授权撤销后，历史记录保留，但不能继续发放该券。</p>
 </li>
 </ol>
 <h2 id="二筛选与排序">二、筛选与排序</h2>
 <ol>
 <li>
-<p><strong>筛选</strong>：提供「全部」「定向发放」「公开发放」「券码领取」，默认「全部」。</p>
+<p><strong>筛选</strong>：提供「全部」「定向发放」「公开发放」「券码领取」，默认「全部」；无记录时展示「暂无发放记录」。</p>
 </li>
 <li>
-<p><strong>排序</strong>：按最近活动时间倒序。</p>
-<ul>
-<li>定向发放按发放时间；公开发放按最近领取时间；券码领取按实际领取时间。</li>
-</ul>
-</li>
-<li>
-<p><strong>无记录</strong>：展示「暂无发放记录」。</p>
+<p><strong>排序</strong>：按最近活动时间倒序；定向发放取发放时间，公开发放取最近领取时间，券码领取取实际领取时间。</p>
 </li>
 </ol>
 <h2 id="三记录内容">三、记录内容</h2>
@@ -475,37 +460,25 @@ main.desc pre.desc-code > code {
 <tr>
 <td>定向发放</td>
 <td>券名称、优惠内容、发放人 ID、接收用户脱敏手机号、发放时间、使用状态</td>
-<td>按单张用户券记录；体验券可展开查看编号和截止时间，价格券不展示内部券码</td>
+<td>按单张用户券记录；体验券可展开编号和截止时间</td>
 </tr>
 <tr>
 <td>公开发放</td>
-<td>券名称、优惠内容、发放人 ID、已领取数量、最近领取时间</td>
-<td>仅已有领取的入口进入记录；按用户券张数统计，同一手机号领取多张时逐张计数</td>
+<td>券名称、优惠内容、已领取数量、最近领取时间</td>
+<td>仅已领取入口进入；按用户券张数统计，价格券每人每模板限领一张</td>
 </tr>
 <tr>
 <td>券码领取</td>
-<td>券名称、优惠内容、发放人 ID、使用状态、领取用户脱敏手机号、领取时间</td>
-<td>仅实际领取的体验券进入记录；定向发放的编号只计入「定向发放」</td>
+<td>券名称、优惠内容、使用状态、领取用户脱敏手机号、领取时间</td>
+<td>仅已领取的体验券进入；定向发放编号不重复计入</td>
 </tr>
 </tbody>
 </table>
-<h2 id="四领取明细与保留">四、领取明细与保留</h2>
-<ol>
-<li>
-<p><strong>公开发放明细</strong>：默认收起，展开后展示领取用户脱敏手机号、领取时间、截止时间、使用状态及体验券编号。</p>
-</li>
-<li>
-<p><strong>体验券来源</strong>：券码、二维码和领取链接中的发放人 ID须与记录归属一致；仅查看、复制或下载凭证但未领取的编号不进入记录。</p>
-</li>
-<li>
-<p><strong>记录保留</strong>：用户券使用、退款、过期或作废后，原记录、领取信息和发放人 ID仍保留。</p>
-</li>
-</ol>
         </div>
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发放记录-PRD" data-toc-id="发放记录-PRD">发放记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一权限说明" data-toc-id="一权限说明">一、权限说明</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二筛选与排序" data-toc-id="二筛选与排序">二、筛选与排序</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三记录内容" data-toc-id="三记录内容">三、记录内容</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#四领取明细与保留" data-toc-id="四领取明细与保留">四、领取明细与保留</a></span></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发放记录-PRD" data-toc-id="发放记录-PRD">发放记录 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一权限与范围" data-toc-id="一权限与范围">一、权限与范围</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二筛选与排序" data-toc-id="二筛选与排序">二、筛选与排序</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三记录内容" data-toc-id="三记录内容">三、记录内容</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

@@ -1,11 +1,11 @@
 // 由 sync_project.py 自动生成；不要手改。
 window.NAV_DATA = {
   "projectName": "形影随拍后台 · Ant Design 原型查看器",
-  "lastSyncAt": "2026-10-27 09:39:00",
+  "lastSyncAt": "2026-10-27 17:50:07",
   "tree": [
     {
       "id": "xiaomifeng-2-2--marketing",
-      "title": "营销管理",
+      "title": "优惠券管理",
       "order": 2,
       "children": [
         {
@@ -164,7 +164,7 @@ window.NAV_DATA = {
           "title": "领取页",
           "order": 1,
           "templateType": "screen",
-          "routeHash": "#/demo/export/mini-receive?phone=13800000001",
+          "routeHash": "#/demo/export/mini-receive?phone=13800000002",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-receive.html",
           "mdPath": ".published/xiaomifeng-2-2/desc/小程序领取页PRD-20261022.md",
           "children": []
@@ -190,9 +190,29 @@ window.NAV_DATA = {
           "children": []
         },
         {
+          "id": "xiaomifeng-2-2--mini-coupon-detail",
+          "title": "优惠券详情",
+          "order": 4,
+          "templateType": "screen",
+          "routeHash": "#/demo/export/mini-coupon-detail?phone=13800000001&detail=first",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-coupon-detail.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券详情PRD-20261022.md",
+          "children": []
+        },
+        {
+          "id": "xiaomifeng-2-2--mini-theme-list",
+          "title": "主题列表",
+          "order": 5,
+          "templateType": "screen",
+          "routeHash": "#/demo/export/mini-theme-list?phone=13800000001",
+          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-theme-list.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/小程序主题列表PRD-20261027.md",
+          "children": []
+        },
+        {
           "id": "xiaomifeng-2-2--mini-checkout",
           "title": "确认订单",
-          "order": 4,
+          "order": 6,
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-checkout?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-checkout.html",
@@ -202,7 +222,7 @@ window.NAV_DATA = {
         {
           "id": "xiaomifeng-2-2--mini-order",
           "title": "订单详情",
-          "order": 5,
+          "order": 7,
           "templateType": "screen",
           "routeHash": "#/demo/export/mini-order?phone=13800000001",
           "htmlPath": ".published/xiaomifeng-2-2/pages/mini-order.html",

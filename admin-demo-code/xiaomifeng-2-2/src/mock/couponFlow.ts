@@ -46,20 +46,19 @@ export function claimPublicCoupon(store: CouponStore, planId: string, phone: str
   if (!canIssueCoupon(coupon, store.tickets)) throw new Error('优惠券已暂停或已领完');
   const limit = receiveLimitError(coupon, phone, store.tickets);
   if (limit) throw new Error(limit);
-  const issuerId = plan.operatorId || currentCouponOperatorId;
   if (coupon.kind === '体验权益券') {
     const code = store.tickets.find((item) => item.couponId === coupon.id && !item.phoneDigits && !item.distributedById && item.status !== '已作废');
     if (!code) throw new Error('体验券已领完');
     const issuedAt = couponLocalTime();
     const tickets = store.tickets.map((item) => item.id === code.id ? {
-      ...item, redeemCode: issuerAwareRedeemCode(item.redeemCode, issuerId), distributedById: issuerId, distributedAt: plan.createdAt, phone: maskPhone(phone), phoneDigits: phone, issuedAt,
+      ...item, distributedById: undefined, distributedAt: undefined, phone: maskPhone(phone), phoneDigits: phone, issuedAt,
       expiresAt: couponExpiryAt(issuedAt, item.validityDays || coupon.validityDays),
       source: '扫码领取' as const, claimPlanId: plan.id, status: '待使用' as const,
     } : item);
     return { store: withClaimedExperienceRights({ ...store, tickets }), ticketId: code.id };
   }
   const baseTicket = createTicket(coupon, '扫码领取', phone);
-  const ticket = { ...baseTicket, redeemCode: issuerAwareRedeemCode(baseTicket.redeemCode, issuerId), distributedById: issuerId, distributedAt: plan.createdAt, claimPlanId: plan.id };
+  const ticket = { ...baseTicket, claimPlanId: plan.id };
   return { store: { ...store, tickets: [ticket, ...store.tickets] }, ticketId: ticket.id };
 }
 
@@ -91,10 +90,7 @@ export function markExperienceCodeDistributed(store: CouponStore, ticketId: stri
   if (!ticket || !coupon) throw new Error('体验券编号不存在');
   if (!authorizedIssuerIds(coupon).includes(issuerId)) throw new Error('当前账号未获得该优惠券的发放权限');
   if (!canIssueCoupon(coupon, store.tickets) || effectiveCouponStatus(ticket) !== '未领取') throw new Error('该编号已领取、已作废或不可发放');
-  if (ticket.distributedById && ticket.distributedById !== issuerId) throw new Error('该编号已由其他发券人投放');
-  if (ticket.distributedById === issuerId) return store;
-  return { ...store, tickets: store.tickets.map((item) => item.id === ticketId
-    ? { ...item, redeemCode: issuerAwareRedeemCode(item.redeemCode, issuerId), distributedById: issuerId, distributedAt: couponLocalTime() } : item) };
+  return store;
 }
 
 export function resolveCouponCode(value: string) {
@@ -123,7 +119,7 @@ export function codeTracking(ticket: CouponIssueRecord, store: CouponStore) {
   return status === '待使用' ? '待使用' : status === '未领取' ? '待领取' : status;
 }
 
-export const couponUsageStatuses = ['待使用', '使用中', '已使用', '已使用（退款）', '已过期', '已作废'] as const;
+export const couponUsageStatuses = ['待使用', '使用中', '已使用', '已过期', '已作废'] as const;
 export type CouponUsageStatus = typeof couponUsageStatuses[number];
 
 /** 面向运营的用户券状态：统一价格券、体验券及历史多次券的展示口径。 */
@@ -139,8 +135,6 @@ export function couponUsageStatus(ticket: CouponIssueRecord, store: CouponStore)
     if (expiresAt && Date.now() > new Date(expiresAt.replace(' ', 'T')).getTime()) return '已过期';
     return '待使用';
   }
-  const refundedOrder = (store.orders || []).find((order) => order.ticketId === ticket.id && Boolean(order.refundedAt));
-  if (ticket.usedTimes > 0 && refundedOrder) return '已使用（退款）';
   if (ticket.usedTimes >= ticket.totalUses) return '已使用';
   if (ticket.lockedOrderId || ticket.usedTimes > 0) return '使用中';
   if (ticket.expiresAt && Date.now() > new Date(ticket.expiresAt.replace(' ', 'T')).getTime()) return '已过期';
@@ -158,6 +152,7 @@ export function issueDirected(store: CouponStore, couponId: string, input: strin
   if (invalid) throw new Error(invalid);
   if (!coupon || !canIssueCoupon(coupon, store.tickets)) throw new Error('该券已停用、失效或已发完');
   if (!authorizedIssuerIds(coupon).includes(issuer.id)) throw new Error('当前账号未获得该优惠券的发放权限');
+  if (coupon.kind !== '体验权益券' && new Set(phones).size !== phones.length) throw new Error('每位用户只能领取一张该优惠券，手机号不能重复');
   for (const phone of phones) { const error = receiveLimitError(coupon, phone, store.tickets); if (error) throw new Error(`${phone}：${error}`); }
   const batch = { id: uniqueCouponId('DI'), couponId, source: '定向发放' as const, quantity: phones.length, createdAt: couponLocalTime(), operator: issuer.name, operatorId: issuer.id };
   let tickets = [...store.tickets];
@@ -246,11 +241,13 @@ export function transitionOrder(store: CouponStore, orderId: string, action: 'pa
     updated = { ...order, status: '已完成', fulfilledAt: now };
     rights = rights.map((item) => item.id === order.rightId ? { ...item, usageHistory: [...(item.usageHistory || []), use] } : item);
   } else {
-    if (!['待使用', '已完成'].includes(order.status) || order.payAmount <= 0 || order.refundedAt) throw new Error('该订单当前不能退款');
+    if (!['待使用', '已完成'].includes(order.status) || (order.payAmount <= 0 && !order.rightId) || order.refundedAt) throw new Error('该订单当前不能退款');
     const full = action === 'refund-full';
+    const returnedRight = full && Boolean(order.rightId);
+    if (returnedRight) rights = rights.map((item) => item.id === order.rightId ? { ...item, remainingUses: 1 } : item);
     const valid = ticket && ticket.status !== '已作废' && Boolean(ticket.issuedAt) && Date.now() <= new Date(ticket.expiresAt.replace(' ', 'T')).getTime();
     const returned = full && !order.fulfilledAt && order.status !== '已完成' && valid;
-    updated = { ...order, status: full ? '已退款' : '部分退款', refundedAt: now, refundAmount: full ? order.payAmount : Math.round(order.payAmount * 50) / 100, couponReturnResult: !ticket ? '未使用价格券' : returned ? '原价格券已返还，可继续使用' : !full ? '部分退款不返券、不退权益' : order.fulfilledAt || order.status === '已完成' ? '已履约，不返券、不退权益' : '原券已失效，不返券' };
+    updated = { ...order, status: full ? '已退款' : '部分退款', refundedAt: now, refundAmount: full ? order.payAmount : Math.round(order.payAmount * 50) / 100, couponReturnResult: returnedRight ? '体验券已返还原用户，可继续使用' : !ticket ? '未使用价格券' : returned ? '原价格券已返还，可继续使用' : !full ? '部分退款不返券、不退权益' : order.fulfilledAt || order.status === '已完成' ? '已履约，不返券、不退权益' : '原券已失效，不返券' };
     if (returned) tickets = tickets.map((item) => item.id === ticket!.id ? { ...item, usedTimes: 0, status: '待使用', orderNo: undefined, usageHistory: item.usageHistory.map((record) => record.orderNo === order.id ? { ...record, couponReturnedAt: now } : record) } : item);
   }
   return { ...store, tickets, accountRights: rights, orders: (store.orders || []).map((item) => item.id === order.id ? updated : item) };

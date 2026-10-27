@@ -408,7 +408,7 @@ main.desc pre.desc-code > code {
         <div class="desc-body">
 <h1 id="发券-PRD">发券 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-26</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
 <p><em>需求场景：被授权人员在移动端发放优惠券，并查看本人发放结果。</em></p>
 <h2 id="变更记录">变更记录</h2>
@@ -424,28 +424,24 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-26</td>
-<td>初版</td>
+<td>2026-10-27</td>
+<td>初版；收敛发券规则</td>
 <td>awu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="一权限与范围">一、权限与范围</h2>
+<h2 id="一权限">一、权限</h2>
 <ol>
-<li>
-<p><strong>可见券</strong>：只展示当前账号获授权的券，包含「发放中」「已暂停」「已结束」券。</p>
-</li>
-<li>
-<p><strong>发放权限</strong>：进入页面须有「营销管理」-「发券中心」-「可管理」权限。</p>
-<ul>
-<li>无发放权限时不可操作。</li>
+<li><strong>权限说明</strong>：<ul>
+<li>须有「发券中心」-「可管理」权限；无权限时不可发放。</li>
+<li>仅展示当前账号有权发放的券；平台管理员、租户管理员及平台运营默认可发全部券。</li>
 </ul>
 </li>
 </ol>
 <h2 id="二券卡与入口">二、券卡与入口</h2>
 <ol>
 <li>
-<p><strong>券卡信息</strong>：展示券名称、券类型、状态、优惠内容、剩余可发数量和领取后有效期。</p>
+<p><strong>券卡信息</strong>：展示券名称、券类型、状态、优惠内容、剩余可发数量及领取后有效期。</p>
 </li>
 <li>
 <p><strong>发放入口</strong>：</p>
@@ -460,59 +456,32 @@ main.desc pre.desc-code > code {
 </thead>
 <tbody>
 <tr>
-<td>满减券、折扣券</td>
+<td>满减券、折扣券、特价券</td>
 <td>「定向发放」「公开发放」</td>
 </tr>
 <tr>
 <td>体验券</td>
-<td>自动选择单张编号后「定向发放」「扫码领取」</td>
+<td>「发放体验券」自动选择单张编号后「定向发放」「扫码领取」</td>
 </tr>
 </tbody>
 </table>
 <h2 id="三发放规则">三、发放规则</h2>
-<h3 id="1-满减折扣券定向发放">1. 满减、折扣券定向发放</h3>
-<ol>
-<li><strong>定向发放</strong>：输入一个 11 位手机号，确认时校验当前权限、券状态和剩余量。<ul>
-<li><strong>发放条件</strong>：券状态为「发放中」且有剩余量时才可发放。否则禁用。</li>
-<li><strong>发放成功</strong>：绑定手机号、按绑定时间起算有效期，并记录当前发放账号 ID。</li>
-</ul>
-</li>
-</ol>
-<h3 id="2-满减折扣券公开发放">2. 满减、折扣券公开发放</h3>
 <ol>
 <li>
-<p><strong>公开发放</strong>：创建当前账号归属的公开发放入口。</p>
+<p><strong>通用校验</strong>：仅「发放中」且有剩余可发数量的券可发放；不满足时入口禁用。</p>
 </li>
 <li>
-<p><strong>用户领取</strong>：用户通过二维码或领取链接提交领取。</p>
+<p><strong>价格券</strong>（满减、折扣、特价）：</p>
 <ul>
-<li><strong>发放条件</strong>：券状态为「发放中」且有剩余量时才可发放。否则禁用。</li>
-<li><strong>发放成功</strong>：生成绑定当前用户的用户券，扣减一张额度，并按领取时间起算有效期。并记录当前发放账号 ID。</li>
-<li><strong>重复领取</strong>：同一用户再次领取仍生成新的用户券，每张分别占用额度；本期不限制每人领取次数。</li>
-</ul>
-</li>
-</ol>
-<h3 id="3-体验券单码发放">3. 体验券单码发放</h3>
-<ol>
-<li>
-<p><strong>发放体验券</strong>：点击「发放体验券」后进入一张可发体验券。</p>
-<ul>
-<li><strong>发放条件</strong>：券状态为「发放中」且有剩余量时才可发放。否则禁用。</li>
-<li>自动选择「未领取」的体验券；</li>
+<li><strong>定向发放</strong>：输入一个 11 位手机号；校验该用户未领取同一券模板后，绑定用户并记录当前发放账号 ID。</li>
+<li><strong>公开发放</strong>：创建公开入口，用户通过二维码或领取链接领取；同一用户对同一券模板仅可领取一张，定向与公开领取合并校验。公开领取不追踪发放人，展示「-」。</li>
 </ul>
 </li>
 <li>
-<p><strong>扫码领取</strong>：展示当前编号的体验券的二维码、券码和领取链接。</p>
+<p><strong>体验券</strong>：点击「发放体验券」后自动进入一个「未领取」编号。</p>
 <ul>
-<li><strong>发放条件</strong>：券状态为「发放中」且有剩余量时才可发放。否则禁用。</li>
-<li><strong>用户领取成功时</strong>：用户券和券使用记录沿用该发放人 ID，并计入「券码领取」。</li>
-</ul>
-</li>
-<li>
-<p><strong>定向发放</strong>：输入一个 11 位手机号，确认时校验当前权限、券状态、剩余量及编号状态。</p>
-<ul>
-<li><strong>发放条件</strong>：券状态为「发放中」且有剩余量时才可发放。否则禁用。</li>
-<li><strong>发放成功</strong>：绑定手机号、按绑定时间起算有效期，并记录当前发放账号 ID。归入「定向发放」，不重复计入「券码领取」。</li>
+<li><strong>定向发放</strong>：输入一个 11 位手机号，校验编号仍可发放后绑定用户并记录当前发放账号 ID；归入「定向发放」。</li>
+<li><strong>扫码领取</strong>：展示该编号的二维码、券码及领取链接；用户领取后归入「券码领取」，不追踪发放人，展示「-」。</li>
 </ul>
 </li>
 </ol>
@@ -520,7 +489,7 @@ main.desc pre.desc-code > code {
       </main>
       <div class="toc-divider" data-toc-divider></div>
       <aside class="toc-wrap">
-<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发券-PRD" data-toc-id="发券-PRD">发券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一权限与范围" data-toc-id="一权限与范围">一、权限与范围</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二券卡与入口" data-toc-id="二券卡与入口">二、券卡与入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#三发放规则" data-toc-id="三发放规则">三、发放规则</a></span><ul class="toc-list"><li class="toc-item toc-h3"><span class="toc-row"><a href="#1-满减折扣券定向发放" data-toc-id="1-满减折扣券定向发放">1. 满减、折扣券定向发放</a></span></li><li class="toc-item toc-h3"><span class="toc-row"><a href="#2-满减折扣券公开发放" data-toc-id="2-满减折扣券公开发放">2. 满减、折扣券公开发放</a></span></li><li class="toc-item toc-h3"><span class="toc-row"><a href="#3-体验券单码发放" data-toc-id="3-体验券单码发放">3. 体验券单码发放</a></span></li></ul></li></ul></li></ul></nav>
+<nav class="toc-nav" aria-label="大纲"><div class="toc-header"><span class="toc-title">大纲</span><button class="toc-action toc-toggle-all" type="button" title="展开/折叠全部">全部展开</button></div><ul class="toc-list"><li class="toc-item toc-h1 is-expanded"><span class="toc-row"><span class="toc-chevron" data-toc-chevron role="button" tabindex="-1" aria-label="折叠/展开"></span><a href="#发券-PRD" data-toc-id="发券-PRD">发券 PRD</a></span><ul class="toc-list"><li class="toc-item toc-h2"><span class="toc-row"><a href="#变更记录" data-toc-id="变更记录">变更记录</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#一权限" data-toc-id="一权限">一、权限</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#二券卡与入口" data-toc-id="二券卡与入口">二、券卡与入口</a></span></li><li class="toc-item toc-h2"><span class="toc-row"><a href="#三发放规则" data-toc-id="三发放规则">三、发放规则</a></span></li></ul></li></ul></nav>
       </aside>
     </div>
   </div>

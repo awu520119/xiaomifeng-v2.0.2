@@ -6,7 +6,7 @@
   "groups": [
     {
       "id": "marketing",
-      "title": "营销管理",
+      "title": "优惠券管理",
       "order": 2
     },
     {
@@ -155,7 +155,7 @@
       "id": "mini-receive",
       "title": "领取页",
       "doc": "小程序领取页PRD-20261022.md",
-      "hash": "#/demo/export/mini-receive?phone=13800000001",
+      "hash": "#/demo/export/mini-receive?phone=13800000002",
       "mode": "screen",
       "device": "mobile",
       "parent": "mini",
@@ -182,6 +182,26 @@
       "order": 3
     },
     {
+      "id": "mini-coupon-detail",
+      "title": "优惠券详情",
+      "doc": "小程序券详情PRD-20261022.md",
+      "hash": "#/demo/export/mini-coupon-detail?phone=13800000001&detail=first",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 4
+    },
+    {
+      "id": "mini-theme-list",
+      "title": "主题列表",
+      "doc": "小程序主题列表PRD-20261027.md",
+      "hash": "#/demo/export/mini-theme-list?phone=13800000001",
+      "mode": "screen",
+      "device": "mobile",
+      "parent": "mini",
+      "order": 5
+    },
+    {
       "id": "mini-checkout",
       "title": "确认订单",
       "doc": "小程序下单选券PRD-20261026.md",
@@ -189,7 +209,7 @@
       "mode": "screen",
       "device": "mobile",
       "parent": "mini",
-      "order": 4
+      "order": 6
     },
     {
       "id": "mini-order",
@@ -199,7 +219,7 @@
       "mode": "screen",
       "device": "mobile",
       "parent": "mini",
-      "order": 5
+      "order": 7
     }
   ]
 }

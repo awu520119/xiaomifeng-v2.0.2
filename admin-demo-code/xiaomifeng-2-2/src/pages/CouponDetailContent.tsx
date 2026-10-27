@@ -10,7 +10,7 @@ type Props = {
 };
 
 const kindLabel = (kind: CouponKind) => kind === '体验权益券' ? '体验券' : kind;
-const kindTone = (kind: CouponKind) => kind === '满减券' ? 'reduction' : kind === '折扣券' ? 'discount' : 'experience';
+const kindTone = (kind: CouponKind) => kind === '特价券' ? 'special' : kind === '满减券' ? 'reduction' : kind === '折扣券' ? 'discount' : 'experience';
 const statusTone = (status: string) => ({ '发放中': 'active', '未开始': 'upcoming', '已暂停': 'pending', '已结束': 'finished' }[status] || 'default');
 
 export default function CouponDetailContent({ coupon, store, status, authorizedIssuers, onConfigureAuthorization }: Props) {
@@ -36,8 +36,8 @@ export default function CouponDetailContent({ coupon, store, status, authorizedI
       <h3><span />优惠规则</h3>
       <Descriptions size="small" column={2}>
         {coupon.kind === '体验权益券' ? <Descriptions.Item label="可兑换次数">{coupon.rightsCount || 1} 次体验</Descriptions.Item> : <>
-          <Descriptions.Item label="使用门槛">{coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}</Descriptions.Item>
-          <Descriptions.Item label={coupon.kind === '折扣券' ? '折扣' : '优惠金额'}>{coupon.kind === '折扣券' ? `${coupon.discountRate} 折` : `${coupon.discountAmount} 元`}</Descriptions.Item>
+          {coupon.kind !== '特价券' && <Descriptions.Item label="使用门槛">{coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}</Descriptions.Item>}
+          <Descriptions.Item label={coupon.kind === '折扣券' ? '折扣' : coupon.kind === '特价券' ? '特惠金额' : '优惠金额'}>{coupon.kind === '折扣券' ? `${coupon.discountRate} 折` : `${coupon.discountAmount} 元`}</Descriptions.Item>
         </>}
         <Descriptions.Item label="可用范围">{allThemes ? '全部可用' : '指定主题'}</Descriptions.Item>
         {!allThemes && <>

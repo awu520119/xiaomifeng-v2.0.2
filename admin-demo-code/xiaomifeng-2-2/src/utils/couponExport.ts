@@ -76,13 +76,13 @@ export async function downloadExperienceCouponZip(records: CouponIssueRecord[], 
   const root = createRoot(host);
   const entries: ZipEntry[] = [];
   const safeName = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_');
-  const rows = [['体验券编号', '唯一券码', '发放人ID', '优惠券名称', '使用规则', '领取链接', '二维码文件'], ...records.map((record) => {
+  const rows = [['体验券编号', '唯一券码', '优惠券名称', '优惠规则', '领取链接', '二维码文件'], ...records.map((record) => {
     const serial = record.serialNo || record.redeemCode;
     const link = receiveUrl(`code=${encodeURIComponent(record.redeemCode)}`, record.distributedById);
-    return [serial, record.redeemCode, record.distributedById || '', record.couponName, record.benefit, link, `二维码/${safeName(serial)}.png`];
+    return [serial, record.redeemCode, record.couponName, record.benefit, link, `二维码/${safeName(serial)}.png`];
   })];
   const csv = new TextEncoder().encode('\uFEFF' + rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(',')).join('\n'));
-  entries.push({ name: '线下发放清单.csv', data: csv });
+  entries.push({ name: `${safeName(couponName)}-券码清单.csv`, data: csv });
   try {
     for (const record of records) {
       const serial = safeName(record.serialNo || record.redeemCode);
@@ -101,9 +101,8 @@ export async function downloadExperienceCouponZip(records: CouponIssueRecord[], 
 }
 function downloadUrl(url: string, name: string, revoke = false) { const link = document.createElement('a'); link.href = url; link.download = name; link.click(); if (revoke) setTimeout(() => URL.revokeObjectURL(url), 1000); }
 export function receiveUrl(query: string, issuerId?: string) {
-  const resolvedIssuerId = issuerId || 'current-admin';
-  const fullQuery = !/[?&]issuerId=/.test(query)
-    ? `${query}${query ? '&' : ''}issuerId=${encodeURIComponent(resolvedIssuerId)}`
+  const fullQuery = issuerId && !/[?&]issuerId=/.test(query)
+    ? `${query}${query ? '&' : ''}issuerId=${encodeURIComponent(issuerId)}`
     : query;
   const url = new URL(location.href);
   if (document.documentElement.dataset.prototypeViewer === 'true' && /\/pages\/[^/]+\.html$/.test(url.pathname)) {

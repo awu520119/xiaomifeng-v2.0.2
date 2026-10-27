@@ -24,8 +24,8 @@ const couponViews: Record<string, CouponPrototypeView | undefined> = {
 
 /** Viewer entry points reuse the live pages, including their forms, dialogs and local interactions. */
 export default function PrototypeExportPage({ page, store, setStore }: Props) {
-  const miniPages = { 'mini-receive': 'receive', 'mini-redeem': 'redeem', 'mini-wallet': 'wallet', 'mini-checkout': 'checkout', 'mini-product': 'product', 'mini-mine': 'mine', 'mini-order': 'order' } as const;
-  if (Object.hasOwn(miniPages, page)) return <CouponMiniApp key={page} page={miniPages[page as keyof typeof miniPages]} store={store} setStore={setStore} />;
+  const miniPages = { 'mini-receive': 'receive', 'mini-redeem': 'redeem', 'mini-wallet': 'wallet', 'mini-coupon-detail': 'wallet', 'mini-checkout': 'checkout', 'mini-theme-list': 'theme-list', 'mini-product': 'product', 'mini-mine': 'mine', 'mini-order': 'order' } as const;
+  if (Object.hasOwn(miniPages, page)) return <CouponMiniApp key={page} page={miniPages[page as keyof typeof miniPages]} store={store} setStore={setStore} readOnly={page === 'mini-coupon-detail'} />;
   const isIssuerPage = ['issuer-center', 'issuer-coupons', 'issuer-records'].includes(page);
   const isPopupPage = Boolean(couponViews[page]);
   let content;

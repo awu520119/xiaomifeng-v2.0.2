@@ -58,7 +58,7 @@ export function MiniOrderPage({ store, setStore }: Props) {
   const linkedRight = order && (store.accountRights || []).find((right) => right.id === order.rightId);
   const linkedCode = linkedTicket?.redeemCode;
   const couponKindLabel = linkedTicket?.couponKind === '体验权益券' ? '体验券' : linkedTicket?.couponKind;
-  const couponKindClass = linkedTicket?.couponKind === '满减券' ? 'coupon-kind-tag-reduction' : linkedTicket?.couponKind === '折扣券' ? 'coupon-kind-tag-discount' : 'coupon-kind-tag-experience';
+  const couponKindClass = linkedTicket?.couponKind === '特价券' ? 'coupon-kind-tag-special' : linkedTicket?.couponKind === '满减券' ? 'coupon-kind-tag-reduction' : linkedTicket?.couponKind === '折扣券' ? 'coupon-kind-tag-discount' : 'coupon-kind-tag-experience';
   return <MiniShell title="下单使用优惠券">
     <Space.Compact style={{ width: '100%', marginBottom: 18 }}><Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="输入演示手机号" maxLength={11} /><Button type="primary" onClick={() => setParams(phone ? { phone } : {})}>确认用户</Button></Space.Compact>
     <Typography.Paragraph strong>选择拍摄主题或套餐</Typography.Paragraph><Select style={{ width: '100%', marginBottom: 18 }} value={productId} onChange={setProductId} options={shootingProducts.map((item) => ({ value: item.id, label: `${item.name}，¥${item.price}` }))} />
@@ -82,9 +82,9 @@ export function MiniOrderPage({ store, setStore }: Props) {
     ]} /> : <Typography.Text type="secondary">本订单未使用优惠券或体验权益</Typography.Text>}</section><Space wrap>
       {order.status === '待支付' && <><Button type="primary" onClick={() => act(order, 'pay')}>模拟支付成功</Button><Button onClick={() => act(order, 'cancel')}>取消订单</Button><Button onClick={() => act(order, 'cancel')}>模拟超时关闭</Button></>}
       {(order.status === '待使用' || order.status === '部分退款' && !order.fulfilledAt) && <Button type="primary" onClick={() => act(order, 'fulfil')}>模拟完成服务</Button>}
-      {['待使用', '已完成'].includes(order.status) && !order.refundedAt && order.payAmount > 0 && <>
-        <Popconfirm title="模拟全额退款？" description={order.status === '已完成' || order.fulfilledAt ? '已履约订单不返券、不退权益。' : '未使用服务且原价格券仍有效时返还原券。'} onConfirm={() => act(order, 'refund-full')}><Button danger>全额退款</Button></Popconfirm>
-        <Popconfirm title="模拟退还实付金额的 50%？" description="部分退款不返券、不退权益。" onConfirm={() => act(order, 'refund-partial')}><Button>部分退款（50%）</Button></Popconfirm>
+      {['待使用', '已完成'].includes(order.status) && !order.refundedAt && (order.payAmount > 0 || Boolean(order.rightId)) && <>
+        <Popconfirm title="模拟全额退款？" description={order.rightId ? '体验券将返还原用户。' : order.status === '已完成' || order.fulfilledAt ? '已履约订单不返券。' : '未使用服务且价格券有效时返还原券。'} onConfirm={() => act(order, 'refund-full')}><Button danger>全额退款</Button></Popconfirm>
+        {order.payAmount > 0 && <Popconfirm title="模拟退还实付金额的 50%？" description="部分退款不返券、不退权益。" onConfirm={() => act(order, 'refund-partial')}><Button>部分退款（50%）</Button></Popconfirm>}
       </>}
     </Space>{order.rightId && <Typography.Paragraph type="secondary" style={{ marginTop: 12 }}>体验权益订单无需支付；下单预占一次权益，完成服务后记录实际体验。</Typography.Paragraph>}</Card>}
     <Typography.Title level={5} style={{ marginTop: 24 }}>我的订单</Typography.Title>{orders.map((item) => <Card key={item.id} size="small" style={{ marginBottom: 8 }}><Button type="link" onClick={() => setOrderId(item.id)} style={{ paddingLeft: 0 }}>{item.productName}，{item.status}</Button><div><Typography.Text type="secondary">{item.id}　¥{item.payAmount.toFixed(2)}</Typography.Text></div></Card>)}

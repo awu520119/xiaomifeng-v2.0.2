@@ -408,7 +408,7 @@ main.desc pre.desc-code > code {
         <div class="desc-body">
 <h1 id="小程序券包-PRD">小程序券包 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-25</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
 <p><em>需求场景：用户查看本人优惠券、使用状态和有效期，并进入详情或兑换入口。</em></p>
 <h2 id="变更记录">变更记录</h2>
@@ -424,8 +424,8 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-25</td>
-<td>初版</td>
+<td>2026-10-27</td>
+<td>初版；补充特价券及退款状态</td>
 <td>awu</td>
 </tr>
 </tbody>
@@ -436,30 +436,29 @@ main.desc pre.desc-code > code {
 <p><strong>进入券包</strong>：从「我的」页面点击「优惠券」入口进入。</p>
 </li>
 <li>
-<p><strong>展示范围</strong>：仅展示当前用户已领取或定向发放到账的用户券，不展示未领取券码。</p>
+<p><strong>展示范围</strong>：仅展示当前用户已领取或定向发放到账的用户券。</p>
 </li>
 </ol>
 <h2 id="二查看券包">二、查看券包</h2>
 <ol>
 <li>
-<p><strong>切换页签</strong>：提供「待使用」「使用中」「已使用」「已失效」，默认打开「待使用」。</p>
+<p><strong>切换页签</strong>：提供「待使用」「使用中」「已使用」「已失效」，各页签展示对应数量。</p>
 <ul>
-<li>「已使用」包含「已使用」「已使用（退款）」。</li>
-<li>「已失效」包含「已过期」「已作废」。</li>
-<li>各页签展示对应数量。</li>
+<li><strong>「已使用」</strong>：包含已使用且未返还的券；退款信息在关联订单或使用记录中查看。</li>
+<li><strong>「已失效」</strong>：包含「已过期」「已作废」。</li>
 </ul>
 </li>
 <li>
-<p><strong>查看券卡</strong>：展示优惠权益、券类型、当前状态、券名称和有效期。</p>
+<p><strong>查看券列表</strong>：展示优惠权益、券类型、当前状态、券名称和有效期。</p>
 <ul>
-<li>「待使用」按截止时间从近到远排列；其他页签按获取时间从新到旧排列。</li>
+<li><strong>排序</strong>：「待使用」按截止时间从近到远排列；其他页签按获取时间从新到旧排列。</li>
 </ul>
 </li>
 <li>
 <p><strong>展开规则</strong>：点击「使用规则」展开，再次点击收起。</p>
 </li>
 <li>
-<p><strong>查看详情</strong>：点击券卡打开<a href="小程序券详情PRD-20261022.md">券详情</a>弹层；已失效券仍可查看。</p>
+<p><strong>查看详情</strong>：点击券卡打开<a href="../index.html?node=xiaomifeng-2-2--mini-coupon-detail" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--mini-coupon-detail'},'*');return false;}">券详情</a>弹层；已失效券仍可查看。</p>
 </li>
 <li>
 <p><strong>无券时</strong>：展示「暂无{页签名称}的券」，提示可通过领取链接、二维码或兑换码获取。</p>
@@ -471,13 +470,12 @@ main.desc pre.desc-code > code {
 <p><strong>去使用</strong>：仅「待使用」券提供；点击后按适用范围跳转：</p>
 <ul>
 <li><strong>适用范围为全部</strong>：跳转到首页。</li>
-<li><strong>多个适用拍摄点属于同一景区</strong>，跳转到该景区首页。</li>
 <li><strong>适用范围为一个拍摄点</strong>：跳转到该拍摄点页面。</li>
 <li><strong>适用范围为一个主题时</strong>：跳转到该主题详情页。</li>
 </ul>
 </li>
 <li>
-<p><strong>兑换优惠券</strong>：仅「待使用」页签底部提供「兑换优惠券」，点击进入<a href="小程序兑换页PRD-20261022.md">兑换页</a>。</p>
+<p><strong>兑换优惠券</strong>：仅「待使用」页签底部提供「兑换优惠券」，点击进入<a href="../index.html?node=xiaomifeng-2-2--mini-redeem" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'xiaomifeng-2-2--mini-redeem'},'*');return false;}">兑换页</a>。</p>
 </li>
 </ol>
         </div>

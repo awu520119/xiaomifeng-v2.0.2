@@ -408,9 +408,9 @@ main.desc pre.desc-code > code {
         <div class="desc-body">
 <h1 id="创建优惠券-PRD">创建优惠券 PRD</h1>
 <blockquote>
-<p>版本 v1.0　·　日期 2026-10-22</p>
+<p>版本 v1.0　·　日期 2026-10-27</p>
 </blockquote>
-<p><em>需求场景：运营人员创建满减券、折扣券或体验券，配置优惠规则、统一可用范围、领取后有效天数、总量和使用规则。</em></p>
+<p><em>需求场景：运营人员创建满减券、折扣券、特价券或体验券，配置优惠规则、统一可用范围、领取后有效天数、总量和使用规则。</em></p>
 <h2 id="变更记录">变更记录</h2>
 <table>
 <thead>
@@ -424,15 +424,15 @@ main.desc pre.desc-code > code {
 <tbody>
 <tr>
 <td>v1.0</td>
-<td>2026-10-22</td>
-<td>初版</td>
+<td>2026-10-27</td>
+<td>初版；增加特价券配置及限领规则</td>
 <td>awu</td>
 </tr>
 </tbody>
 </table>
 <h2 id="一创建优惠券权限说明">一、创建优惠券—权限说明</h2>
 <ol>
-<li><strong>权限</strong>：须具有【营销管理】-【优惠券管理】-【编辑】权限。</li>
+<li><strong>权限</strong>：须具有【优惠券管理】-【优惠券列表】-【编辑】权限。</li>
 </ol>
 <h2 id="二创建优惠券基础信息">二、创建优惠券—基础信息</h2>
 <ol>
@@ -445,7 +445,7 @@ main.desc pre.desc-code > code {
 <li>
 <p><strong>优惠券类型</strong>：单选，必填，默认「满减券」。</p>
 <ul>
-<li><strong>可选类型</strong>：「满减券」「折扣券」「体验券」。</li>
+<li><strong>可选类型</strong>：「满减券」「折扣券」「特价券」「体验券」。</li>
 <li>切换类型后，展示该类型对应的优惠规则字段。</li>
 </ul>
 </li>
@@ -472,10 +472,13 @@ main.desc pre.desc-code > code {
 </ul>
 </li>
 <li>
+<p><strong>特惠金额</strong>：仅特价券展示，必填，单位元，最多两位小数，须大于 0，默认 0.01 元。</p>
+</li>
+<li>
 <p><strong>体验券权益</strong>：固定展示「可兑换 1 次体验」。</p>
 </li>
 <li>
-<p><strong>可用范围</strong>：三类券均展示，单选，必填，默认「全部可用」。</p>
+<p><strong>可用范围</strong>：四类券均展示，单选，必填，默认「全部可用」。</p>
 <ul>
 <li><strong>全部可用</strong>：适用于全部拍摄点和主题。</li>
 <li><strong>指定主题</strong>：先选择一个拍摄点，再选择该拍摄点下一个或多个可用主题；拍摄点和主题均为必选。</li>
@@ -495,7 +498,7 @@ main.desc pre.desc-code > code {
 <p><strong>发放总量</strong>：数字输入，必填，单位张，默认 100 张。</p>
 <ul>
 <li><strong>体验券</strong>：1 至 10000 的正整数。</li>
-<li><strong>满减券、折扣券</strong>：1 至 100000 的正整数。</li>
+<li><strong>满减券、折扣券、特价券</strong>：1 至 100000 的正整数。</li>
 </ul>
 </li>
 <li>
@@ -505,13 +508,15 @@ main.desc pre.desc-code > code {
 <li><strong>校验</strong>：为空或仅含空格时不可保存。</li>
 </ul>
 </li>
+<li>
+<p><strong>每人限领</strong>：同一用户对同一满减券、折扣券或特价券模板累计只能领取一张，定向发放和公开领取合并校验。</p>
+</li>
 </ol>
 <h2 id="五编辑优惠券">五、编辑优惠券</h2>
 <ol>
 <li><strong>编辑优惠券</strong>：<ul>
 <li><strong>可编辑字段</strong>：优惠券名称、使用规则。</li>
 <li><strong>只读字段</strong>：券类型、优惠规则、范围、有效期、发放总量回显原值并灰显，保存时保持原配置。</li>
-<li><strong>记录保留</strong>：保存编辑不重新发券，不重置已领取券的领取时间、截止时间、使用状态及历史使用记录。</li>
 </ul>
 </li>
 </ol>

@@ -1,6 +1,6 @@
 export type CouponKind = '特价券' | '满减券' | '折扣券' | '抵扣券' | '体验权益券';
 export type CouponTemplateStatus = '启用' | '已停用';
-export type CouponStatus = '未领取' | '未生效' | '待使用' | '已使用' | '已使用（退款）' | '已核销' | '已核销（退款）' | '已作废' | '已过期';
+export type CouponStatus = '未领取' | '未生效' | '待使用' | '已使用' | '已核销' | '已核销（退款）' | '已作废' | '已过期';
 export type IssueSource = '定向发放' | '券码兑换' | '扫码领取';
 export type ShootingProduct = { id: string; name: string; shootingPoint: string; theme: string; price: number };
 export const shootingProducts: ShootingProduct[] = [
@@ -18,7 +18,7 @@ export const shootingProducts: ShootingProduct[] = [
 export const shootingPointOptions = [...new Set(shootingProducts.map((row) => row.shootingPoint))];
 export const couponShootingPointOptions = ['全部拍摄点', ...shootingPointOptions];
 export const themeOptions = [...new Set(shootingProducts.map((row) => row.theme))];
-export const couponKinds: CouponKind[] = ['满减券', '折扣券', '体验权益券'];
+export const couponKinds: CouponKind[] = ['满减券', '折扣券', '特价券', '体验权益券'];
 export type CouponTemplate = {
   id: string; name: string; kind: CouponKind; benefit: string;
   validityDays: number; availableRange: string[]; shootingPoints: string[];
@@ -28,12 +28,14 @@ export type CouponTemplate = {
 };
 export type CouponIssuer = { id: string; name: string; account: string; organization: string };
 export const currentCouponOperatorId = 'current-admin';
+/** 这些角色依系统权限默认可发全部券，无须在单券授权中重复配置。 */
+export const defaultCouponIssuerIds = new Set([currentCouponOperatorId, 'platform-operator', 'tenant-admin']);
 export const couponIssuerOptions: CouponIssuer[] = [
   { id: currentCouponOperatorId, name: '系统管理员', account: 'admin', organization: '平台运营中心' },
   { id: 'issuer-wanglin', name: '王琳', account: 'wanglin', organization: '市场运营组' },
   { id: 'issuer-chenjie', name: '陈杰', account: 'chenjie', organization: '景区运营组' },
 ];
-export function authorizedIssuerIds(coupon: CouponTemplate) { return coupon.authorizedIssuerIds ?? [currentCouponOperatorId]; }
+export function authorizedIssuerIds(coupon: CouponTemplate) { return [...new Set([...(coupon.authorizedIssuerIds ?? []), ...defaultCouponIssuerIds])]; }
 export function canCurrentOperatorIssue(coupon: CouponTemplate) { return authorizedIssuerIds(coupon).includes(currentCouponOperatorId); }
 export type CouponUseRecord = {
   orderNo: string; shootingPoint: string; theme: string; productId: string; productName: string; usedAt: string;
@@ -65,6 +67,9 @@ export function normalizeCouponStore(value: CouponStore): CouponStore {
     const { startsAt: _startsAt, endsAt: _endsAt, ...rest } = legacy;
     return { ...rest, validityDays: Math.max(1, duration), rightsCount: rest.kind === '体验权益券' ? 1 : rest.rightsCount } as CouponTemplate;
   }).map((coupon) => coupon.kind === '体验权益券' ? { ...coupon, rightsCount: 1, benefit: couponRuleText({ ...coupon, rightsCount: 1 }) } : coupon);
+  for (const sample of initialCouponTemplates.filter((coupon) => coupon.kind === '特价券')) {
+    if (!templates.some((coupon) => coupon.id === sample.id)) templates.push({ ...sample });
+  }
   const validityByCoupon = new Map(templates.map((coupon) => [coupon.id, coupon.validityDays]));
   const tickets = value.tickets.map((ticket) => {
     const validityDays = ticket.validityDays || validityByCoupon.get(ticket.couponId) || 30;
@@ -72,15 +77,14 @@ export function normalizeCouponStore(value: CouponStore): CouponStore {
     const issuedAt = ticket.issuedAt || '';
     const { startsAt: _startsAt, ...rest } = ticket as CouponIssueRecord & { startsAt?: string };
     const experience = ticket.couponKind === '体验权益券';
-    const claimPlan = rest.claimPlanId ? value.plans.find((plan) => plan.id === rest.claimPlanId) : undefined;
     const batch = rest.batchNo ? value.batches?.find((item) => item.id === rest.batchNo) : undefined;
-    const distributedById = rest.distributedById || claimPlan?.operatorId || batch?.operatorId;
+    const distributedById = rest.source === '定向发放' ? (rest.distributedById || batch?.operatorId) : undefined;
     const usageHistory = experience ? rest.usageHistory.slice(0, 1) : rest.usageHistory;
     return { ...rest, redeemCode: issuerAwareRedeemCode(rest.redeemCode, distributedById), distributedById, validityDays, expiresAt: ticket.expiresAt || (issuedAt ? couponExpiryAt(issuedAt, validityDays) : ''), benefit: experience ? '可兑换 1 次体验' : rest.benefit, totalUses: experience ? 1 : rest.totalUses, usedTimes: experience ? Math.min(1, rest.usedTimes) : rest.usedTimes, usageHistory };
   });
   const accountRights = (value.accountRights || []).map((right) => {
     const { startsAt: _startsAt, ...rest } = right as ExperienceAccountRight & { startsAt?: string };
-    const used = (rest.usageHistory?.length || 0) > 0 || rest.remainingUses <= 0;
+    const used = rest.remainingUses <= 0;
     return { ...rest, totalUses: 1, remainingUses: used ? 0 : 1, usageHistory: rest.usageHistory?.slice(0, 1) };
   });
   return { ...value, templates, tickets, accountRights };
@@ -111,6 +115,7 @@ export function phoneListError(phones: string[]) {
 }
 export function couponRuleText(coupon: Pick<CouponTemplate, 'kind' | 'minSpend' | 'discountAmount' | 'discountRate' | 'rightsCount'>) {
   if (coupon.kind === '体验权益券') return '可兑换 1 次体验';
+  if (coupon.kind === '特价券') return `特惠价 ${coupon.discountAmount} 元`;
   if (coupon.kind === '满减券') return `满 ${coupon.minSpend} 元减 ${coupon.discountAmount} 元`;
   if (coupon.kind === '抵扣券') return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}抵扣 ${coupon.discountAmount} 元`;
   return `${coupon.minSpend > 0 ? `满 ${coupon.minSpend} 元` : '无门槛'}享 ${coupon.discountRate} 折`;
@@ -129,8 +134,7 @@ export function couponQuotaUsed(coupon: CouponTemplate, tickets: CouponIssueReco
 export function remainingQuota(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return Math.max(0, coupon.totalLimit - couponQuotaUsed(coupon, tickets)); }
 export function couponTemplateStatus(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return remainingQuota(coupon, tickets) === 0 ? '已结束' : coupon.status === '已停用' ? '已暂停' : '发放中'; }
 export function canIssueCoupon(coupon: CouponTemplate, tickets: CouponIssueRecord[]) { return coupon.status !== '已停用' && remainingQuota(coupon, tickets) > 0; }
-// 保留旧调用签名以兼容本地演示数据，不再按用户限制领取数量。
-export function receiveLimitError(_coupon: CouponTemplate, _phone: string, _tickets: CouponIssueRecord[]): string | undefined { return undefined; }
+export function receiveLimitError(coupon: CouponTemplate, phone: string, tickets: CouponIssueRecord[]): string | undefined { return coupon.kind !== '体验权益券' && tickets.some((ticket) => ticket.couponId === coupon.id && ticket.phoneDigits === phone) ? '每位用户只能领取一张该优惠券' : undefined; }
 export function createTicket(coupon: CouponTemplate, source: IssueSource, phone?: string): CouponIssueRecord {
   const code = uniqueCouponId();
   const issuedAt = phone ? couponLocalTime() : '';
@@ -145,11 +149,11 @@ export function ticketProducts(ticket: Pick<CouponIssueRecord, 'productIds' | 's
     && (ticket.availableRange.includes('全部可用') || ticket.availableRange.includes(row.theme)));
 }
 export function priceDiscount(ticket: CouponIssueRecord, amount: number) {
-  return Math.round(Math.min(amount, ['满减券', '抵扣券'].includes(ticket.couponKind) ? ticket.discountAmount : amount * (1 - ticket.discountRate / 10)) * 100) / 100;
+  return Math.round(Math.min(amount, ticket.couponKind === '特价券' ? Math.max(0, amount - ticket.discountAmount) : ['满减券', '抵扣券'].includes(ticket.couponKind) ? ticket.discountAmount : amount * (1 - ticket.discountRate / 10)) * 100) / 100;
 }
 export function validateTicketUse(ticket: CouponIssueRecord, values: { orderNo: string; productId: string; orderAmount?: number }, allTickets: CouponIssueRecord[]) {
   const status = effectiveCouponStatus(ticket);
-  if (['已作废', '已使用', '已使用（退款）', '已过期', '未生效'].includes(status)) return `该券${status}，不能使用`;
+  if (['已作废', '已使用', '已过期', '未生效'].includes(status)) return `该券${status}，不能使用`;
   if (!ticketProducts(ticket).some((row) => row.id === values.productId)) return '该商品/主题不在券的适用范围内';
   if (!values.orderNo.trim()) return '请输入订单号';
   if (allTickets.some((row) => row.usageHistory.some((use) => use.orderNo === values.orderNo.trim()))) return '该订单已使用优惠券，不能重复使用';
@@ -161,6 +165,9 @@ export const initialCouponTemplates: CouponTemplate[] = [
   { ...defaultCoupon, id: 'CP-EXPERIENCE', name: '指定主题兑换券', kind: '体验权益券', rightsCount: 1, productIds: ['SP001', 'SP002'], availableRange: ['古韵照壁', '白墙黛瓦'], shootingPoints: ['南长街'], benefit: '可兑换 1 次体验' },
   { ...defaultCoupon, id: 'CP-DISCOUNT', name: '拍摄满100元享8折', kind: '折扣券', minSpend: 100, discountRate: 8, benefit: '满 100 元享 8 折' },
   { ...defaultCoupon, id: 'CP-REDUCTION', name: '拍摄满100减20', kind: '满减券', minSpend: 100, discountAmount: 20, benefit: '满 100 元减 20 元' },
+  { ...defaultCoupon, id: 'CP-SPECIAL', name: '拍摄特惠价99元', kind: '特价券', discountAmount: 99, benefit: '特惠价 99 元' },
+  { ...defaultCoupon, id: 'CP-SPECIAL-001', name: '新客0.01元特惠券', kind: '特价券', discountAmount: 0.01, benefit: '特惠价 0.01 元', totalLimit: 200, description: '限指定活动期间使用，每人限领一张。' },
+  { ...defaultCoupon, id: 'CP-SPECIAL-002', name: '南长街49元特惠券', kind: '特价券', discountAmount: 49, benefit: '特惠价 49 元', shootingPoints: ['南长街'], availableRange: ['古韵照壁', '白墙黛瓦'], totalLimit: 50, status: '已停用', description: '仅限南长街指定主题使用，每人限领一张。' },
 ];
 const samplePartial = createTicket(initialCouponTemplates[0], '定向发放', '13800000001');
 samplePartial.id = samplePartial.redeemCode = 'CN-DEMO-EXPERIENCE-001';

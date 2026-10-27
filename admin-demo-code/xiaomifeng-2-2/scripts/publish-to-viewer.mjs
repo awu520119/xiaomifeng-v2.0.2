@@ -32,6 +32,7 @@ function readConfig() {
   for (const page of config.pages) {
     if (!safeId.test(page?.id || '') || pages.has(page.id)) fail('pages 中存在非法或重复 id');
     if (!/^[^/\\]+\.md$/.test(page.doc || '') || docs.has(page.doc)) fail(`页面 ${page.id} 的 doc 必须是唯一的 Markdown 文件名`);
+    if (page.docSource !== undefined && !/^[^/\\]+\.md$/.test(page.docSource)) fail(`页面 ${page.id} 的 docSource 必须是 Markdown 文件名`);
     if (!page.title || !groups.has(page.parent) || !Number.isInteger(page.order)) fail(`页面 ${page.id} 的 parent、title 或 order 无效`);
     if (!['screen', 'drawer'].includes(page.mode) || typeof page.hash !== 'string' || !page.hash.startsWith('#/')) fail(`页面 ${page.id} 的 mode 或 hash 无效`);
     if (page.device !== undefined && !['pc', 'mobile'].includes(page.device)) fail(`页面 ${page.id} 的 device 无效`);
@@ -84,6 +85,17 @@ function pageHtml(html, page) {
     .replace('</head>', `${device}</head>`)
     .replace('<body>', `<body>${boot}`)
     .replace(/<title>.*?<\/title>/, `<title>${page.title}</title>`);
+}
+
+// 将引用的 PRD 映射到查看器目录，原始 Markdown 文件保持不变。
+function viewerDocLinks(markdown, config) {
+  const pageByDoc = new Map(config.pages.map((page) => [page.docSource || page.doc, `${config.sourceId}--${page.id}`]));
+  return markdown.replace(/\[([^\]\n]+)\]\(([^)\n]+\.md)\)/g, (original, label, file) => {
+    const id = pageByDoc.get(file);
+    if (!id) return original;
+    const href = `../index.html?node=${encodeURIComponent(id)}`;
+    return `<a href="${href}" target="_top" onclick="if(window.parent!==window){window.parent.postMessage({type:'gotoNode',id:'${id}'},'*');return false;}">${label}</a>`;
+  });
 }
 
 function fragment(config) {
@@ -144,9 +156,12 @@ function main() {
   const publishedRoot = join(viewer, '.published');
   const target = join(publishedRoot, config.sourceId);
   if (!inside(publishedRoot, target)) fail('发布目标路径异常');
-  const docFiles = [...config.pages.map((page) => page.doc), ...(config.referenceDocs || [])];
-  for (const doc of docFiles) {
-    if (!existsSync(join(root, 'docs', doc))) fail(`找不到 PRD：docs/${doc}`);
+  const docFiles = [
+    ...config.pages.map((page) => ({ source: page.docSource || page.doc, target: page.doc })),
+    ...(config.referenceDocs || []).map((doc) => ({ source: doc, target: doc })),
+  ];
+  for (const { source } of docFiles) {
+    if (!existsSync(join(root, 'docs', source))) fail(`找不到 PRD：docs/${source}`);
   }
   const html = inlineBuild();
   mkdirSync(publishedRoot, { recursive: true });
@@ -173,8 +188,9 @@ function main() {
     for (const page of config.pages) {
       writeFileSync(join(stage, 'pages', `${page.id}.html`), pageHtml(html, page), 'utf8');
     }
-    for (const doc of docFiles) {
-      copyFileSync(join(root, 'docs', doc), join(stage, 'desc', doc));
+    for (const { source, target } of docFiles) {
+      const markdown = readFileSync(join(root, 'docs', source), 'utf8');
+      writeFileSync(join(stage, 'desc', target), viewerDocLinks(markdown, config), 'utf8');
     }
     writeFileSync(join(stage, 'nav.fragment.json'), `${JSON.stringify(fragment(config), null, 2)}\n`, 'utf8');
     if (process.env.PROTOTYPE_SKIP_SMOKE !== '1') run('python3', [join(root, 'scripts', 'smoke-published.py'), stage], root);
