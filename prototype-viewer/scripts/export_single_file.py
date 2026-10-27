@@ -40,6 +40,20 @@ def safe_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
 
+def split_shared_script(page_html: str, shared_script: str | None) -> tuple[str, str | None]:
+    """Remove an identical first inline bundle from each page and leave a marker."""
+    match = re.search(r'<script[^>]*>(.*?)</script>', page_html, re.S)
+    if not match:
+        return page_html, shared_script
+    script = match.group(1)
+    if shared_script is None:
+        shared_script = script
+    if script != shared_script:
+        return page_html, None
+    replacement = '/*__PROTOTYPE_SHARED_SCRIPT__*/'
+    return page_html[:match.start(1)] + replacement + page_html[match.end(1):], shared_script
+
+
 def inline_desc_assets(html: str, project: Path) -> str:
     """说明页由旧版构建器生成时可能仍外链增强层，单文件导出时一并内联。"""
     replacements = (
@@ -72,23 +86,41 @@ def main() -> int:
     data = load_nav(project)
     pages: dict[str, dict[str, str]] = {}
     descs: dict[str, str] = {}
+    shared_script: str | None = None
+    page_sources: list[tuple[str, str]] = []
 
     for node in iter_leaf_nodes(data["tree"]):
         html_path = node.get("htmlPath")
         if html_path:
             page_html = read(project / html_path)
-            pages[html_path] = {"srcdoc": page_html}
+            page_sources.append((html_path, page_html))
         if node.get("mdPath"):
             descs[node["id"]] = inline_desc_assets(
                 read(project / "desc" / f"{node['id']}.html"), project
             )
+
+    # Published React pages currently share a large, byte-identical runtime bundle.
+    # Store it once in the viewer and leave only page-specific HTML in each entry.
+    split_pages: list[tuple[str, str]] = []
+    for html_path, page_html in page_sources:
+        stripped, candidate = split_shared_script(page_html, shared_script)
+        if candidate is None:
+            shared_script = None
+            break
+        shared_script = candidate
+        split_pages.append((html_path, stripped))
+    if shared_script is not None and split_pages:
+        pages = {html_path: {"srcdoc": page_html} for html_path, page_html in split_pages}
+    else:
+        pages = {html_path: {"srcdoc": page_html} for html_path, page_html in page_sources}
 
     html = read(project / "index.html")
     html = inline_tag(html, "style", "assets/viewer.css", read(project / "assets/viewer.css"))
     html = inline_tag(html, "script", "nav.js", f"window.NAV_DATA = {safe_json(data)};")
     embedded = (
         "window.PROTOTYPE_EMBEDDED_PAGES = " + safe_json(pages) + ";\n"
-        "window.PROTOTYPE_EMBEDDED_DESCS = " + safe_json(descs) + ";"
+        "window.PROTOTYPE_EMBEDDED_DESCS = " + safe_json(descs) + ";\n"
+        "window.PROTOTYPE_EMBEDDED_SHARED_SCRIPT = " + safe_json(shared_script or "") + ";"
     )
     html = inline_tag(html, "script", "assets/viewer.js", f"{embedded}\n{read(project / 'assets/viewer.js')}")
 

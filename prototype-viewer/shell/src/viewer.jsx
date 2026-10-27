@@ -86,7 +86,12 @@ function Viewer() {
     return URL.createObjectURL(new Blob([boot, window.PROTOTYPE_EMBEDDED_REACT_APP_HTML], { type: 'text/html' }));
   }, [route]);
   const pageSrc = embedded ? (route === undefined ? '' : blobUrl) : currentPath;
-  const pageSrcDoc = embedded && route === undefined ? embedded.srcdoc : undefined;
+  const pageSrcDoc = embedded && route === undefined
+    ? embedded.srcdoc.replace(
+      '/*__PROTOTYPE_SHARED_SCRIPT__*/',
+      () => window.PROTOTYPE_EMBEDDED_SHARED_SCRIPT || '',
+    )
+    : undefined;
 
   const selectNode = useCallback((node, push = true) => {
     if (!node?.htmlPath) return;
