@@ -1,4 +1,5 @@
 {
   "schemaVersion": 1,
-  "mode": "hybrid"
+  "mode": "hybrid",
+  "toolkitVersion": 5
 }

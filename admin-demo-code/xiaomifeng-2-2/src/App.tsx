@@ -1,74 +1,46 @@
 import {
+  AppstoreOutlined,
   CameraOutlined,
+  MobileOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MobileOutlined,
-  SafetyCertificateOutlined,
-  ShoppingOutlined,
-  TagOutlined,
+  ToolOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Layout, Menu, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import CouponListPage from './pages/CouponListPage';
-import CouponIssuerCenterPage from './pages/CouponIssuerCenterPage';
-import CouponRecordsPage from './pages/CouponRecordsPage';
-import CouponMiniApp from './pages/mini/CouponMiniApp';
-import OperationLogsPage from './pages/OperationLogsPage';
-import OrderListPage from './pages/OrderListPage';
-import MiniPreviewPage from './pages/MiniPreviewPage';
-import { findPrototypePage } from './pages/registry';
-import { couponStoreKey, initialCouponStore, normalizeCouponStore } from './mock/coupons';
-import type { CouponStore } from './mock/coupons';
-import { prepareExperienceCodes, withClaimedExperienceRights } from './mock/couponFlow';
-import { withExperienceIssueSamples } from './mock/experienceIssueSamples';
-import { withIssuerCenterSamples } from './mock/issuerCenterSamples';
-import { withOrderSamples } from './mock/orderSamples';
-import { withMiniCommerceSamples, withMiniProgramSamples } from './mock/miniProgramSamples';
+import { AlertCenter, DutySchedule, OperationsWorkbench, SolutionLibrary } from './pages/OperationsPages';
+import { initialOperationsStore } from './mock/operations';
+import type { OperationsStore } from './features/operations/types';
 import design from '../design/system.json';
+import ThemeManagement from './pages/ThemeManagement';
+import NotificationCenter from './components/NotificationCenter';
+import TicketMiniPage from './pages/TicketMiniPage';
 
 const { Header, Sider, Content } = Layout;
 
 export default function App() {
-  const hydrate = (data: CouponStore) => withClaimedExperienceRights(withMiniCommerceSamples(withMiniProgramSamples(withIssuerCenterSamples(withOrderSamples(prepareExperienceCodes(data))))));
-  const [store, setStore] = useState<CouponStore>(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem(couponStoreKey) || 'null');
-      if (data?.version === 3 && Array.isArray(data.templates) && Array.isArray(data.tickets) && Array.isArray(data.plans)) return hydrate(withExperienceIssueSamples(normalizeCouponStore(data)));
-    } catch { /* 无有效存储时恢复演示数据 */ }
-    return hydrate(withExperienceIssueSamples(initialCouponStore));
+  const [operationsStore, setOperationsStore] = useState<OperationsStore>(() => {
+    try { const data = JSON.parse(localStorage.getItem('xiaomifeng-operations-demo-v1') || 'null'); if (data?.devices && data?.alerts && data?.workOrders && data?.schedules && data?.solutions) { if (data.alertContentVersion !== 3) data.alerts = initialOperationsStore.alerts; else data.alerts = data.alerts.map((alert: OperationsStore['alerts'][number]) => alert.id === 'CSV-AL-5' && alert.status === '已关闭' && (!alert.closedAt || alert.closedAt === '2026-11-02 15:05:26') && alert.timeline.some(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26') ? { ...alert, closedAt: '2026-11-02 15:05:26', timeline: alert.timeline.map(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26' ? { ...entry, at: '2026-11-02 15:05:26' } : entry) } : alert); return { ...initialOperationsStore, ...data, alerts: [...data.alerts, ...initialOperationsStore.alerts.filter(alert => !data.alerts.some((item: OperationsStore['alerts'][number]) => item.id === alert.id))], people: data.people ? data.people.map((person: OperationsStore['people'][number]) => ({ ...person, account: person.account || initialOperationsStore.people.find(sample => sample.id === person.id)?.account })) : initialOperationsStore.people, devices: [...data.devices.map((device: OperationsStore['devices'][number]) => { const sample = initialOperationsStore.devices.find(item => item.id === device.id); return device.weather && !device.weather.flightStatus && !device.weather.unavailable && sample?.weather?.flightStatus ? { ...device, weather: sample.weather } : device; }), ...initialOperationsStore.devices.filter(item => item.id === 'DR-105' && !data.devices.some((device: OperationsStore['devices'][number]) => device.id === item.id))] }; } } catch { /* 恢复运维演示数据 */ }
+    return initialOperationsStore;
   });
-  useEffect(() => { try { localStorage.setItem(couponStoreKey, JSON.stringify(store)); } catch { /* 禁用存储时仍可在当前页面演示 */ } }, [store]);
-  useEffect(() => {
-    const sync = (event: StorageEvent) => { if (event.key !== couponStoreKey || !event.newValue) return; try { const data = JSON.parse(event.newValue); if (data.version === 3 && Array.isArray(data.templates) && Array.isArray(data.tickets) && Array.isArray(data.plans)) setStore(hydrate(withExperienceIssueSamples(normalizeCouponStore(data)))); } catch { /* 忽略无效存储 */ } };
-    window.addEventListener('storage', sync); return () => window.removeEventListener('storage', sync);
-  }, []);
+  useEffect(() => { try { localStorage.setItem('xiaomifeng-operations-demo-v1', JSON.stringify({ ...operationsStore, alertContentVersion: 3 })); } catch { /* 当前会话仍可继续演示 */ } }, [operationsStore]);
   const [collapsed, setCollapsed] = useState(false);
-  const [openKeys, setOpenKeys] = useState<string[]>(['marketing', 'orders', 'mini']);
+  const [openKeys, setOpenKeys] = useState<string[]>(() => [window.location.hash.startsWith('#/business/') ? 'business' : 'operations']);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const prototypeEntry = findPrototypePage(location.pathname);
-  if (prototypeEntry) {
-    const PrototypePage = prototypeEntry.component;
-    return <PrototypePage key={location.pathname} page={prototypeEntry.route} store={store} setStore={setStore} />;
-  }
-  if (document.documentElement.dataset.prototypeViewer === 'true') return <div className="prototype-stage-mask" aria-hidden="true" />;
-
-  const miniCommercePaths = ['/mini-preview/product', '/mini-preview/checkout', '/mini-preview/order'];
-  const selectedKey = miniCommercePaths.includes(location.pathname) ? '/mini-preview/product' : location.pathname.startsWith('/mini-preview/') ? location.pathname : ['/coupon-directed', '/coupon-public', '/coupon-batches', '/coupon-issues', '/coupon-redemptions', '/coupon-records'].includes(location.pathname) ? '/coupon-records' : location.pathname === '/operation-logs' ? '/operation-logs' : location.pathname === '/orders' ? '/orders' : location.pathname === '/issuer-center' ? '/issuer-center' : '/coupons';
-  const pageTitles: Record<string, string> = { '/coupons': '优惠券管理', '/coupon-records': '优惠券记录', '/coupon-issues': '优惠券记录', '/coupon-redemptions': '优惠券记录', '/issuer-center': '发券中心', '/operation-logs': '操作日志', '/orders': '订单列表', '/mini-preview/receive': '领取优惠券', '/mini-preview/redeem': '兑换体验券', '/mini-preview/wallet': '我的券包', '/mini-preview/checkout': '下单选券', '/mini-preview/product': '下单选券', '/mini-preview/mine': '我的', '/mini-preview/order': '订单详情' };
+  const selectedKey = location.pathname.startsWith('/ops/') || location.pathname.startsWith('/business/') || location.pathname.startsWith('/ticket-mini') ? location.pathname : '/ops/dashboard';
+  const pageTitles: Record<string, string> = { '/ticket-mini': '景区套票小程序端', '/business/themes': '主题管理', '/ops/dashboard': '运维工作台', '/ops/alerts': '告警中心', '/ops/schedule': '值班排班', '/ops/solutions': '处置方案库' };
   const pageTitle = pageTitles[location.pathname] || pageTitles[selectedKey];
-  const miniPage = location.pathname === '/coupon-receive' ? 'receive' : location.pathname === '/coupon-my' ? 'wallet' : location.pathname === '/coupon-order' ? 'checkout' : location.pathname.startsWith('/mini/') ? location.pathname.slice('/mini/'.length) : '';
-  if (['receive', 'redeem', 'wallet', 'checkout', 'product', 'mine', 'order'].includes(miniPage)) return <CouponMiniApp key={miniPage} page={miniPage as 'receive' | 'redeem' | 'wallet' | 'checkout' | 'product' | 'mine' | 'order'} store={store} setStore={setStore} />;
 
   return (
     <Layout className="app-layout">
       <Sider
         className="app-sider"
-        width={design.layout.sidebarWidth}
-        collapsedWidth={design.layout.sidebarCollapsedWidth}
+        width={design.navigation.width}
+        collapsedWidth={design.navigation.collapsedWidth}
         collapsed={collapsed}
         trigger={null}
       >
@@ -83,39 +55,18 @@ export default function App() {
           openKeys={collapsed ? [] : openKeys}
           onOpenChange={setOpenKeys}
           items={[
+            { key: '/ticket-mini', icon: <MobileOutlined />, label: '景区套票小程序端' },
+            { key: 'business', icon: <AppstoreOutlined />, label: '运营中心', children: [{ key: '/business/themes', label: '主题管理' }] },
             {
-              key: 'marketing',
-              icon: <TagOutlined />,
-              label: '营销管理',
+              key: 'operations',
+              icon: <ToolOutlined />,
+              label: '运维管理',
               children: [
-                { key: '/coupons', label: '优惠券管理' },
-                { key: '/coupon-records', label: '优惠券记录' },
-                { key: '/issuer-center', label: '发券中心' },
+                { key: '/ops/dashboard', label: '运维工作台' },
+                { key: '/ops/alerts', label: '告警中心' },
+                { key: '/ops/schedule', label: '值班排班' },
+                { key: '/ops/solutions', label: '处置方案库' },
               ],
-            },
-            {
-              key: 'orders',
-              icon: <ShoppingOutlined />,
-              label: '订单管理',
-              children: [{ key: '/orders', label: '订单列表' }],
-            },
-            {
-              key: 'mini',
-              icon: <MobileOutlined />,
-              label: '用户端小程序',
-              children: [
-                { key: '/mini-preview/product', label: '下单选券' },
-                { key: '/mini-preview/mine', label: '我的' },
-                { key: '/mini-preview/receive', label: '领取优惠券' },
-                { key: '/mini-preview/redeem', label: '兑换体验券' },
-                { key: '/mini-preview/wallet', label: '我的券包' },
-              ],
-            },
-            {
-              key: 'system',
-              icon: <SafetyCertificateOutlined />,
-              label: '系统管理',
-              children: [{ key: '/operation-logs', label: '操作日志' }],
             },
           ]}
           onClick={({ key }) => navigate(key)}
@@ -134,6 +85,7 @@ export default function App() {
         <Header className="app-header">
           <Typography.Title level={1}>{pageTitle}</Typography.Title>
           <Space size={8} className="account">
+            <NotificationCenter />
             <Avatar size={28} icon={<UserOutlined />} />
             <span>系统管理员</span>
           </Space>
@@ -141,21 +93,13 @@ export default function App() {
 
         <Content className="app-content">
           <Routes>
-            <Route path="/coupons" element={<CouponListPage store={store} setStore={setStore} />} />
-            <Route path="/issuer-center" element={<CouponIssuerCenterPage store={store} setStore={setStore} />} />
-            <Route path="/orders" element={<OrderListPage store={store} />} />
-            <Route path="/coupon-directed" element={<Navigate replace to="/coupons" />} />
-            <Route path="/coupon-public" element={<Navigate replace to="/coupons" />} />
-            <Route path="/coupon-batches" element={<Navigate replace to="/coupons" />} />
-            <Route path="/coupon-issues" element={<CouponRecordsPage store={store} setStore={setStore} />} />
-            <Route path="/coupon-records" element={<CouponRecordsPage store={store} setStore={setStore} />} />
-            <Route path="/coupon-redeem" element={<Navigate replace to="/coupon-issues" />} />
-            <Route path="/coupon-redemptions" element={<Navigate replace to="/coupon-issues" />} />
-            <Route path="/coupon-codes" element={<Navigate replace to="/coupon-batches" />} />
-            <Route path="/coupon-channel-codes" element={<Navigate replace to="/coupon-batches" />} />
-            <Route path="/operation-logs" element={<OperationLogsPage />} />
-            <Route path="/mini-preview/:page" element={<MiniPreviewPage store={store} />} />
-            <Route path="*" element={<Navigate to="/coupons" replace />} />
+            <Route path="/ticket-mini" element={<TicketMiniPage />} />
+            <Route path="/business/themes" element={<ThemeManagement />} />
+            <Route path="/ops/dashboard" element={<OperationsWorkbench store={operationsStore} setStore={setOperationsStore} />} />
+            <Route path="/ops/alerts" element={<AlertCenter store={operationsStore} setStore={setOperationsStore} />} />
+            <Route path="/ops/schedule" element={<DutySchedule store={operationsStore} setStore={setOperationsStore} />} />
+            <Route path="/ops/solutions" element={<SolutionLibrary store={operationsStore} setStore={setOperationsStore} />} />
+            <Route path="*" element={<Navigate to="/ops/dashboard" replace />} />
           </Routes>
         </Content>
       </Layout>

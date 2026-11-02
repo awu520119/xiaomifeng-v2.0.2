@@ -1,0 +1,272 @@
+[
+  {
+    "page": "themes",
+    "name": "新增主题表单",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".theme-toolbar button.ant-btn-primary",
+        "index": 1
+      },
+      {
+        "action": "visible",
+        "selector": ".theme-create-drawer .ant-drawer-body",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "alerts",
+    "name": "告警详情",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".ops-alert-detail-action",
+        "index": 0
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-alert-detail-drawer .ant-drawer-body",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "solutions",
+    "name": "方案表单",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".ops-solution-actions button.ant-btn-primary"
+      },
+      {
+        "action": "visible",
+        "selector": ".ant-drawer-body",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "solutions",
+    "name": "方案详情",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".ops-solution-name button",
+        "index": 0
+      },
+      {
+        "action": "visible",
+        "selector": ".ant-drawer-body",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "solutions",
+    "name": "删除确认取消",
+    "steps": [
+      {
+        "action": "click",
+        "role": "button",
+        "name": "删除",
+        "index": 0
+      },
+      {
+        "action": "visible",
+        "selector": ".ant-popconfirm",
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".ant-popconfirm-buttons .ant-btn-default"
+      },
+      {
+        "action": "hidden",
+        "selector": ".ant-popconfirm"
+      }
+    ]
+  },
+  {
+    "page": "schedule",
+    "name": "新增排班",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".ops-schedule-actions button.ant-btn-primary"
+      },
+      {
+        "action": "visible",
+        "selector": ".ant-modal-body",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "alerts",
+    "name": "搜索及重置",
+    "steps": [
+      {
+        "action": "fill",
+        "selector": "input[aria-label=\"搜索告警名称或设备\"]",
+        "value": "不存在的告警"
+      },
+      {
+        "action": "text",
+        "selector": ".ant-table-placeholder",
+        "value": "暂无告警",
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".ops-filter-grid button.ant-btn-link"
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-alert-detail-action",
+        "index": 0
+      }
+    ]
+  },
+  {
+    "page": "solutions",
+    "name": "搜索及重置",
+    "steps": [
+      {
+        "action": "fill",
+        "selector": "input[aria-label=\"搜索方案名称或故障提示\"]",
+        "value": "不存在的方案"
+      },
+      {
+        "action": "text",
+        "selector": ".ant-table-placeholder",
+        "value": "暂无匹配方案",
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".ops-solution-filter button.ant-btn-link"
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-solution-name",
+        "index": 0
+      }
+    ]
+  },
+  {
+    "page": "dashboard",
+    "name": "设备筛选",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[aria-label=\"设备类型筛选\"]"
+      },
+      {
+        "action": "click",
+        "selector": ".ant-select-item-option[title=\"独立无人机\"]"
+      },
+      {
+        "action": "count",
+        "selector": ".ops-device-tile",
+        "value": 1,
+        "checkpoint": true
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-device-tile"
+      }
+    ]
+  },
+  {
+    "page": "dashboard",
+    "name": "通知阅读与全部已读",
+    "steps": [
+      {
+        "action": "click",
+        "role": "button",
+        "name": "打开通知中心"
+      },
+      {
+        "action": "count",
+        "selector": ".notification-item",
+        "value": 19,
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".notification-item",
+        "index": 0
+      },
+      {
+        "action": "count",
+        "selector": ".notification-item.is-read",
+        "value": 1
+      },
+      {
+        "action": "text",
+        "selector": ".ant-message",
+        "value": "原型仅提示"
+      },
+      {
+        "action": "click",
+        "selector": ".notification-toolbar [data-node-key=\"read\"]"
+      },
+      {
+        "action": "count",
+        "selector": ".notification-item",
+        "value": 1
+      },
+      {
+        "action": "click",
+        "selector": ".notification-read-all"
+      },
+      {
+        "action": "click",
+        "selector": ".notification-toolbar [data-node-key=\"unread\"]"
+      },
+      {
+        "action": "text",
+        "selector": ".notification-list",
+        "value": "暂无未读通知",
+        "checkpoint": true
+      }
+    ]
+  },
+  {
+    "page": "alerts",
+    "name": "查看方案并返回告警",
+    "steps": [
+      {
+        "action": "click",
+        "selector": ".ops-alert-detail-action",
+        "index": 0
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-alert-detail-drawer .ops-alert-timeline-item",
+        "index": 0,
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".ops-alert-detail-drawer .ops-alert-solution button",
+        "index": 0
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-inline-solution-drawer .ops-solution-detail",
+        "checkpoint": true
+      },
+      {
+        "action": "click",
+        "selector": ".ops-inline-solution-drawer .ant-drawer-close"
+      },
+      {
+        "action": "visible",
+        "selector": ".ops-alert-detail-drawer .ops-alert-timeline-item",
+        "index": 0
+      }
+    ]
+  }
+]

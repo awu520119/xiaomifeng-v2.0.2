@@ -5,221 +5,93 @@
   },
   "groups": [
     {
-      "id": "marketing",
-      "title": "优惠券管理",
+      "id": "business",
+      "title": "运营中心",
+      "order": 1
+    },
+    {
+      "id": "operations",
+      "title": "运维管理",
       "order": 2
     },
     {
-      "id": "orders",
-      "title": "订单管理",
-      "order": 2
-    },
-    {
-      "id": "system",
-      "title": "系统管理",
+      "id": "ticket-mini",
+      "title": "景区套票小程序端",
       "order": 3
-    },
-    {
-      "id": "mini",
-      "title": "用户端小程序",
-      "order": 4
     }
   ],
   "pages": [
     {
-      "id": "coupon-management",
-      "title": "优惠券列表",
-      "doc": "优惠券列表PRD-20261022.md",
-      "hash": "#/demo/export/coupon-list",
+      "id": "themes",
+      "title": "主题管理",
+      "doc": "主题管理原型说明.md",
+      "hash": "#/business/themes",
       "mode": "screen",
-      "parent": "marketing",
-      "order": 2
-    },
-    {
-      "id": "coupon-create",
-      "title": "创建优惠券",
-      "doc": "创建优惠券PRD-20261022.md",
-      "hash": "#/demo/export/coupon-create",
-      "mode": "drawer",
-      "parent": "marketing",
+      "parent": "business",
       "order": 1,
-      "dialogTitle": "创建优惠券"
+      "ready": {
+        "selector": ".app-content"
+      }
     },
     {
-      "id": "coupon-authorization",
-      "title": "发券权限",
-      "doc": "发券权限PRD-20261022.md",
-      "hash": "#/demo/export/coupon-authorization",
-      "mode": "drawer",
-      "parent": "marketing",
+      "id": "dashboard",
+      "title": "运维工作台",
+      "doc": "运维管理PRD-20261028.md",
+      "hash": "#/ops/dashboard",
+      "mode": "screen",
+      "parent": "operations",
+      "order": 2,
+      "ready": {
+        "selector": ".app-content"
+      }
+    },
+    {
+      "id": "alerts",
+      "title": "告警中心",
+      "doc": "运维管理PRD-20261028.md",
+      "hash": "#/ops/alerts",
+      "mode": "screen",
+      "parent": "operations",
       "order": 3,
-      "dialogTitle": "发券权限"
+      "ready": {
+        "selector": ".app-content"
+      }
     },
     {
-      "id": "coupon-directed",
-      "title": "定向发放",
-      "doc": "定向发放PRD-20261022.md",
-      "hash": "#/demo/export/coupon-directed",
+      "id": "schedule",
+      "title": "值班排班",
+      "doc": "运维管理PRD-20261028.md",
+      "hash": "#/ops/schedule",
       "mode": "screen",
-      "parent": "marketing",
+      "parent": "operations",
       "order": 4,
-      "dialogTitle": "定向发放"
+      "ready": {
+        "selector": ".app-content"
+      }
     },
     {
-      "id": "coupon-public",
-      "title": "公开发放",
-      "doc": "公开发放PRD-20261022.md",
-      "hash": "#/demo/export/coupon-public",
+      "id": "solutions",
+      "title": "处置方案库",
+      "doc": "运维管理PRD-20261028.md",
+      "hash": "#/ops/solutions",
       "mode": "screen",
-      "parent": "marketing",
+      "parent": "operations",
       "order": 5,
-      "dialogTitle": "公开发放"
+      "ready": {
+        "selector": ".app-content"
+      }
     },
     {
-      "id": "coupon-detail",
-      "title": "优惠券详情",
-      "doc": "优惠券详情PRD-20261022.md",
-      "hash": "#/demo/export/coupon-detail",
-      "mode": "drawer",
-      "parent": "marketing",
-      "order": 8,
-      "dialogTitle": "优惠券详情"
-    },
-    {
-      "id": "coupon-codes",
-      "title": "查看券码",
-      "doc": "查看券码PRD-20261022.md",
-      "hash": "#/demo/export/coupon-codes",
-      "mode": "drawer",
-      "parent": "marketing",
-      "order": 6,
-      "dialogTitle": "查看券码"
-    },
-    {
-      "id": "coupon-code-detail",
-      "title": "券码详情",
-      "doc": "券码详情PRD-20261022.md",
-      "hash": "#/demo/export/coupon-code-detail",
+      "id": "ticket-mini",
+      "title": "套票浏览与下单",
+      "doc": "景区套票小程序端原型说明.md",
+      "hash": "#/ticket-mini",
       "mode": "screen",
-      "parent": "marketing",
-      "order": 7,
-      "dialogTitle": "券码详情"
-    },
-    {
-      "id": "coupon-records",
-      "title": "优惠券记录",
-      "doc": "优惠券记录PRD-20261022.md",
-      "hash": "#/demo/export/coupon-usage",
-      "mode": "screen",
-      "parent": "marketing",
-      "order": 9
-    },
-    {
-      "id": "issuer-center",
-      "title": "发券",
-      "doc": "发券PRD-20261022.md",
-      "hash": "#/demo/export/issuer-coupons",
-      "mode": "screen",
-      "parent": "marketing",
-      "order": 10
-    },
-    {
-      "id": "issuer-records",
-      "title": "发放记录",
-      "doc": "发放记录PRD-20261022.md",
-      "hash": "#/demo/export/issuer-records",
-      "mode": "screen",
-      "parent": "marketing",
-      "order": 11
-    },
-    {
-      "id": "order-list",
-      "title": "订单详情（优惠券）",
-      "doc": "订单详情（优惠券）PRD-20261022.md",
-      "hash": "#/demo/export/order-coupon-detail",
-      "mode": "drawer",
-      "parent": "orders",
+      "parent": "ticket-mini",
       "order": 1,
-      "dialogTitle": "订单详情"
-    },
-    {
-      "id": "operation-logs",
-      "title": "操作日志",
-      "doc": "操作日志PRD-20261022.md",
-      "hash": "#/demo/export/operation-logs",
-      "mode": "screen",
-      "parent": "system",
-      "order": 1
-    },
-    {
-      "id": "mini-receive",
-      "title": "领取页",
-      "doc": "小程序领取页PRD-20261022.md",
-      "hash": "#/demo/export/mini-receive?phone=13800000002",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 1
-    },
-    {
-      "id": "mini-redeem",
-      "title": "兑换页",
-      "doc": "小程序兑换页PRD-20261022.md",
-      "hash": "#/demo/export/mini-redeem?phone=13800000001",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 2
-    },
-    {
-      "id": "mini-wallet",
-      "title": "我的券包",
-      "doc": "小程序券包PRD-20261022.md",
-      "hash": "#/demo/export/mini-wallet?phone=13800000001",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 3
-    },
-    {
-      "id": "mini-coupon-detail",
-      "title": "优惠券详情",
-      "doc": "小程序券详情PRD-20261022.md",
-      "hash": "#/demo/export/mini-coupon-detail?phone=13800000001&detail=first",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 4
-    },
-    {
-      "id": "mini-theme-list",
-      "title": "主题列表",
-      "doc": "小程序主题列表PRD-20261027.md",
-      "hash": "#/demo/export/mini-theme-list?phone=13800000001",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 5
-    },
-    {
-      "id": "mini-checkout",
-      "title": "确认订单",
-      "doc": "小程序下单选券PRD-20261026.md",
-      "hash": "#/demo/export/mini-checkout?phone=13800000001",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 6
-    },
-    {
-      "id": "mini-order",
-      "title": "订单详情",
-      "doc": "小程序订单详情PRD-20261022.md",
-      "hash": "#/demo/export/mini-order?phone=13800000001",
-      "mode": "screen",
-      "device": "mobile",
-      "parent": "mini",
-      "order": 7
+      "ready": {
+        "selector": ".ticket-mini-frame iframe"
+      }
     }
   ]
 }

@@ -1,0 +1,34 @@
+.theme-create-drawer .ant-drawer-body { padding: 24px; }
+.theme-create-footer { width: 100%; justify-content: flex-end; }
+.theme-create-steps { margin: 8px 0 28px; }
+.theme-create-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+.theme-delivery-card { margin-bottom: 16px; }
+.theme-create-drawer .ant-table-cell .ant-form-item { margin-bottom: 0; }
+@media (max-width: 600px) { .theme-create-grid { grid-template-columns: 1fr; } }
+
+.theme-cover-upload { display: block; width: min(100%, 304px); }
+.theme-cover-upload .ant-upload { display: block; width: 100%; }
+.theme-cover-trigger { display: flex; width: 100%; min-height: 160px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; border: 1px solid #adc6ff; background: #f3f6ff; color: var(--admin-color-primary); cursor: pointer; font: inherit; font-size: 14px; }
+.theme-cover-trigger .anticon { font-size: 20px; }
+.theme-cover-trigger:hover, .theme-cover-trigger:focus-visible { border-color: var(--admin-color-primary); outline-color: var(--admin-color-primary); }
+
+.route-points-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin: 4px 0 12px; }
+.route-points-header strong { color: var(--admin-color-text); font-weight: 500; }
+.route-points-header div div, .route-points-header > span, .route-points-empty { color: var(--admin-color-text-secondary); font-size: 12px; line-height: 20px; }
+.route-point-options { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 20px; }
+.route-point-options .ant-checkbox-wrapper { margin: 0; }
+.route-points-empty { padding: 14px 0 20px; }
+.route-point-card { margin-bottom: 16px; border-color: var(--admin-color-split); }
+.route-point-card .ant-card-head { min-height: 48px; }
+.route-point-card .ant-card-body { padding: 16px; }
+.route-point-card .ant-form-item:last-child { margin-bottom: 0; }
+.route-point-number { display: inline-grid; width: 22px; height: 22px; margin-right: 8px; place-items: center; border-radius: 50%; background: var(--admin-color-primaryLight); color: var(--admin-color-primary); font-size: 12px; }
+
+.combo-templates { margin: 8px 0 24px; }
+.combo-header { display: grid; gap: 4px; margin: 0 0 16px; }
+.combo-header strong { font-size: 14px; font-weight: 500; color: var(--admin-color-text); }
+.combo-header span, .combo-card .ant-card-extra { color: var(--admin-color-text-secondary); font-size: 12px; }
+.combo-card { margin-bottom: 12px; border-color: var(--admin-color-split); }
+.combo-card .ant-card-head-title { white-space: normal; overflow-wrap: anywhere; }
+.combo-card .ant-card-body { padding: 16px; }
+.combo-card .ant-form-item:last-child { margin-bottom: 0; }

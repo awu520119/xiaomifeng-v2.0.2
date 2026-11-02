@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅拍小程序 · 低保真线框图 v2（真实数据 + 可交互）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: #ececec;
+    color: #2a2a2a;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: 32px 16px 80px; min-height: 100vh;
+  }
+
+  /* ============ 外层 ============ */
+  .stage { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+
+  /* ============ 手机 ============ */
+  .phone {
+    width: 360px; height: 760px; background: transparent; border-radius: 0; padding: 0;
+    box-shadow: none; flex-shrink: 0;
+  }
+  .screen {
+    width: 100%; height: 100%; background: #fff; border-radius: 0; overflow: hidden;
+    position: relative; border: 1px solid #e5e5e5;
+  }
+  .screens-wrap { width: 200%; height: 100%; display: flex; transition: transform 0.28s ease; }
+  .screens-wrap.show-detail { transform: translateX(-50%); }
+  .screen-page { width: 50%; height: 100%; overflow-y: auto; position: relative; }
+
+  /* ============ 订单详情页（多点联拍） · 全屏覆盖 ============
+     结构：.order-overlay (flex column, 不滚动)
+            ├── .status-bar (sticky top)
+            ├── .order-nav (sticky top)
+            ├── .order-body (flex:1, overflow-y:auto, 内容滚动)
+            └── .order-cta (flex-shrink:0, 固定吸底)
+     注意：必须放在 .screen 内（不是 .screens-wrap 内），因为 .screens-wrap 的 transform
+     会改变 position: absolute/fixed 子元素的 containing block，导致位置偏移。 */
+  .order-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: #fff; z-index: 200;
+    transform: translateX(100%); transition: transform 0.28s ease;
+    overflow: hidden;
+  }
+  .order-overlay.show { transform: translateX(0); }
+
+  .order-body {
+    flex: 1 1 0; min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .order-body::-webkit-scrollbar { display: none; }
+  .order-body { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .order-nav {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; border-bottom: 1px solid #f0f0f0; background: #fff;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .order-nav .back { font-size: 24px; cursor: pointer; width: 28px; color: #1a1a1a; line-height: 1; }
+  .order-nav .title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .order-nav .more { font-size: 18px; color: #888; cursor: pointer; letter-spacing: 1px; }
+
+  .order-hero {
+    position: relative; height: 150px; overflow: hidden;
+    background: repeating-linear-gradient(135deg, #d8d8d8 0 14px, #b0b0b0 14px 28px);
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .order-hero .status-badge {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(255,255,255,0.95); color: #1a1a1a;
+    padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .order-hero .status-badge::before { content: '⏰'; }
+  .order-hero .status-badge.shooting::before { content: '●'; }
+  .order-hero .status-badge.done::before { content: '✓'; }
+  .order-hero .hero-meta {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.5); color: #fff;
+    padding: 3px 8px; border-radius: 3px; font-size: 10px;
+  }
+
+  .theme-summary { padding: 12px 14px 10px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+  .theme-summary .ts-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; line-height: 1.35; }
+  .theme-summary .ts-price-row { display: flex; align-items: baseline; gap: 8px; }
+  .theme-summary .ts-price { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .theme-summary .ts-price .y { font-size: 12px; }
+  .theme-summary .ts-orig { font-size: 11px; color: #bbb; text-decoration: line-through; }
+  .theme-summary .ts-tag { font-size: 9px; padding: 2px 6px; background: #1a1a1a; color: #fff; border-radius: 2px; }
+
+  .order-section { margin: 10px 12px 0; border: 1px solid #ccc; border-radius: 6px; background: #fff; overflow: hidden; }
+  .order-section .sec-h {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid #f0f0f0; background: #fafafa;
+  }
+  .order-section .sec-h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .order-section .sec-h .r { font-size: 10px; color: #888; }
+
+  /* 拍摄点路线 · 多点联拍核心模块 */
+  .route-list { padding: 0; }
+  .route-point {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; position: relative;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .route-point:active { background: #fafafa; }
+  .route-point:not(:last-child) { border-bottom: 1px dashed #e5e5e5; }
+  .route-point .ord {
+    width: 22px; height: 22px; background: #1a1a1a; color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .route-point .info { flex: 1; min-width: 0; }
+  .route-point .info .row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; flex-wrap: wrap; }
+  .route-point .info .name { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .route-point .info .open-tag { font-size: 8px; padding: 1px 4px; background: #1a1a1a; color: #fff; border-radius: 2px; }
+  .route-point .info .open-tag.closed { background: #888; }
+  .route-point .info .meta { font-size: 10px; color: #888; }
+  .route-point .actions { display: flex; gap: 10px; flex-shrink: 0; }
+  .route-point .actions span {
+    font-size: 10px; color: #1a1a1a; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 2px;
+  }
+
+  /* 拍摄进度状态 */
+  .route-point.done .ord {
+    background: #1a1a1a; color: #fff;
+    border: 2px solid #1a1a1a;
+  }
+  .route-point.done .name {
+    color: #888;
+    text-decoration: line-through;
+  }
+  .route-point.done .open-tag { background: #1a1a1a; }
+
+  .route-point.shooting .ord {
+    background: #fff;
+    color: #1a1a1a;
+    border: 2px solid #1a1a1a;
+    animation: ring-pulse 1.4s ease-in-out infinite;
+  }
+  .route-point.shooting .open-tag {
+    background: #1a1a1a;
+    animation: ring-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes ring-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* 进度条（在 sec-h 右侧） */
+  .route-progress {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; color: #1a1a1a; font-weight: 700;
+  }
+  .route-progress .bar {
+    width: 50px; height: 4px; background: #e5e5e5; border-radius: 2px;
+    position: relative; overflow: hidden;
+  }
+  .route-progress .bar-fill {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    background: #1a1a1a; border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .order-info { margin: 10px 12px 0; border: 1px solid #ccc; border-radius: 6px; padding: 0; background: #fff; overflow: hidden; }
+  .order-info .sec-h { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
+  .order-info .row { display: flex; justify-content: space-between; padding: 7px 12px; font-size: 11px; align-items: center; }
+  .order-info .row .l { color: #888; }
+  .order-info .row .r { color: #1a1a1a; font-weight: 600; }
+  .order-info .row.total .r { color: #1a1a1a; font-size: 14px; font-weight: 700; }
+  .order-info .row.total { background: #fafafa; border-top: 1px solid #f0f0f0; }
+
+  .order-cta {
+    flex-shrink: 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    padding: 8px 12px 12px;
+    display: flex; gap: 10px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  }
+  .order-cta .btn-secondary {
+    flex: 0.8; height: 40px;
+    background: #fff; color: #1a1a1a;
+    border: 1px solid #1a1a1a;
+    border-radius: 20px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .order-cta .btn-primary {
+    flex: 1.4; height: 40px;
+    background: #1a1a1a; color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .order-cta.shooting { display: block; }
+  .order-cta.complete .btn-secondary,
+  .order-cta.complete .btn-primary { flex: 1; }
+  .order-cta .shooting-tip {
+    min-height: 44px;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .order-cta .shooting-tip .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #1a1a1a;
+    animation: ring-pulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .order-cta .shooting-tip .main { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.3; }
+  .order-cta .shooting-tip .sub { font-size: 10px; color: #777; line-height: 1.4; margin-top: 2px; }
+
+  /* 订单详情页内的交付物概览（精简版） */
+  .order-deliver { padding: 8px; display: flex; gap: 6px; }
+  .order-deliver-item {
+    flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 6px 4px;
+    text-align: center; background: #fafafa;
+  }
+  .order-deliver-item .ico { font-size: 14px; margin-bottom: 2px; }
+  .order-deliver-item .name { font-size: 10px; color: #1a1a1a; font-weight: 600; margin-bottom: 2px; }
+  .order-deliver-item .ct { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+  .order-deliver-item .ct .u { font-size: 9px; color: #888; font-weight: 400; }
+  .order-deliver-item .spec { margin-top: 3px; font-size: 8px; color: #777; line-height: 1.35; }
+
+  /* 成片详情页 · 全屏覆盖 */
+  .work-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: #fff; z-index: 260;
+    transform: translateX(100%); transition: transform 0.28s ease;
+    overflow: hidden;
+  }
+  .work-overlay.show { transform: translateX(0); }
+  .work-body {
+    flex: 1 1 0; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; padding: 10px 12px 12px;
+  }
+  .work-body::-webkit-scrollbar { display: none; }
+  .work-status {
+    border: 1px solid #1a1a1a; border-radius: 6px;
+    padding: 12px; background: #fafafa; margin-bottom: 10px;
+  }
+  .work-status .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .work-status .main { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .work-status .tag { font-size: 9px; font-weight: 700; border: 1px solid #1a1a1a; background: #fff; padding: 2px 6px; border-radius: 3px; }
+  .work-status .sub { font-size: 10px; color: #777; line-height: 1.5; }
+  .work-feature {
+    border: 1px solid #1a1a1a; border-radius: 6px; overflow: hidden; background: #fff; margin-bottom: 10px;
+  }
+  .work-feature-thumb {
+    height: 180px; position: relative; display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(135deg, #d0d0d0 0 14px, #b8b8b8 14px 28px);
+    border-bottom: 1px solid #1a1a1a; cursor: pointer;
+  }
+  .work-feature-thumb .play { width: 56px; height: 56px; border: 2px solid #1a1a1a; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; padding-left: 3px; font-size: 20px; }
+  .work-feature-thumb .duration { position: absolute; right: 10px; bottom: 10px; padding: 3px 8px; background: #1a1a1a; color: #fff; border-radius: 3px; font-size: 10px; }
+  .work-feature-info { padding: 10px 12px; }
+  .work-feature-info .name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .work-feature-info .meta { font-size: 10px; color: #777; line-height: 1.45; }
+  .work-action-row { display: flex; gap: 8px; margin-top: 9px; }
+  .work-action-row button {
+    flex: 1; height: 30px; border-radius: 15px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .work-action-row .light { background: #fff; border: 1px solid #1a1a1a; color: #1a1a1a; }
+  .work-action-row .dark { background: #1a1a1a; border: none; color: #fff; }
+  .work-section { margin: 10px 0 0; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; background: #fff; }
+  .work-section .sec-h {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid #f0f0f0; background: #fafafa;
+  }
+  .work-section .sec-h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .work-section .sec-h .r { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #888; }
+  .work-mini-action { border: 1px solid #999; background: #fff; color: #1a1a1a; border-radius: 10px; padding: 2px 7px; font-size: 9px; font-weight: 700; cursor: pointer; }
+  .work-video-list { padding: 8px; display: grid; gap: 8px; }
+  .work-video-card { border: 1px solid #ccc; border-radius: 5px; background: #fafafa; overflow: hidden; }
+  .work-video-thumb {
+    height: 92px; position: relative; display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(135deg, #d4d4d4 0 10px, #c8c8c8 10px 20px);
+    border-bottom: 1px solid #ddd;
+  }
+  .work-video-thumb .play { width: 38px; height: 38px; border: 1px solid #1a1a1a; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; padding-left: 2px; }
+  .work-video-thumb .duration { position: absolute; right: 8px; bottom: 7px; padding: 2px 6px; background: #1a1a1a; color: #fff; border-radius: 3px; font-size: 9px; }
+  .work-video-info { padding: 8px 10px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .work-video-info .name { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .work-video-info .meta { font-size: 10px; color: #777; margin-top: 2px; }
+  .work-video-actions { padding: 0 10px 9px; display: flex; gap: 7px; }
+  .work-video-actions button { flex: 1; height: 28px; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; }
+  .work-video-actions .light { background: #fff; border: 1px solid #1a1a1a; color: #1a1a1a; }
+  .work-video-actions .dark { background: #1a1a1a; border: none; color: #fff; }
+  .work-photo-grid { padding: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .work-photo {
+    aspect-ratio: 1; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; position: relative; overflow: hidden;
+    background: repeating-linear-gradient(135deg, #d8d8d8 0 8px, #c8c8c8 8px 16px);
+  }
+  .work-photo .idx { position: absolute; left: 4px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 1px solid #999; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #555; }
+  .work-photo .pa { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(0,0,0,0.2); background: rgba(255,255,255,0.86); }
+  .work-photo .pa span { display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #1a1a1a; }
+  .work-photo .pa span + span { border-left: 1px solid rgba(0,0,0,0.2); }
+  .work-route { padding: 8px 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .work-route span { border: 1px solid #ccc; border-radius: 4px; background: #fafafa; padding: 4px 6px; font-size: 9px; color: #555; }
+  .work-route span.pending { border-style: dashed; color: #999; background: #fff; }
+  .work-resource-list { display: grid; gap: 8px; margin-top: 10px; }
+  .work-resource {
+    border: 1px solid #ccc; border-radius: 6px; background: #fff; padding: 10px;
+    display: grid; gap: 8px;
+  }
+  .work-resource-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .work-resource .name { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+  .work-resource .meta { font-size: 10px; color: #777; line-height: 1.45; }
+  .work-resource .count { font-size: 11px; color: #1a1a1a; font-weight: 700; white-space: nowrap; }
+  .work-photo-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .work-photo-strip .ph {
+    aspect-ratio: 1; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;
+    background: repeating-linear-gradient(135deg, #d8d8d8 0 8px, #c8c8c8 8px 16px);
+  }
+  .work-deliver-section { border: 1px solid #ccc; border-radius: 6px; background: #fff; overflow: hidden; margin-top: 10px; }
+  .work-deliver-section .h {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; background: #fafafa; border-bottom: 1px solid #f0f0f0;
+  }
+  .work-deliver-section .h .title { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .work-deliver-section .h .count { font-size: 10px; color: #777; }
+  .work-video-rows { display: grid; gap: 8px; padding: 8px; }
+  .work-video-row { border: 1px solid #ccc; border-radius: 5px; background: #fafafa; overflow: hidden; }
+  .work-video-row .thumb {
+    height: 86px; position: relative; display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(135deg, #d4d4d4 0 10px, #c8c8c8 10px 20px);
+    border-bottom: 1px solid #ddd; cursor: pointer;
+  }
+  .work-video-row .play { width: 34px; height: 34px; border: 1px solid #1a1a1a; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; padding-left: 2px; }
+  .work-video-row .duration { position: absolute; right: 8px; bottom: 7px; padding: 2px 6px; background: #1a1a1a; color: #fff; border-radius: 3px; font-size: 9px; }
+  .work-video-row .info { padding: 8px 10px; }
+  .work-video-row .name { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .work-video-row .meta { font-size: 10px; color: #777; line-height: 1.4; }
+  .work-item-actions { display: flex; gap: 7px; padding: 0 10px 9px; }
+  .work-item-actions button { flex: 1; height: 28px; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; }
+  .work-item-actions .light { background: #fff; border: 1px solid #1a1a1a; color: #1a1a1a; }
+  .work-item-actions .dark { background: #1a1a1a; border: none; color: #fff; }
+  .work-photo-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
+  .work-photo-card { border: 1px solid #ccc; border-radius: 5px; background: #fafafa; overflow: hidden; }
+  .work-photo-card .thumb {
+    aspect-ratio: 1; cursor: pointer; position: relative;
+    background: repeating-linear-gradient(135deg, #d8d8d8 0 8px, #c8c8c8 8px 16px);
+  }
+  .work-photo-card .idx { position: absolute; left: 5px; top: 5px; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 1px solid #999; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #555; }
+  .work-photo-tip { padding: 0 10px 10px; font-size: 10px; color: #777; line-height: 1.45; }
+  .screen-page::-webkit-scrollbar { display: none; }
+  .screen-page { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* 状态栏 */
+  .status-bar { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 10px; color: #888; border-bottom: 1px solid #f0f0f0; background: #fff; position: sticky; top: 0; z-index: 5; }
+
+  /* ============ 通用低保真样式 ============ */
+  .wf-img { background: repeating-linear-gradient(135deg, #e0e0e0 0 6px, #d4d4d4 6px 12px); }
+  .wf-img-d { background: repeating-linear-gradient(135deg, #c8c8c8 0 6px, #b8b8b8 6px 12px); }
+  .wf-divider { height: 1px; background: #eee; margin: 0 12px; }
+
+  .hero {
+    height: 170px; position: relative; overflow: hidden;
+    background: repeating-linear-gradient(135deg, #d8d8d8 0 14px, #c8c8c8 14px 28px);
+    border-bottom: 1px solid #1a1a1a;
+  }
+  /* 景区介绍 · 展开/收起（背景信息层，克制） */
+  .scenic-intro { padding: 8px 14px 6px; position: relative; }
+  .scenic-intro .intro-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 5px; line-height: 1.3; }
+  .scenic-intro .intro-text { font-size: 10px; color: #888; line-height: 1.6; }
+  .scenic-intro .intro-text.collapsed { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .scenic-intro .intro-toggle { font-size: 10px; color: #555; font-weight: 600; margin-top: 4px; cursor: pointer; display: inline-block; }
+
+  /* 拍摄模式 · 精致浮起分段控件 */
+  .mode-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+  .mode-picker {
+    margin: 0 14px 12px; background: #f0f0f0; border-radius: 10px; padding: 4px;
+    display: flex; position: relative;
+  }
+  .mode-picker .mp {
+    flex: 1; height: 38px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-size: 13px; color: #999; cursor: pointer; transition: all 0.22s ease;
+    position: relative; z-index: 1; font-weight: 500;
+  }
+  .mode-picker .mp.active {
+    background: #fff; color: #1a1a1a; font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.05);
+  }
+  .mode-picker .mp .ico { display: flex; align-items: center; gap: 3px; }
+  .mode-picker .mp .ico .d { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .mode-picker .mp .new-tag {
+    position: absolute; top: -1px; right: 10px; font-size: 8px; font-weight: 700;
+    background: #1a1a1a; color: #fff; padding: 1px 5px; border-radius: 0 0 3px 3px;
+    letter-spacing: 0.3px; line-height: 1.4;
+  }
+
+  /* 拍摄点切换器 · 紧跟模式 header，作为二级筛选 */
+  .point-section { margin-top: 10px; margin-bottom: 12px; }
+  .point-section .h { display: flex; justify-content: space-between; align-items: center; padding: 0 14px; margin-bottom: 8px; font-size: 11px; color: #555; }
+  .point-section .h .more-btn { color: #888; cursor: pointer; }
+  .point-section .h .to-go { color: #1a1a1a; font-weight: 600; cursor: pointer; }
+  .point-scroll { display: flex; gap: 8px; padding: 0 14px 8px; overflow-x: auto; }
+  .point-scroll::-webkit-scrollbar { display: none; }
+  .point-card {
+    width: 70px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 5px; padding: 3px;
+    background: #fff; cursor: pointer; position: relative;
+  }
+  .point-card.active { border: 1.5px solid #1a1a1a; background: #f5f5f5; }
+  .point-card.disabled { opacity: 0.5; cursor: not-allowed; }
+  .point-card .img { height: 36px; background: repeating-linear-gradient(135deg, #e0e0e0 0 5px, #d4d4d4 5px 10px); border-radius: 3px; margin-bottom: 3px; position: relative; }
+  .point-card .badge-open { position: absolute; top: 2px; left: 2px; font-size: 7px; padding: 1px 3px; background: #555; color: #fff; border-radius: 1px; }
+  .point-card .badge-closed { background: #888; }
+  .point-card .check { position: absolute; top: 2px; right: 2px; width: 11px; height: 11px; background: #1a1a1a; color: #fff; border-radius: 50%; font-size: 7px; display: none; align-items: center; justify-content: center; }
+  .point-card.active .check { display: flex; }
+  .point-card .name { font-size: 9px; color: #1a1a1a; font-weight: 600; margin-bottom: 1px; }
+  .point-card .dist { font-size: 7px; color: #999; }
+  .point-card.more-card .img { background: #f5f5f5; border: 1px dashed #aaa; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #aaa; }
+
+  /* 上下文条 */
+  .context-bar {
+    margin: 0 12px 12px; padding: 9px 11px; border: 1px solid #999; border-radius: 5px;
+    background: #f9f9f9; display: flex; justify-content: space-between; align-items: center;
+  }
+  .context-bar .l .name { font-size: 11px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+  .context-bar .l .meta { font-size: 10px; color: #888; }
+  .context-bar.multi .l .name { display: flex; align-items: center; gap: 4px; }
+  .context-bar .r { font-size: 10px; color: #888; }
+
+  /* 主题列表卡 */
+  .list-card {
+    margin: 0 14px 10px; border: 1px solid #bbb; border-radius: 6px; overflow: hidden;
+    background: #fff; cursor: pointer; transition: transform 0.15s;
+  }
+  .list-card:active { transform: scale(0.99); }
+  .list-card .img {
+    height: 100px; position: relative;
+    background: repeating-linear-gradient(135deg, #d4d4d4 0 8px, #c8c8c8 8px 16px);
+  }
+  .list-card .save-tag { position: absolute; top: 6px; right: 6px; font-size: 10px; padding: 2px 6px; background: #555; color: #fff; border-radius: 2px; }
+  .list-card .hot { position: absolute; top: 6px; right: 56px; font-size: 10px; padding: 2px 6px; background: #fff; color: #1a1a1a; border: 1px solid #1a1a1a; border-radius: 8px; }
+  .list-card .meta-pill { position: absolute; bottom: 6px; left: 6px; font-size: 10px; padding: 2px 6px; background: #fff; color: #1a1a1a; border-radius: 2px; border: 1px solid #1a1a1a; }
+  .list-card .info { padding: 8px 10px; }
+  .list-card .title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; line-height: 1.3; }
+  .list-card .row { display: flex; justify-content: space-between; align-items: center; }
+  .price-wrap { display: flex; align-items: baseline; gap: 5px; }
+  .price-orig { font-size: 10px; color: #bbb; text-decoration: line-through; }
+  .price-now { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .price-now .y { font-size: 10px; }
+  .cta { background: #1a1a1a; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .card-arrow { color: #888; font-size: 11px; font-weight: 500; }
+  .list-card:active .card-arrow { color: #1a1a1a; }
+
+  /* 帮助浮标 */
+  /* 空状态 */
+  .empty-state { text-align: center; padding: 40px 20px; color: #999; font-size: 12px; }
+  .empty-state .ico { font-size: 28px; margin-bottom: 6px; }
+
+  /* ============ 详情页 ============ */
+  .detail-hero {
+    height: 180px; position: relative; overflow: hidden;
+    background: repeating-linear-gradient(135deg, #d4d4d4 0 12px, #c8c8c8 12px 24px);
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .detail-hero .play-btn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 60px; height: 60px; background: #fff; border: 2px solid #1a1a1a; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1a1a1a;
+    cursor: pointer; transition: transform 0.15s; z-index: 3; padding-left: 4px;
+  }
+  .detail-hero .play-btn:active { transform: translate(-50%, -50%) scale(0.92); }
+
+  .detail-body { padding: 12px; padding-bottom: 16px; }
+  .detail-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .detail-title { font-size: 16px; font-weight: 700; color: #1a1a1a; flex: 1; line-height: 1.4; }
+  .detail-likes { border: 1px solid #888; border-radius: 4px; padding: 3px 8px; font-size: 11px; color: #555; cursor: pointer; }
+  .detail-likes.liked { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+  .badges { margin-bottom: 6px; }
+  .badges .b { display: inline-block; font-size: 10px; padding: 2px 6px; background: #f0f0f0; border: 1px solid #bbb; color: #555; border-radius: 2px; }
+  .detail-subtitle { font-size: 11px; color: #888; line-height: 1.5; margin-bottom: 10px; }
+
+  /* 价格条 */
+  .price-banner {
+    display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+    border: 1px solid #1a1a1a; border-radius: 6px; margin-bottom: 12px; background: #fafafa;
+  }
+  .price-banner .l { display: flex; align-items: baseline; gap: 6px; }
+  .price-banner .now { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .price-banner .now .y { font-size: 12px; }
+  .price-banner .orig { font-size: 11px; color: #bbb; text-decoration: line-through; }
+  .price-banner .save-tag { font-size: 11px; padding: 2px 6px; background: #1a1a1a; color: #fff; border-radius: 2px; }
+
+  /* 交付物 bundle */
+  .deliver-bundle { border: 1px solid #bbb; border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+  .deliver-bundle .bundle-h { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px 6px; }
+  .deliver-bundle .bundle-h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .deliver-bundle .bundle-h .r { font-size: 10px; color: #888; }
+  .deliver-grid { display: flex; gap: 6px; padding: 6px 12px 10px; }
+  .deliver-grid-item { flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 8px 4px; text-align: center; background: #fafafa; cursor: pointer; }
+  .deliver-grid-item:active { transform: scale(0.97); }
+  .deliver-grid-item .dg-icon { font-size: 16px; margin-bottom: 3px; }
+  .deliver-grid-item .dg-name { font-size: 10px; color: #1a1a1a; margin-bottom: 3px; font-weight: 600; }
+  .deliver-grid-item .dg-count { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .deliver-grid-item .dg-count .unit { font-size: 9px; color: #888; font-weight: 400; }
+  .deliver-grid-item .dg-spec { font-size: 9px; color: #999; }
+  .deliver-grid-item .dg-versions { margin-top: 5px; display: grid; gap: 3px; }
+  .deliver-grid-item .dg-version {
+    display: flex; justify-content: space-between; align-items: center; gap: 4px;
+    padding: 3px 5px; border: 1px solid #ddd; border-radius: 3px; background: #fff;
+    font-size: 8px; color: #555; line-height: 1.2;
+  }
+  .deliver-grid-item .dg-duration { font-weight: 700; color: #1a1a1a; white-space: nowrap; }
+
+  /* 统计条 */
+  .detail-stats { display: flex; gap: 0; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px; background: #fafafa; }
+  .detail-stats .stat { flex: 1; text-align: center; }
+  .detail-stats .stat .v { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .detail-stats .stat .v .u { font-size: 10px; color: #888; font-weight: 400; }
+  .detail-stats .stat .l { font-size: 10px; color: #888; }
+  .detail-stats .stat-divider { width: 1px; background: #ddd; }
+
+  /* 路线时间线 */
+  .route-timeline { margin-bottom: 12px; }
+  .route-timeline .timeline-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .route-timeline .timeline-h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .route-timeline .timeline-h .more { font-size: 10px; color: #888; cursor: pointer; }
+  .route-map {
+    height: 74px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;
+    background: repeating-linear-gradient(135deg, #ececec 0 8px, #e0e0e0 8px 16px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #777; cursor: pointer;
+  }
+  .route-step { display: flex; gap: 10px; padding-bottom: 12px; position: relative; }
+  .route-step:not(:last-child)::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 1px; background: #ccc; }
+  .route-step .ord-col { flex-shrink: 0; }
+  .route-step .ord-circle { width: 24px; height: 24px; background: #1a1a1a; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .route-step .step-content { flex: 1; }
+  .route-step .step-name { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+  .route-step .step-desc { font-size: 10px; color: #888; margin-bottom: 6px; }
+  .route-step .step-meta { font-size: 9px; color: #777; margin-bottom: 6px; line-height: 1.35; }
+  .route-step .step-actions { display: flex; gap: 8px; margin-top: 7px; }
+  .route-step .step-actions span {
+    height: 24px; min-width: 52px; padding: 0 8px; border: 1px solid #aaa; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #1a1a1a; cursor: pointer; background: #fff;
+  }
+  .angle-thumbs { display: flex; gap: 8px; }
+  .angle-thumb {
+    width: 52px; height: 40px; background: repeating-linear-gradient(135deg, #d4d4d4 0 5px, #c8c8c8 5px 10px);
+    border-radius: 4px; border: 1.5px solid #1a1a1a; cursor: pointer; position: relative;
+    transition: transform 0.15s;
+  }
+  .angle-thumb:hover { transform: scale(1.05); }
+  .angle-thumb:active { transform: scale(0.95); }
+  .angle-thumb .zoom-ico {
+    position: absolute; right: 3px; bottom: 3px;
+    width: 16px; height: 16px; background: rgba(255,255,255,0.92); border: 1px solid #1a1a1a;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: #1a1a1a; font-weight: 700;
+  }
+
+  /* 详情 tab */
+  .detail-tabs { display: flex; gap: 20px; border-bottom: 1px solid #eee; margin: 4px 0 12px; }
+  .detail-tabs .t { padding-bottom: 8px; font-size: 12px; color: #888; cursor: pointer; position: relative; }
+  .detail-tabs .t.active { color: #1a1a1a; font-weight: 700; }
+  .detail-tabs .t.active::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 16px; height: 2px; background: #1a1a1a; }
+
+  .tab-content { margin-bottom: 12px; display: none; }
+  .tab-content.active { display: block; }
+  .deliverable-card { border: 1px solid #ccc; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+  .deliverable-card.rec { border-color: #1a1a1a; }
+  .deliverable-card .h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .deliverable-card .h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .deliverable-card .body-text { font-size: 11px; color: #666; line-height: 1.8; }
+
+  /* 步骤条 */
+  .step-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px; background: #fafafa; }
+  .step-bar .step { text-align: center; flex: 1; }
+  .step-bar .step .icon { width: 24px; height: 24px; border: 1px solid #bbb; border-radius: 50%; margin: 0 auto 4px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #888; }
+  .step-bar .step.active .icon { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+  .step-bar .step.done .icon { border-color: #555; background: #555; color: #fff; }
+  .step-bar .step .label { font-size: 10px; color: #888; }
+  .step-bar .step.active .label { color: #1a1a1a; font-weight: 600; }
+  .step-bar .arrow { color: #ccc; font-size: 12px; }
+
+  /* 拍摄点卡 */
+  .loc-card { border: 1px solid #ccc; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
+  .loc-card .h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .loc-card .h .l { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .loc-card .h .r { font-size: 10px; color: #888; }
+  .loc-card .map-ph { height: 70px; background: repeating-linear-gradient(135deg, #ececec 0 8px, #e0e0e0 8px 16px); border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #888; cursor: pointer; }
+  .loc-card .loc-foot { display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
+  .loc-card .loc-foot .phone { color: #1a1a1a; cursor: pointer; font-weight: 600; }
+  .loc-card .loc-foot .btns { display: flex; gap: 14px; }
+  .loc-card .loc-foot .btns span { color: #1a1a1a; cursor: pointer; font-weight: 600; }
+
+  /* 底部 CTA · sticky 吸底不随滚动移动 */
+  .bottom-cta { position: sticky; bottom: 0; left: 0; right: 0; padding: 10px 12px 14px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; z-index: 6; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
+  .bottom-cta .icon-btn { width: 40px; height: 40px; border: 1px solid #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #555; cursor: pointer; flex-shrink: 0; }
+  .bottom-cta .btn { flex: 1; height: 40px; background: #1a1a1a; color: #fff; border: none; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .bottom-cta .btn .price { font-size: 15px; font-weight: 700; margin-right: 4px; }
+
+  /* Toast */
+  .toast {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+    background: #1a1a1a; color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 12px;
+    opacity: 0; transition: all 0.2s; z-index: 9999; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .toast.error { background: #888; }
+  .toast.success { background: #1a1a1a; }
+
+  /* 图片预览器 · 全屏覆盖视口 */
+  .image-viewer {
+    position: fixed; inset: 0; background: rgba(20,20,20,0.97); z-index: 9100;
+    display: none; flex-direction: column; min-height: 0;
+    opacity: 0; transition: opacity 0.2s ease;
+  }
+  .image-viewer.show { display: flex; opacity: 1; }
+  .image-viewer .viewer-header {
+    flex-shrink: 0; padding: 20px 24px 12px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08); max-width: 720px; margin: 0 auto; width: 100%; box-sizing: border-box;
+  }
+  .image-viewer .viewer-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .image-viewer .viewer-counter { font-size: 12px; color: rgba(255,255,255,0.5); margin-left: 10px; }
+  .image-viewer .viewer-close {
+    width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff; cursor: pointer; transition: background 0.15s;
+  }
+  .image-viewer .viewer-close:hover { background: rgba(255,255,255,0.2); }
+  .image-viewer .viewer-body { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 12px 72px; }
+  .image-viewer .viewer-stage { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .image-viewer .viewer-img {
+    width: 100%; max-width: 640px; height: 100%; max-height: 100%; border-radius: 8px;
+    background: repeating-linear-gradient(135deg, #d4d4d4 0 14px, #c8c8c8 14px 28px);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: #666;
+    transition: transform 0.25s ease;
+  }
+  .image-viewer .viewer-img.switching { transform: scale(0.96); opacity: 0.5; }
+  .image-viewer .viewer-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 48px; height: 48px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; cursor: pointer; z-index: 5; transition: background 0.15s;
+  }
+  .image-viewer .viewer-nav:hover { background: rgba(255,255,255,0.25); }
+  .image-viewer .viewer-nav.prev { left: 24px; }
+  .image-viewer .viewer-nav.next { right: 24px; }
+  .image-viewer .viewer-nav.disabled { opacity: 0.3; pointer-events: none; }
+  .image-viewer .viewer-thumbs { flex-shrink: 0; padding: 12px 16px 16px; display: flex; gap: 8px; justify-content: center; }
+  .image-viewer .viewer-thumbs .vt {
+    width: 56px; height: 40px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.15);
+    background: repeating-linear-gradient(135deg, #b0b0b0 0 6px, #a0a0a0 6px 12px); transition: all 0.15s; opacity: 0.5;
+  }
+  .image-viewer .viewer-thumbs .vt.active { border-color: #fff; opacity: 1; transform: scale(1.05); }
+  .image-viewer .viewer-footer { flex-shrink: 0; padding: 0 16px 20px; text-align: center; color: rgba(255,255,255,0.4); font-size: 11px; }
+  .image-viewer .viewer-footer span { color: #fff; font-weight: 700; cursor: pointer; }
+  .image-viewer .viewer-photo-actions {
+    display: flex; justify-content: center; gap: 10px; padding: 0 16px 20px; flex-shrink: 0;
+  }
+  .image-viewer .viewer-photo-actions button {
+    width: 128px; height: 34px; border-radius: 17px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .image-viewer .viewer-photo-actions .light { background: transparent; border: 1px solid rgba(255,255,255,0.55); color: #fff; }
+  .image-viewer .viewer-photo-actions .dark { background: #fff; border: none; color: #1a1a1a; }
+
+  /* 交付物预览弹层 · 全屏覆盖视口 */
+  .deliver-preview {
+    position: fixed; inset: 0; background: rgba(20,20,20,0.97); z-index: 9000;
+    display: none; flex-direction: column; min-height: 0; opacity: 0; transition: opacity 0.2s ease;
+  }
+  .deliver-preview.show { display: flex; opacity: 1; }
+  .deliver-preview .dp-mask { position: absolute; inset: 0; z-index: 0; cursor: pointer; }
+  .deliver-preview .dp-header {
+    flex-shrink: 0; padding: 20px 24px 14px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; background: rgba(20,20,20,0.97);
+    max-width: 720px; margin: 0 auto; width: 100%; box-sizing: border-box;
+  }
+  .deliver-preview .dp-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .deliver-preview .dp-close {
+    width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff; cursor: pointer; transition: background 0.15s;
+  }
+  .deliver-preview .dp-close:hover { background: rgba(255,255,255,0.2); }
+  .deliver-preview .dp-body {
+    flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 20px 24px; position: relative; z-index: 1;
+    max-width: 720px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+  .deliver-preview .dp-body.dp-player-mode {
+    max-width: none; padding: 0 18px 18px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .dp-full-player { width: 100%; max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
+  .dp-player-screen {
+    position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: calc(100vh - 170px);
+    border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+    background: repeating-linear-gradient(135deg, #c8c8c8 0 14px, #b8b8b8 14px 28px);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .dp-player-screen.portrait { width: min(76vw, 360px); aspect-ratio: 9 / 16; justify-self: center; }
+  .dp-player-screen .dp-play {
+    width: 74px; height: 74px; background: rgba(255,255,255,0.92); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 28px; color: #1a1a1a; padding-left: 4px;
+  }
+  .dp-player-screen .dp-duration {
+    position: absolute; right: 12px; bottom: 10px; background: rgba(0,0,0,0.65);
+    color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 4px;
+  }
+  .dp-player-meta { text-align: center; color: rgba(255,255,255,0.72); font-size: 12px; }
+  .dp-player-actions { display: flex; gap: 10px; justify-content: center; }
+  .dp-player-actions button {
+    width: 120px; height: 34px; border-radius: 17px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .dp-player-actions .light { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.55); }
+  .dp-player-actions .dark { background: #fff; color: #1a1a1a; border: none; }
+  .dp-video-preview {
+    width: 100%; aspect-ratio: 16 / 9; min-height: 180px; max-height: 420px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+    background: repeating-linear-gradient(135deg, #c8c8c8 0 14px, #b8b8b8 14px 28px);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-bottom: 14px;
+    transition: transform 0.15s;
+  }
+  .dp-video-preview:active { transform: scale(0.99); }
+  .dp-video-preview .dp-play {
+    width: 72px; height: 72px; background: rgba(255,255,255,0.9); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 28px; color: #1a1a1a;
+  }
+  .dp-video-preview .dp-duration { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
+  .dp-spec-row { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 14px; }
+  .dp-spec-row span { background: rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 5px; }
+  .dp-version-card {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+    padding: 14px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s;
+  }
+  .dp-version-card:active { transform: scale(0.98); }
+  .dp-version-card .dp-vh { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .dp-version-card .dp-vtag { font-size: 12px; color: #fff; font-weight: 700; background: rgba(255,255,255,0.12); padding: 3px 9px; border-radius: 5px; white-space: nowrap; }
+  .dp-version-card .dp-vname { font-size: 15px; color: #fff; font-weight: 700; }
+  .dp-version-card .dp-vmeta { font-size: 12px; color: rgba(255,255,255,0.65); margin-bottom: 10px; }
+  .dp-version-card .dp-vthumb { width: 100%; aspect-ratio: 16 / 9; min-height: 120px; max-height: 220px; border-radius: 8px; margin-bottom: 8px; background: repeating-linear-gradient(135deg, #c8c8c8 0 12px, #b8b8b8 12px 24px); position: relative; display: flex; align-items: center; justify-content: center; }
+  .dp-version-card .dp-play {
+    width: 54px; height: 54px; background: rgba(255,255,255,0.9); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; color: #1a1a1a; padding-left: 3px;
+  }
+  .dp-version-card .dp-vthumb::after {
+    content: attr(data-duration); position: absolute; right: 8px; bottom: 8px;
+    background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 3px 7px; border-radius: 4px;
+  }
+  .dp-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .dp-photo { aspect-ratio: 1; border-radius: 8px; cursor: pointer; background: repeating-linear-gradient(135deg, #c8c8c8 0 9px, #b8b8b8 9px 18px); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.15s; }
+  .dp-photo:active { transform: scale(0.94); }
+  .dp-desc { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.7; margin-top: 14px; }
+
+  /* 下单确认弹层 */
+  .modal-mask { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: none; }
+  .modal-mask.show { display: flex; align-items: flex-end; }
+  .modal { width: 100%; background: #fff; border-radius: 12px 12px 0 0; padding: 16px; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal .h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+  .modal .h .title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+  .modal .h .close { font-size: 18px; cursor: pointer; color: #888; }
+  .modal .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 11px; border-bottom: 1px solid #f5f5f5; }
+  .modal .row .l { color: #888; }
+  .modal .row .r { color: #1a1a1a; font-weight: 600; }
+  .modal .total { display: flex; justify-content: space-between; padding: 10px 0; }
+  .modal .total .l { font-size: 12px; color: #1a1a1a; font-weight: 700; }
+  .modal .total .r { font-size: 18px; color: #1a1a1a; font-weight: 700; }
+  .modal .confirm-btn { width: 100%; height: 42px; background: #1a1a1a; color: #fff; border: none; border-radius: 21px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+
+  /* ============ 标注层（可开关） ============ */
+  .anno-layer.show-anno .anno-tag { display: block; }
+  .anno-tag {
+    display: none; position: absolute; background: #fff; border: 1px solid #1a1a1a;
+    color: #1a1a1a; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+    white-space: nowrap; z-index: 50; line-height: 1.3;
+  }
+  .anno-tag .lv { color: #888; font-weight: 400; margin-left: 3px; font-size: 8px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- ============ 手机 ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="screens-wrap anno-layer" id="screensWrap">
+
+        <!-- ============ 首页 ============ -->
+        <div class="screen-page home" id="homePage">
+          <div class="status-bar"><span>16:23</span><span>📶 4G ▮64</span></div>
+
+          <div class="hero">
+            <span class="anno-tag" style="top:40px;left:230px;">景区图背景<span class="lv">L1</span></span>
+          </div>
+
+          <div class="scenic-intro">
+            <div class="intro-title">西湖景区</div>
+            <div class="intro-text collapsed" id="introText">西湖位于浙江省杭州市西湖区龙井路1号，三面环山，面积约 49 平方千米，湖面 6.38 平方千米。景区内有"西湖十景"（苏堤春晓、断桥残雪、平湖秋月等），以及雷峰塔、岳王庙等人文古迹。本景区设有 5 个航拍拍摄点，覆盖经典视角与隐藏拍摄点，适合单点旅拍与多点联拍。</div>
+            <div class="intro-toggle" onclick="toggleIntro()">展开 ▾</div>
+            <span class="anno-tag" style="top:6px;right:-110px;">景区介绍·展开/收起<span class="lv">L2</span></span>
+          </div>
+
+          <div class="mode-section">
+            <div class="mode-picker" id="dualTab">
+              <div class="mp active" data-tab="single" onclick="switchTab('single')">
+                <span class="ico"><span class="d"></span></span>
+                单点旅拍
+              </div>
+              <div class="mp" data-tab="multi" onclick="switchTab('multi')">
+                <span class="new-tag">NEW</span>
+                <span class="ico"><span class="d"></span><span class="d"></span><span class="d"></span></span>
+                多点联拍
+              </div>
+              <span class="anno-tag" style="top:6px;right:-110px;">拍摄模式选择<span class="lv">L1</span></span>
+            </div>
+
+            <div class="point-section" id="pointSection">
+              <div class="h" id="pointHeader">
+                <span>📍 烟雨画桥 · 营业中 09:00-18:00 · 182m</span>
+                <span><span class="to-go" onclick="toast('打开导航')">到这去 ➤</span> &nbsp; <span class="more-btn" onclick="toast('打开地图视图')">地图 ›</span></span>
+              </div>
+              <div class="point-scroll" id="pointScroll">
+                <div class="point-card active" data-point="烟雨画桥" data-open="true" onclick="selectPoint(this)">
+                  <div class="img"><span class="badge-open">营业中</span></div>
+                  <div class="check">✓</div>
+                  <div class="name">烟雨画桥</div>
+                  <div class="dist">距您 182m</div>
+                </div>
+                <div class="point-card" data-point="湖心栈道" data-open="true" onclick="selectPoint(this)">
+                  <div class="img"><span class="badge-open">营业中</span></div>
+                  <div class="check">✓</div>
+                  <div class="name">湖心栈道</div>
+                  <div class="dist">距您 1.2km</div>
+                </div>
+                <div class="point-card" data-point="云顶观景台" data-open="true" onclick="selectPoint(this)">
+                  <div class="img"><span class="badge-open">营业中</span></div>
+                  <div class="check">✓</div>
+                  <div class="name">云顶观景台</div>
+                  <div class="dist">距您 2.5km</div>
+                </div>
+                <div class="point-card disabled" data-point="雷峰夕照" data-open="false" onclick="selectPoint(this)">
+                  <div class="img"><span class="badge-open badge-closed">已闭园</span></div>
+                  <div class="check">✓</div>
+                  <div class="name">雷峰夕照</div>
+                  <div class="dist">距您 3.8km</div>
+                </div>
+                <div class="point-card more-card" onclick="toast('查看更多拍摄点（含废弃点）')">
+                  <div class="img">＋</div>
+                  <div class="name">更多 (1)</div>
+                  <div class="dist">含废弃点</div>
+                </div>
+              </div>
+              <span class="anno-tag" style="top:80px;right:-110px;">拍摄点·二级筛选<span class="lv">L2</span></span>
+            </div>
+
+            <div id="themeListArea"></div>
+          </div>
+
+        </div>
+
+        <!-- ============ 详情页 ============ -->
+        <div class="screen-page detail" id="detailPage">
+          <div class="status-bar"><span>14:53</span><span>📶 4G ▮64</span></div>
+
+          <div class="detail-hero" id="detailHero" onclick="backToHome()" style="cursor:pointer;">
+            <div class="play-btn" onclick="event.stopPropagation();openDeliverPreview('smart')">▶</div>
+            <span class="anno-tag" style="top:40px;left:230px;">首屏样片播放区<span class="lv">L1</span></span>
+          </div>
+
+          <div class="detail-body" id="detailBody"></div>
+
+          <div class="bottom-cta">
+            <div class="icon-btn" onclick="toast('联系客服 13098765678')">📞</div>
+            <button class="btn" onclick="openOrderModal()"><span class="price" id="ctaPrice">¥99.00</span> 立即体验</button>
+            <span class="anno-tag" style="bottom:14px;right:-110px;">固定底部CTA<span class="lv">L1</span></span>
+          </div>
+        </div>
+
+        <!-- 下单弹层 -->
+        <div class="modal-mask" id="orderModal">
+          <div class="modal">
+            <div class="h">
+              <div class="title">确认订单</div>
+              <div class="close" onclick="closeOrderModal()">✕</div>
+            </div>
+            <div class="row"><div class="l">主题</div><div class="r" id="orderTheme2">西湖五拍摄点联拍</div></div>
+            <div class="row"><div class="l">交付物</div><div class="r" id="orderDeliver">精简视频 + 精选照片</div></div>
+            <div class="row"><div class="l">原价</div><div class="r" id="orderOrig">¥199.00</div></div>
+            <div class="row"><div class="l">优惠</div><div class="r" id="orderSave">-¥100.00</div></div>
+            <div class="total"><div class="l">实付</div><div class="r" id="orderTotal">¥99.00</div></div>
+            <button class="confirm-btn" onclick="confirmOrder()">确认支付 ¥<span id="confirmPrice">99.00</span></button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Toast（移出 .screens-wrap，确保覆盖页内反馈可见） -->
+      <div class="toast" id="toast"></div>
+
+      <!-- 图片预览器 · 全屏（移出 .screens-wrap，避免被 ancestor transform 影响） -->
+      <div class="image-viewer" id="imageViewer">
+        <div class="viewer-header">
+          <div>
+            <span class="viewer-title" id="viewerTitle">拍摄角度示例</span>
+            <span class="viewer-counter" id="viewerCounter">1 / 1</span>
+          </div>
+          <div class="viewer-close" onclick="closeImageViewer()">✕</div>
+        </div>
+        <div class="viewer-body">
+          <div class="viewer-nav prev" id="viewerPrev" onclick="viewerPrev()">‹</div>
+          <div class="viewer-stage" onclick="closeImageViewer()">
+            <div class="viewer-img" id="viewerImg">[ 图片占位 ]</div>
+          </div>
+          <div class="viewer-nav next" id="viewerNext" onclick="viewerNext()">›</div>
+        </div>
+        <div class="viewer-thumbs" id="viewerThumbs"></div>
+        <div class="viewer-footer">点击空白处或 ✕ 关闭 · 左右箭头键切换 · ESC 退出</div>
+      </div>
+
+      <!-- 交付物预览弹层 · 全屏（移出 .screens-wrap，避免被 ancestor transform 影响） -->
+      <div class="deliver-preview" id="deliverPreview">
+        <div class="dp-mask" onclick="closeDeliverPreview()"></div>
+        <div class="dp-header">
+          <span class="dp-title" id="dpTitle">预览</span>
+          <span class="dp-close" onclick="closeDeliverPreview()">✕</span>
+        </div>
+        <div class="dp-body" id="dpBody"></div>
+      </div>
+
+      <!-- ============ 订单详情页（多点联拍） · 全屏覆盖（移出 .screens-wrap，避免被 ancestor transform 影响） ============ -->
+      <div class="order-overlay" id="orderOverlay">
+        <div class="status-bar"><span>09:59</span><span>📶 4G ▮58</span></div>
+
+        <!-- 顶部导航 -->
+        <div class="order-nav">
+          <span class="back" onclick="closeOrder()">‹</span>
+          <span class="title">订单详情</span>
+          <span class="more" onclick="toast('更多操作：分享/联系客服/投诉')">···</span>
+        </div>
+
+        <!-- 内容滚动区（独立 .order-body，CTA 在 flex column 末尾固定吸底） -->
+        <div class="order-body">
+
+        <!-- 主题大图 + 状态徽章 -->
+        <div class="order-hero">
+          <span class="hero-meta" id="orderHeroMeta">订单号 2026072109593549208</span>
+          <span class="status-badge" id="orderStatusBadge">待使用</span>
+        </div>
+
+        <!-- 主题概要：标题 + 价格 -->
+        <div class="theme-summary">
+          <div class="ts-title" id="orderThemeTitle">西湖五拍摄点联拍</div>
+          <div class="ts-price-row">
+            <span class="ts-price"><span class="y">¥</span><span id="orderNowPrice">99.00</span></span>
+            <span class="ts-orig" id="orderOrigPrice">¥199.00</span>
+            <span class="ts-tag">省 ¥100</span>
+          </div>
+        </div>
+
+        <!-- 拍摄点路线（多点联拍核心模块） -->
+        <div class="order-section">
+          <div class="sec-h">
+            <span class="l">📍 拍摄点路线</span>
+            <span class="r route-progress" id="orderRouteProgress">
+              <span class="text" id="orderProgressText">0/5</span>
+              <span class="bar"><span class="bar-fill" id="orderProgressFill" style="width: 0%"></span></span>
+            </span>
+          </div>
+          <div class="route-list" id="orderRouteList"></div>
+        </div>
+
+        <!-- 已购交付物概览 -->
+        <div class="order-section">
+          <div class="sec-h">
+            <span class="l">📦 已购交付物</span>
+            <span class="r"></span>
+          </div>
+          <div class="order-deliver" id="orderDeliverList">
+            <div class="order-deliver-item">
+              <div class="ico">🎞️</div>
+              <div class="name">精简视频</div>
+              <div class="ct">3<span class="u">版</span></div>
+              <div class="spec">横屏版30s / 竖屏版25s / 高光短版15s</div>
+            </div>
+            <div class="order-deliver-item">
+              <div class="ico">📷</div>
+              <div class="name">精选照片</div>
+              <div class="ct">6<span class="u">张</span></div>
+              <div class="spec">高清原图</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单信息 -->
+        <div class="order-info">
+          <div class="sec-h">
+            <span class="l">📄 订单信息</span>
+          </div>
+          <div class="row"><span class="l">订单号</span><span class="r">2026072109593549208</span></div>
+          <div class="row"><span class="l">下单时间</span><span class="r">2026-07-21 09:59:36</span></div>
+          <div class="row"><span class="l">手机号</span><span class="r">130****0295</span></div>
+          <div class="row"><span class="l">支付方式</span><span class="r">微信支付</span></div>
+          <div class="row total"><span class="l">支付金额</span><span class="r" id="orderFinalPrice">¥99.00</span></div>
+        </div>
+
+        <!-- 底部 CTA（在 flex column 末尾，固定吸底不随内容滚动） -->
+        </div><!-- /.order-body -->
+
+        <div class="order-cta" id="orderCta">
+          <button class="btn-secondary" onclick="applyRefund()">退款</button>
+          <button class="btn-primary" onclick="scanToShoot()">扫码拍摄</button>
+        </div>
+      </div>
+
+      <!-- ============ 成片详情页 · 拍摄完成后进入 ============ -->
+      <div class="work-overlay" id="workOverlay">
+        <div class="status-bar"><span>10:42</span><span>📶 4G ▮58</span></div>
+
+        <div class="order-nav">
+          <span class="back" onclick="closeFinishedWork()">‹</span>
+          <span class="title">成片详情</span>
+          <span class="more" onclick="toast('联系客服')">···</span>
+        </div>
+
+        <div class="work-body" id="workBody"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= 真实数据（来自 v3 演示稿） ================= */
+const POINTS = {
+  '烟雨画桥': { dist: '182m', open: true, hours: '09:00-18:00', phone: '13098765001' },
+  '湖心栈道': { dist: '1.2km', open: true, hours: '09:00-17:30', phone: '13098765002' },
+  '云顶观景台': { dist: '2.5km', open: true, hours: '08:30-17:00', phone: '13098765003' },
+  '雷峰夕照': { dist: '3.8km', open: true, hours: '09:00-18:00', phone: '13098765004' },
+  '苏堤春晓': { dist: '850m', open: true, hours: '09:00-18:00', phone: '13098765005' },
+  '外滩源': { dist: '420m', open: true, hours: '全天开放', phone: '13098765101' },
+  '陆家嘴': { dist: '1.6km', open: true, hours: '06:00-22:00', phone: '13098765102' },
+  '北外滩': { dist: '2.1km', open: true, hours: '全天开放', phone: '13098765103' },
+  '麦田CBD': { dist: '320m', open: true, hours: '08:00-20:00', phone: '13098765201' },
+  '高铁穿行': { dist: '1.8km', open: true, hours: '08:00-20:00', phone: '13098765202' },
+  '摩天楼': { dist: '2.4km', open: true, hours: '08:00-20:00', phone: '13098765203' },
+  '落日坡': { dist: '3.6km', open: true, hours: '16:00-20:00', phone: '13098765204' },
+  '拙政园': { dist: '680m', open: true, hours: '07:30-17:30', phone: '13098765301' },
+  '留园': { dist: '1.2km', open: true, hours: '07:30-17:00', phone: '13098765302' },
+  '梅峰岛': { dist: '2.1km', open: true, hours: '08:00-17:00', phone: '13098765401' },
+  '猴岛': { dist: '3.4km', open: true, hours: '08:00-17:00', phone: '13098765402' },
+  '龙山岛': { dist: '4.8km', open: true, hours: '08:00-17:00', phone: '13098765403' }
+};
+
+const SINGLE_THEMES = {
+  '烟雨画桥': [
+    { id:'s1', title:'烟雨画桥 · 航拍三运镜', sub:'画桥穿越 + 桥边走拍 + 全景拉升，拍出江南氛围感', hot:180, orig:128, now:0.01, save:99, meta:'1 拍摄点 · 8min', rec:true },
+    { id:'s2', title:'画桥夜景 · 灯光追踪', hot:42, orig:128, now:0.01, save:99, meta:'1 拍摄点 · 10min' },
+    { id:'s3', title:'烟雨画桥 · 鸟瞰大全景', hot:28, orig:108, now:28, save:80, meta:'1 拍摄点 · 12min' },
+    { id:'s4', title:'画桥晨雾 · 静谧跟拍', hot:15, orig:98, now:28, save:70, meta:'1 拍摄点 · 9min' }
+  ],
+  '湖心栈道': [
+    { id:'s5', title:'湖心栈道 · 环绕同框', sub:'湖心环绕 + 适合闺蜜/情侣/家庭', hot:95, orig:108, now:28, save:80, meta:'1 拍摄点 · 10min', rec:true },
+    { id:'s6', title:'栈道晨曦 · 横移跟拍', hot:35, orig:98, now:28, save:70, meta:'1 拍摄点 · 9min' },
+    { id:'s7', title:'湖心夜景 · 倒影构图', hot:22, orig:128, now:48, save:80, meta:'1 拍摄点 · 11min' }
+  ],
+  '云顶观景台': [
+    { id:'s8', title:'云顶落日 · 航拍四运镜', sub:'从人物拉到西湖全景，适合朋友圈封面', hot:67, orig:128, now:0.01, save:99, meta:'1 拍摄点 · 12min', rec:true },
+    { id:'s9', title:'观景台拉升 · 全景大片', hot:31, orig:128, now:38, save:90, meta:'1 拍摄点 · 10min' }
+  ]
+};
+
+const MULTI_THEMES = [
+  { id:'m1', title:'西湖五拍摄点联拍', sub:'烟雨画桥 → 云顶观景台 → 湖心栈道 → 苏堤春晓 → 雷峰夕照', hot:326, orig:199, now:99, save:100, meta:'5 拍摄点 · 35min · 5.2km', rec:true,
+    points:['烟雨画桥','云顶观景台','湖心栈道','苏堤春晓','雷峰夕照'],
+    deliverables:{ smart:{versions:[
+      { name:'横屏版', ratio:'16:9', seconds:30, desc:'云上环绕模板 · 适合朋友圈封面' },
+      { name:'竖屏版', ratio:'9:16', seconds:25, desc:'故事卡点模板 · 适合短视频平台' },
+      { name:'高光短版', ratio:'1:1', seconds:15, desc:'核心镜头浓缩 · 适合作为快速预览' }
+    ]}, photos:6 } },
+  { id:'m2', title:'外滩夜景三拍摄点联拍', hot:142, orig:168, now:79, save:89, meta:'3 拍摄点 · 22min · 3.8km',
+    points:['外滩源','陆家嘴','北外滩'],
+    deliverables:{ smart:{versions:[
+      { name:'横屏版', ratio:'16:9', seconds:28, desc:'夜景宽幅模板 · 适合横屏分享' },
+      { name:'竖屏版', ratio:'9:16', seconds:22, desc:'城市节奏模板 · 适合短视频平台' }
+    ]}, photos:4 } },
+  { id:'m3', title:'麦田四拍摄点日落联拍', hot:88, orig:158, now:69, save:89, meta:'4 拍摄点 · 28min · 4.5km',
+    points:['麦田CBD','高铁穿行','摩天楼','落日坡'],
+    deliverables:{ smart:{versions:[
+      { name:'横屏版', ratio:'16:9', seconds:30, desc:'落日电影感模板 · 适合朋友圈封面' }
+    ]}, photos:5 } },
+  { id:'m4', title:'苏州园林双拍摄点联拍', hot:55, orig:128, now:68, save:60, meta:'2 拍摄点 · 15min · 1.8km',
+    points:['拙政园','留园'],
+    deliverables:{ smart:{versions:[
+      { name:'横屏版', ratio:'16:9', seconds:24, desc:'园林留白模板 · 适合横屏收藏' },
+      { name:'竖屏版', ratio:'9:16', seconds:18, desc:'移步换景模板 · 适合短视频平台' }
+    ]}, photos:3 } },
+  { id:'m5', title:'千岛湖三拍摄点联拍', hot:38, orig:138, now:88, save:50, meta:'3 拍摄点 · 25min · 6.2km',
+    points:['梅峰岛','猴岛','龙山岛'],
+    deliverables:{ smart:{versions:[
+      { name:'竖屏版', ratio:'9:16', seconds:26, desc:'湖景旅行模板 · 适合短视频平台' }
+    ]}, photos:4 } }
+];
+
+/* ================= 状态 ================= */
+let state = { screen: 'home', tab: 'single', point: '烟雨画桥', theme: null, orders: 0 };
+let viewerState = { images: [], index: 0, title: '' };
+
+function formatDuration(value) {
+  if (typeof value === 'number') return `${value}s`;
+  if (typeof value === 'string' && value.trim()) return value;
+  return '30s';
+}
+
+function getSmartVersions(dv) {
+  const smart = (dv && dv.smart) || {};
+  if (Array.isArray(smart.versions) && smart.versions.length) {
+    return smart.versions.slice(0, 3).map((v, i) => ({
+      name: v.name || `版本${i + 1}`,
+      ratio: v.ratio || '',
+      duration: formatDuration(v.seconds || v.duration),
+      desc: v.desc || '自动卡点配乐 · 智能调色'
+    }));
+  }
+
+  const versions = [];
+  if (smart.landscape) versions.push({ name: '横屏版', ratio: '16:9', duration: '30s', desc: '云上环绕模板 · 适合朋友圈封面' });
+  if (smart.portrait) versions.push({ name: '竖屏版', ratio: '9:16', duration: '30s', desc: '故事卡点模板 · 适合短视频平台' });
+  return versions.slice(0, 3);
+}
+
+function getDeliverables(theme) {
+  const dv = theme.deliverables || { smart: { versions: [{ name: '横屏版', ratio: '16:9', seconds: 30 }] }, photos: 6 };
+  const smartVersions = getSmartVersions(dv);
+  const items = [];
+  if (smartVersions.length) {
+    items.push({
+      icon: '🎞️',
+      name: '精简视频',
+      count: String(smartVersions.length),
+      unit: '版',
+      preview: 'smart',
+      versions: smartVersions
+    });
+  }
+  if (dv.photos) {
+    items.push({
+      icon: '📷',
+      name: '精选照片',
+      count: String(dv.photos),
+      unit: '张',
+      spec: '高清原图',
+      preview: 'photos'
+    });
+  }
+  return items;
+}
+
+function getOrderPoints(theme) {
+  if (!theme) return [];
+  return (theme.points && theme.points.length > 1) ? theme.points : [state.point || '烟雨画桥'];
+}
+
+function isAllShotsDone(theme) {
+  const points = getOrderPoints(theme);
+  return points.length > 0 && points.every(p => state.shotPoints && state.shotPoints.includes(p));
+}
+
+function getShotCount(theme) {
+  return getOrderPoints(theme).filter(p => state.shotPoints && state.shotPoints.includes(p)).length;
+}
+
+/* ================= 首页渲染 ================= */
+function renderHome() {
+  const area = document.getElementById('themeListArea');
+  let html = '';
+
+  if (state.tab === 'single') {
+    const p = POINTS[state.point];
+    const ph = document.getElementById('pointHeader');
+    if (!p.open) {
+      ph.innerHTML = `<span style="color:#999;">📍 ${state.point} · 已闭园</span><span class="more-btn" onclick="toast('打开地图视图')">地图 ›</span>`;
+      html = `<div class="empty-state"><div class="ico">🌙</div>该拍摄点已闭园，请选择其他拍摄点</div>`;
+    } else {
+      ph.innerHTML = `<span>📍 ${state.point} · 营业中 ${p.hours} · ${p.dist}</span><span><span class="to-go" onclick="toast('打开导航')">到这去 ➤</span> &nbsp; <span class="more-btn" onclick="toast('打开地图视图')">地图 ›</span></span>`;
+      const themes = SINGLE_THEMES[state.point] || [];
+      if (themes.length === 0) {
+        html = `<div class="empty-state"><div class="ico">📷</div>该拍摄点暂无主题</div>`;
+      } else {
+        html = themes.map(t => renderListCard(t, 'single')).join('');
+      }
+    }
+  } else {
+    html = MULTI_THEMES.map(t => renderListCard(t, 'multi')).join('');
+  }
+  area.innerHTML = html;
+  updateStats();
+}
+
+function renderListCard(t, type) {
+  const numMatch = t.meta.match(/(\d+)\s*拍摄点/);
+  const pointNum = numMatch ? numMatch[1] : '1';
+  const metaShort = type === 'multi' ? `${pointNum} 拍摄点联拍` : `${pointNum} 拍摄点`;
+  return `
+    <div class="list-card" onclick="enterDetail('${t.id}','${type}')">
+      <div class="img">
+        <span class="save-tag">省 ¥${t.save}</span>
+        <span class="hot">🔥 ${t.hot}</span>
+        <span class="meta-pill">📍 ${metaShort}</span>
+      </div>
+      <div class="info">
+        <div class="title">${t.title}</div>
+        <div class="row">
+          <div class="price-wrap">
+            <span class="price-orig">¥${t.orig.toFixed(2)}</span>
+            <span class="price-now"><span class="y">¥</span>${t.now.toFixed(2)}</span>
+          </div>
+          <span class="card-arrow">查看详情 ›</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= 详情页渲染 ================= */
+function renderDetail() {
+  const t = state.theme;
+  if (!t) return;
+  const body = document.getElementById('detailBody');
+  const isMulti = t.points && t.points.length > 1;
+  const dv = t.deliverables || { smart: { versions: [{ name: '横屏版', ratio: '16:9', seconds: 30 }] }, photos: 6 };
+  const deliverItems = getDeliverables(t);
+
+  body.innerHTML = `
+    <div class="detail-title-row">
+      <div class="detail-title">${t.title}</div>
+      <div class="detail-likes" id="detailLikes" onclick="this.classList.toggle('liked')">🔥 ${t.hot}</div>
+    </div>
+    <div class="badges">
+      ${isMulti ? `<span class="b">多点联拍</span>` : `<span class="b">单点旅拍</span>`}
+    </div>
+    <div class="detail-subtitle">${t.sub || '一次拍摄，多重精彩'}</div>
+
+    <div class="price-banner">
+      <div class="l">
+        <span class="now"><span class="y">¥</span>${t.now.toFixed(2)}</span>
+        <span class="orig">¥${t.orig.toFixed(2)}</span>
+      </div>
+      <span class="save-tag">省 ¥${t.save} · 约 ${(t.now/t.orig*10).toFixed(1)} 折</span>
+    </div>
+
+    ${(() => {
+      return `
+    <div class="deliver-bundle">
+      <div class="bundle-h">
+        <div class="l">📦 您将获得</div>
+      </div>
+      <div class="deliver-grid">
+        ${deliverItems.map(it => `
+        <div class="deliver-grid-item" onclick="openDeliverPreview('${it.preview}')">
+          <div class="dg-icon">${it.icon}</div>
+          <div class="dg-name">${it.name}</div>
+          <div class="dg-count">${it.count}<span class="unit">${it.unit}</span></div>
+          ${it.versions ? `
+          <div class="dg-versions">
+            ${it.versions.map(v => `
+            <div class="dg-version"><span>${v.name}</span><span class="dg-duration">${v.duration}</span></div>
+            `).join('')}
+          </div>` : `<div class="dg-spec">${it.spec}</div>`}
+        </div>
+        `).join('')}
+      </div>
+    </div>`;
+    })()}
+
+    ${isMulti ? `
+      <div class="route-timeline">
+        <div class="timeline-h">
+          <span class="l">📍 拍摄路线预览</span>
+          <span class="more" onclick="toast('查看完整路线地图')">共 ${t.points.length} 个拍摄点 ›</span>
+        </div>
+        <div class="route-map" onclick="toast('打开路线地图 · 串联 ${t.points.length} 个拍摄点')">[ 路线地图预览 · 串联 ${t.points.length} 个拍摄点 ]</div>
+        <div class="detail-stats" style="margin-bottom:14px;">
+          <div class="stat"><div class="v">${(t.meta.match(/(\d+)\s*拍摄点/)||['','0'])[1]}</div><div class="l">拍摄点数</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><div class="v">${(t.meta.match(/(\d+)\s*min/)||['','0'])[1]}<span class="u">min</span></div><div class="l">全程时长</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><div class="v">${(t.meta.match(/(\d+(\.\d+)?)\s*km/)||['','0'])[1]}<span class="u">km</span></div><div class="l">路线距离</div></div>
+        </div>
+        ${t.points.map((p, i) => {
+          const descs = ['桥边走拍，拍出江南氛围感','从人物拉到西湖全景','湖心环绕同框','杨柳依依伴人行','落日金光铺满湖面'];
+          const imgsJson = JSON.stringify(['img'+(i+1),'img'+((i+2)%5+1),'img'+((i+3)%5+1)]);
+          const pointInfo = POINTS[p] || { dist: '-', hours: '以现场为准', phone: '13098765678', open: true };
+          return `
+            <div class="route-step">
+              <div class="ord-col"><div class="ord-circle">${i+1}</div></div>
+              <div class="step-content">
+                <div class="step-name">${p}</div>
+                <div class="step-desc">${descs[i] || '专业运镜 · 精彩瞬间'}</div>
+                <div class="step-meta">${pointInfo.open ? '营业中' : '已闭园'} ${pointInfo.hours} · ${pointInfo.dist} · 电话 ${pointInfo.phone}</div>
+                <div class="angle-thumbs">
+                  ${[1,2,3].map((j,idx) => `<div class="angle-thumb" onclick='event.stopPropagation();openImageViewer(${imgsJson}, ${idx}, "${p} - 拍摄角度示例")'><span class="zoom-ico">⤢</span></div>`).join('')}
+                </div>
+                <div class="step-actions">
+                  <span onclick="toast('打开导航到「${p}」')">➤ 导航</span>
+                  <span onclick="toast('拨打「${p}」电话 ${pointInfo.phone}')">📞 电话</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : `
+      <div class="detail-stats" style="margin-bottom:14px;">
+        <div class="stat"><div class="v">1</div><div class="l">拍摄点数</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><div class="v">${(t.meta.match(/(\d+)\s*min/)||['','8'])[1]}<span class="u">min</span></div><div class="l">拍摄时长</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><div class="v">${dv.photos || 6}</div><div class="l">精选照片</div></div>
+      </div>
+    `}
+
+    <div class="detail-tabs" id="detailTabs">
+      <div class="t active" data-tab="ai" onclick="switchDetailTab('ai')">AI 服务</div>
+      <div class="t" data-tab="fee" onclick="switchDetailTab('fee')">拍摄须知</div>
+    </div>
+
+    <div class="tab-content active" id="tab-ai">
+      <div class="deliverable-card rec">
+        <div class="h"><div class="l">✦ AI 服务（已包含）</div></div>
+        <div class="body-text">
+          ✓ 智能挑片：从拍摄素材中自动筛选精彩瞬间<br>
+          ✓ 一键成片：按选定模板自动合成视频<br>
+          ✓ 智能配乐：根据画面节奏匹配 BGM<br>
+          ✓ 智能调色：自动优化画面色彩
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-fee">
+      <div class="deliverable-card">
+        <div class="h"><div class="l">📄 退款协议</div></div>
+        <div class="body-text">
+          ✓ 召唤无人机前：可随时无理由申请退款，秒级原路退回<br>
+          ✓ 拍摄完成后：需联系客服申请，经审核通过后方可退款<br>
+          ✓ 下载成片后：视为对内容满意，不支持退款<br>
+          ✓ 极端天气、设备故障等不可抗力，请直接联系客服
+        </div>
+      </div>
+    </div>
+
+    <div class="step-bar" id="stepBar">
+      <div class="step active"><div class="icon">🛒</div><div class="label">主题购买</div></div>
+      <div class="arrow">›</div>
+      <div class="step"><div class="icon">📍</div><div class="label">前往拍摄点</div></div>
+      <div class="arrow">›</div>
+      <div class="step"><div class="icon">📱</div><div class="label">扫码派机</div></div>
+      <div class="arrow">›</div>
+      <div class="step"><div class="icon">🚁</div><div class="label">航拍开始</div></div>
+    </div>
+
+    ${!isMulti ? `
+    <div class="loc-card">
+      <div class="h">
+        <div class="l">📍 拍摄点</div>
+        <div class="r">${isMulti ? t.points.length + ' 个拍摄点' : '1 个拍摄点'}</div>
+      </div>
+      <div class="map-ph" onclick="toast('打开地图查看路线')">[ 地图预览 · ${isMulti ? '串联 ' + t.points.length + ' 个拍摄点' : '单拍摄点'} ]</div>
+      <div class="loc-foot">
+        <span>客服电话：<span class="phone" onclick="toast('拨打电话 13098765678')">13098765678</span></span>
+        <span class="btns">
+          <span onclick="toast('拨打电话')">📞 电话</span>
+          <span onclick="toast('打开导航')">➤ 导航</span>
+        </span>
+      </div>
+    </div>
+    ` : ''}
+  `;
+
+  document.getElementById('ctaPrice').textContent = `¥${t.now.toFixed(2)}`;
+  document.getElementById('orderTheme2').textContent = t.title;
+  document.getElementById('orderOrig').textContent = `¥${t.orig.toFixed(2)}`;
+  document.getElementById('orderSave').textContent = `-¥${t.save}.00`;
+  document.getElementById('orderTotal').textContent = `¥${t.now.toFixed(2)}`;
+  document.getElementById('confirmPrice').textContent = t.now.toFixed(2);
+  updateStats();
+}
+
+/* ================= 交互 ================= */
+function selectPoint(el) {
+  const point = el.dataset.point;
+  const open = el.dataset.open === 'true';
+  if (!open) { toast(`${point} 已闭园`, 'error'); return; }
+  document.querySelectorAll('.point-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.point = point;
+  renderHome();
+  toast(`已切换到「${point}」`);
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll('.mode-picker .mp').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  const pointSection = document.getElementById('pointSection');
+  if (pointSection) pointSection.style.display = tab === 'multi' ? 'none' : '';
+  renderHome();
+}
+
+function enterDetail(themeId, type) {
+  const list = type === 'multi' ? MULTI_THEMES : Object.values(SINGLE_THEMES).flat();
+  const theme = list.find(t => t.id === themeId);
+  if (!theme) return;
+  state.theme = theme;
+  state.screen = 'detail';
+  document.getElementById('screensWrap').classList.add('show-detail');
+  renderDetail();
+  document.getElementById('detailPage').scrollTop = 0;
+}
+
+function backToHome() {
+  state.screen = 'home';
+  document.getElementById('screensWrap').classList.remove('show-detail');
+  updateStats();
+}
+
+function switchDetailTab(tab) {
+  document.querySelectorAll('#detailTabs .t').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function openOrderModal() {
+  if (state.theme) {
+    const items = getDeliverables(state.theme);
+    const text = items.map(it => `${it.name}${it.count}${it.unit}`).join(' + ');
+    document.getElementById('orderDeliver').textContent = text || '精简视频 + 精选照片';
+  }
+  document.getElementById('orderModal').classList.add('show');
+}
+function closeOrderModal() { document.getElementById('orderModal').classList.remove('show'); }
+
+function confirmOrder() {
+  closeOrderModal();
+  state.orders++;
+  state.shotPoints = [];
+  state.shootingPoint = null;
+  state.currentWork = null;
+  document.getElementById('workOverlay').classList.remove('show');
+  // 下单成功后，跳转到订单详情页（多点联拍）
+  renderOrderDetail();
+  setTimeout(() => {
+    document.getElementById('orderOverlay').classList.add('show');
+    toast(`✓ 下单成功！前往订单详情`, 'success');
+  }, 200);
+  // 详情页步骤条推进（保留历史状态）
+  const steps = document.querySelectorAll('#stepBar .step');
+  if (steps.length > 0) {
+    steps[0].classList.remove('active');
+    steps[0].classList.add('done');
+    if (steps[1]) steps[1].classList.add('active');
+  }
+  updateStats();
+}
+
+/* ================= 订单详情页（多点联拍） ================= */
+function renderOrderDetail() {
+  const t = state.theme;
+  if (!t) return;
+  const isMulti = t.points && t.points.length > 1;
+  const dv = t.deliverables || { smart: { versions: [{ name: '横屏版', ratio: '16:9', seconds: 30 }] }, photos: 6 };
+
+  // 主题概要
+  document.getElementById('orderThemeTitle').textContent = t.title;
+  document.getElementById('orderNowPrice').textContent = t.now.toFixed(2);
+  document.getElementById('orderOrigPrice').textContent = `¥${t.orig.toFixed(2)}`;
+  document.getElementById('orderFinalPrice').textContent = `¥${t.now.toFixed(2)}`;
+
+  // 拍摄点路线 + 进度
+  const routeList = document.getElementById('orderRouteList');
+  const points = getOrderPoints(t);
+  const total = points.length;
+  if (!state.shotPoints) state.shotPoints = [];
+  const shotCount = points.filter(p => state.shotPoints.includes(p)).length;
+  // 更新顶部进度条
+  document.getElementById('orderProgressText').textContent = `${shotCount}/${total}`;
+  document.getElementById('orderProgressFill').style.width = (total > 0 ? (shotCount / total * 100) : 0) + '%';
+  const statusBadge = document.getElementById('orderStatusBadge');
+  if (statusBadge) {
+    statusBadge.classList.toggle('shooting', !!state.shootingPoint);
+    statusBadge.classList.toggle('done', !state.shootingPoint && isAllShotsDone(t));
+    statusBadge.textContent = state.shootingPoint ? '拍摄中' : (isAllShotsDone(t) ? '已完成' : '待使用');
+  }
+
+  routeList.innerHTML = points.map((p, i) => {
+    const isShot = state.shotPoints.includes(p);
+    const isShooting = state.shootingPoint === p && !isShot;
+    const stateCls = isShot ? 'done' : (isShooting ? 'shooting' : '');
+    const ordText = isShot ? '✓' : (i + 1);
+    let stateTag;
+    let progressText;
+    if (isShot) {
+      stateTag = '✓ 已完成';
+      progressText = '已完成拍摄';
+    } else if (isShooting) {
+      stateTag = '● 拍摄中';
+      progressText = '无人机正在执行该点拍摄';
+    } else {
+      stateTag = '待拍摄';
+      progressText = '待扫码派机';
+    }
+    return `
+      <div class="route-point ${stateCls}" onclick="toggleShotPoint('${p}')">
+        <div class="ord">${ordText}</div>
+        <div class="info">
+          <div class="row1">
+            <span class="name">${p}</span>
+            <span class="open-tag">${stateTag}</span>
+          </div>
+          <div class="meta">${progressText}</div>
+        </div>
+        <div class="actions" onclick="event.stopPropagation()">
+          <span onclick="toast('打开导航到「${p}」')">➤ 导航</span>
+          <span onclick="toast('拨打「${p}」客服电话')">📞 电话</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 交付物概览
+  const items = getDeliverables(t);
+  document.getElementById('orderDeliverList').innerHTML = items.map(it => `
+    <div class="order-deliver-item">
+      <div class="ico">${it.icon}</div>
+      <div class="name">${it.name}</div>
+      <div class="ct">${it.count}<span class="u">${it.unit}</span></div>
+      ${it.versions ? `<div class="spec">${it.versions.map(v => `${v.name}${v.duration}`).join(' / ')}</div>` : `<div class="spec">${it.spec}</div>`}
+    </div>
+  `).join('');
+  renderOrderCta(points);
+}
+
+function renderOrderCta(points = []) {
+  const cta = document.getElementById('orderCta');
+  if (!cta) return;
+  const shotCount = points.filter(p => state.shotPoints && state.shotPoints.includes(p)).length;
+  const work = state.currentWork;
+  const hasCurrentWork = !!work;
+  const isCurrentWorkFresh = hasCurrentWork && work.shotCount === shotCount;
+  if (state.shootingPoint) {
+    cta.classList.add('shooting');
+    cta.classList.remove('complete');
+    cta.innerHTML = `
+      <div class="shooting-tip">
+        <span class="dot"></span>
+        <div>
+          <div class="main">正在拍摄中</div>
+          <div class="sub">「${state.shootingPoint}」正在拍摄，请完成后再操作</div>
+        </div>
+      </div>
+    `;
+  } else if (isAllShotsDone(state.theme)) {
+    cta.classList.remove('shooting');
+    cta.classList.add('complete');
+    if (work && work.isFinal) {
+      cta.innerHTML = `
+        <button class="btn-secondary" onclick="shareAllWork()">分享成片</button>
+        <button class="btn-primary" onclick="viewFinishedWork()">查看成片</button>
+      `;
+    } else {
+      cta.innerHTML = `
+        <button class="btn-secondary" onclick="${hasCurrentWork ? 'viewFinishedWork()' : 'applyRefund()'}">${hasCurrentWork ? '查看当前成片' : '退款'}</button>
+        <button class="btn-primary" onclick="generateCurrentWork()">生成最终成片</button>
+      `;
+    }
+  } else if (shotCount > 0) {
+    cta.classList.remove('shooting');
+    cta.classList.remove('complete');
+    cta.innerHTML = `
+      <button class="btn-secondary" onclick="${isCurrentWorkFresh ? 'viewFinishedWork()' : 'generateCurrentWork()'}">${isCurrentWorkFresh ? '查看成片' : (hasCurrentWork ? '更新成片' : '生成当前成片')}</button>
+      <button class="btn-primary" onclick="scanToShoot()">继续拍摄</button>
+    `;
+  } else {
+    cta.classList.remove('shooting');
+    cta.classList.remove('complete');
+    cta.innerHTML = `
+      <button class="btn-secondary" onclick="applyRefund()">退款</button>
+      <button class="btn-primary" onclick="scanToShoot()">扫码拍摄</button>
+    `;
+  }
+}
+
+/* 点击拍摄点切换"已完成"状态（demo 演示用，真实场景由无人机拍摄完成后回调） */
+function toggleShotPoint(pointName) {
+  if (!state.shotPoints) state.shotPoints = [];
+  const idx = state.shotPoints.indexOf(pointName);
+  if (idx >= 0) {
+    state.shotPoints.splice(idx, 1);
+    if (state.currentWork && state.currentWork.shotCount > getShotCount(state.theme)) {
+      state.currentWork = null;
+    }
+    toast(`已取消「${pointName}」完成标记`);
+  } else {
+    state.shotPoints.push(pointName);
+    if (state.shootingPoint === pointName) state.shootingPoint = null;
+    toast(`✓ 「${pointName}」已完成拍摄`);
+  }
+  renderOrderDetail();
+  if (isAllShotsDone(state.theme)) {
+    generateCurrentWork({ silent: true, open: false });
+    setTimeout(() => viewFinishedWork(), 350);
+  }
+}
+
+/* 扫码拍摄：派无人机到下一个未完成的拍摄点，模拟拍摄完成 */
+function scanToShoot() {
+  const t = state.theme;
+  if (!t) { toast('请先选择主题'); return; }
+  if (state.shootingPoint) {
+    toast(`「${state.shootingPoint}」正在拍摄中，请稍后`);
+    return;
+  }
+  const points = getOrderPoints(t);
+  if (!state.shotPoints) state.shotPoints = [];
+  const next = points.find(p => !state.shotPoints.includes(p));
+  if (!next) {
+    viewFinishedWork();
+    return;
+  }
+  // 派机：设为"拍摄中"
+  state.shootingPoint = next;
+  renderOrderDetail();
+  toast(`🚁 已派机前往「${next}」，正在拍摄…`);
+  // 1.8s 后自动完成
+  setTimeout(() => {
+    if (state.shootingPoint === next) {
+      state.shotPoints.push(next);
+      state.shootingPoint = null;
+      renderOrderDetail();
+      const remain = points.filter(p => !state.shotPoints.includes(p)).length;
+      if (remain === 0) {
+        generateCurrentWork({ silent: true, open: false });
+        toast(`🎉 「${next}」已完成 · 全部 ${points.length} 个拍摄点已完成`);
+        setTimeout(() => viewFinishedWork(), 700);
+      } else {
+        toast(`✓ 「${next}」已完成 · 还剩 ${remain} 个拍摄点`);
+      }
+    }
+  }, 1800);
+}
+
+function generateCurrentWork(options = {}) {
+  const t = state.theme;
+  if (!t) { toast('请先选择主题'); return; }
+  if (state.shootingPoint) {
+    toast(`「${state.shootingPoint}」正在拍摄中，完成后再生成`);
+    return;
+  }
+  const points = getOrderPoints(t);
+  const shotCount = getShotCount(t);
+  if (shotCount <= 0) {
+    toast('完成至少 1 个拍摄点后可生成成片');
+    return;
+  }
+
+  const previous = state.currentWork;
+  state.currentWork = {
+    shotCount,
+    total: points.length,
+    isFinal: shotCount === points.length,
+    generatedAt: '刚刚生成'
+  };
+  renderOrderDetail();
+
+  if (!options.silent) {
+    toast(previous ? '当前成片已更新' : '当前成片已生成', 'success');
+  }
+  if (options.open !== false) {
+    setTimeout(() => viewFinishedWork(), options.silent ? 0 : 320);
+  }
+}
+
+function renderFinishedWork() {
+  const t = state.theme;
+  const dv = t.deliverables || { smart: { versions: [{ name: '横屏版', ratio: '16:9', seconds: 30 }] }, photos: 6 };
+  const versions = getSmartVersions(dv);
+  const work = state.currentWork || {
+    shotCount: getShotCount(t),
+    total: getOrderPoints(t).length,
+    isFinal: isAllShotsDone(t),
+    generatedAt: '刚刚生成'
+  };
+  const fullPhotoCount = Number(dv.photos || 0);
+  const photoCount = work.isFinal ? fullPhotoCount : Math.max(1, Math.ceil(fullPhotoCount * work.shotCount / work.total));
+  const photoImages = JSON.stringify(Array.from({ length: photoCount }, (_, i) => `photo${i + 1}`));
+  const body = document.getElementById('workBody');
+  document.querySelector('#workOverlay .order-nav .title').textContent = '成片详情';
+
+  body.innerHTML = `
+    <div class="work-deliver-section">
+      <div class="h">
+        <span class="title">🎞️ 精简视频</span>
+        <span class="count">${versions.length} 版</span>
+      </div>
+      <div class="work-video-rows">
+        ${versions.map((v, i) => `
+        <div class="work-video-row">
+          <div class="thumb" onclick="openDeliverPreview('smart', ${i})">
+            <span class="play">▶</span>
+            <span class="duration">${v.duration}</span>
+          </div>
+          <div class="info">
+            <div class="name">${v.name}</div>
+            <div class="meta">${v.ratio || '自适应'} · ${v.duration}</div>
+          </div>
+          <div class="work-item-actions">
+            <button class="light" onclick="downloadVideo('${v.name}')">下载</button>
+            <button class="dark" onclick="shareVideo('${v.name}')">分享</button>
+          </div>
+        </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="work-deliver-section">
+      <div class="h">
+        <span class="title">📷 精选照片</span>
+        <span class="count">${photoCount} 张</span>
+      </div>
+      <div class="work-photo-cards">
+        ${Array.from({ length: photoCount }, (_, i) => `
+        <div class="work-photo-card">
+          <div class="thumb" onclick='openImageViewer(${photoImages}, ${i}, "精选照片")'>
+            <span class="idx">${i + 1}</span>
+          </div>
+        </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function viewFinishedWork() {
+  if (!state.theme) { toast('暂无成片'); return; }
+  if (!state.currentWork) {
+    if (isAllShotsDone(state.theme)) {
+      generateCurrentWork({ silent: true, open: false });
+    } else {
+      toast('请先生成当前成片');
+      return;
+    }
+  }
+  if (!state.currentWork) {
+    toast('请先生成当前成片');
+    return;
+  }
+  renderFinishedWork();
+  document.getElementById('workOverlay').classList.add('show');
+}
+
+function closeFinishedWork() {
+  document.getElementById('workOverlay').classList.remove('show');
+}
+
+function downloadVideo(name) { toast(`已开始下载「${name}」`); }
+function shareVideo(name) { toast(`分享「${name}」`); }
+function downloadAllVideos() { toast('已开始下载全部精简视频'); }
+function shareAllVideos() { toast('分享全部精简视频'); }
+function downloadPhoto(index) { toast(`已开始下载照片 ${index}`); }
+function sharePhoto(index) { toast(`分享照片 ${index}`); }
+function downloadAllPhotos() { toast('已开始下载全部精选照片'); }
+function shareAllPhotos() { toast('分享全部精选照片'); }
+function downloadAllWork() { toast('已开始下载全部成片资源'); }
+function shareAllWork() {
+  if (!state.theme) { toast('请先选择主题'); return; }
+  if (!state.currentWork) { toast(getShotCount(state.theme) > 0 ? '请先生成当前成片' : '完成至少 1 个拍摄点后可生成成片'); return; }
+  toast('分享本次成片');
+}
+
+function toastUnfinishedShots() {
+  if (!state.theme) { toast('请先选择主题'); return; }
+  const points = getOrderPoints(state.theme);
+  const done = points.filter(p => state.shotPoints && state.shotPoints.includes(p)).length;
+  const remain = Math.max(points.length - done, 0);
+  toast(remain > 0 ? `还差 ${remain} 个拍摄点，请继续拍摄` : '成片正在生成，请稍后');
+}
+
+/* 退款（demo：清空拍摄进度） */
+function applyRefund() {
+  if (state.shootingPoint) {
+    toast(`「${state.shootingPoint}」正在拍摄中，请完成后再申请退款`);
+    return;
+  }
+  if (state.shotPoints && state.shotPoints.length > 0) {
+    state.shotPoints = [];
+    state.shootingPoint = null;
+    state.currentWork = null;
+    document.getElementById('workOverlay').classList.remove('show');
+    renderOrderDetail();
+    toast('已申请退款 · 拍摄进度已清空，预计1-3个工作日原路退回');
+  } else {
+    toast('已申请退款，预计1-3个工作日原路退回');
+  }
+}
+
+function closeOrder() {
+  document.getElementById('orderOverlay').classList.remove('show');
+  setTimeout(() => toast('已返回主题详情'), 280);
+}
+
+/* 景区介绍展开/收起 */
+function toggleIntro() {
+  const el = document.getElementById('introText');
+  el.classList.toggle('collapsed');
+  const btn = event.target;
+  btn.textContent = el.classList.contains('collapsed') ? '展开 ▾' : '收起 ▴';
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ====== 图片预览器 · 全屏优化 ====== */
+function openImageViewer(images, index, title) {
+  viewerState = { images: images, index: index || 0, title: title || '拍摄角度示例' };
+  renderImageViewer();
+  document.getElementById('imageViewer').classList.add('show');
+}
+function closeImageViewer() { document.getElementById('imageViewer').classList.remove('show'); }
+function viewerPrev() {
+  if (viewerState.images.length <= 1) return;
+  viewerState.index = (viewerState.index - 1 + viewerState.images.length) % viewerState.images.length;
+  renderImageViewer(true);
+}
+function viewerNext() {
+  if (viewerState.images.length <= 1) return;
+  viewerState.index = (viewerState.index + 1) % viewerState.images.length;
+  renderImageViewer(true);
+}
+function viewerJump(i) {
+  if (i === viewerState.index) return;
+  viewerState.index = i;
+  renderImageViewer(true);
+}
+function renderImageViewer(animate) {
+  const imgEl = document.getElementById('viewerImg');
+  if (animate) {
+    imgEl.classList.add('switching');
+    setTimeout(() => {
+      imgEl.textContent = `[ ${viewerState.images[viewerState.index]} 占位图 ]`;
+      imgEl.classList.remove('switching');
+    }, 120);
+  } else {
+    imgEl.textContent = `[ ${viewerState.images[viewerState.index]} 占位图 ]`;
+  }
+  document.getElementById('viewerTitle').textContent = viewerState.title;
+  document.getElementById('viewerCounter').textContent = `${viewerState.index + 1} / ${viewerState.images.length}`;
+  const footer = document.querySelector('#imageViewer .viewer-footer, #imageViewer .viewer-photo-actions');
+  if (footer) {
+    if (viewerState.title === '精选照片') {
+      footer.className = 'viewer-photo-actions';
+      footer.innerHTML = `
+        <button class="light" onclick="event.stopPropagation();downloadPhoto(${viewerState.index + 1})">下载当前照片</button>
+        <button class="dark" onclick="event.stopPropagation();sharePhoto(${viewerState.index + 1})">分享当前照片</button>
+      `;
+    } else {
+      footer.className = 'viewer-footer';
+      footer.textContent = '点击空白处或 ✕ 关闭 · 左右箭头键切换 · ESC 退出';
+    }
+  }
+  // 导航箭头禁用态（单图时）
+  const prevBtn = document.getElementById('viewerPrev');
+  const nextBtn = document.getElementById('viewerNext');
+  if (viewerState.images.length <= 1) {
+    prevBtn.classList.add('disabled'); nextBtn.classList.add('disabled');
+  } else {
+    prevBtn.classList.remove('disabled'); nextBtn.classList.remove('disabled');
+  }
+  // 缩略图条
+  const thumbsWrap = document.getElementById('viewerThumbs');
+  if (viewerState.images.length > 1) {
+    thumbsWrap.style.display = 'flex';
+    thumbsWrap.innerHTML = viewerState.images.map((img, i) =>
+      `<div class="vt ${i === viewerState.index ? 'active' : ''}" onclick="viewerJump(${i})"></div>`
+    ).join('');
+  } else {
+    thumbsWrap.style.display = 'none';
+  }
+}
+
+/* ====== 交付物预览弹层 · 全屏优化 ====== */
+function openDeliverPreview(type, versionIndex) {
+  const t = state.theme;
+  if (!t) return;
+  const dv = t.deliverables || { smart: { versions: [{ name: '横屏版', ratio: '16:9', seconds: 30 }] }, photos: 6 };
+  const body = document.getElementById('dpBody');
+  const title = document.getElementById('dpTitle');
+  body.classList.remove('dp-player-mode');
+
+  if (type === 'smart') {
+    const versions = getSmartVersions(dv);
+    if (typeof versionIndex === 'number' && versions[versionIndex]) {
+      const v = versions[versionIndex];
+      const isPortrait = v.ratio === '9:16';
+      title.textContent = v.name;
+      body.classList.add('dp-player-mode');
+      body.innerHTML = `
+        <div class="dp-full-player">
+          <div class="dp-player-screen ${isPortrait ? 'portrait' : ''}" onclick="toast('播放${v.name}')">
+            <div class="dp-play">▶</div>
+            <div class="dp-duration">${v.duration}</div>
+          </div>
+          <div class="dp-player-meta">${v.ratio || '自适应'} · ${v.duration}</div>
+          <div class="dp-player-actions">
+            <button class="light" onclick="downloadVideo('${v.name}')">下载视频</button>
+            <button class="dark" onclick="shareVideo('${v.name}')">分享视频</button>
+          </div>
+        </div>
+      `;
+    } else {
+      title.textContent = `精简视频 · ${versions.length} 版`;
+      body.innerHTML = versions.map((v, i) => `
+      <div class="dp-version-card" onclick="toast('预览${v.name}')">
+        <div class="dp-vh">
+          <span class="dp-vname">${v.name}</span>
+          <span class="dp-vtag">${v.ratio ? `${v.ratio} · ` : ''}${v.duration}</span>
+        </div>
+        <div class="dp-vmeta">${v.ratio || '自适应'} · ${v.duration}</div>
+        <div class="dp-vthumb" data-duration="${v.duration}">
+          <div class="dp-play">▶</div>
+        </div>
+      </div>
+      `).join('');
+    }
+  } else if (type === 'photos') {
+    const photoCount = Number(dv.photos || 0);
+    const photoImages = JSON.stringify(Array.from({ length: photoCount }, (_, i) => `photo${i + 1}`));
+    title.textContent = `精选照片 · ${photoCount} 张`;
+    body.innerHTML = `
+      <div class="dp-photo-grid">
+        ${Array.from({length: photoCount}, (_, i) => `<div class="dp-photo" onclick='event.stopPropagation();openImageViewer(${photoImages}, ${i}, "精选照片")'></div>`).join('')}
+      </div>
+      <div class="dp-desc">从拍摄素材中 AI 挑选的高光瞬间，高清原图，可直接下载保存。</div>
+    `;
+  }
+  document.getElementById('deliverPreview').classList.add('show');
+}
+function closeDeliverPreview() { document.getElementById('deliverPreview').classList.remove('show'); }
+
+/* ====== 全局键盘 · ESC / ←→ 关闭与切换预览 ====== */
+document.addEventListener('keydown', function(e) {
+  const viewer = document.getElementById('imageViewer');
+  const dp = document.getElementById('deliverPreview');
+  const work = document.getElementById('workOverlay');
+  const modal = document.getElementById('orderModal');
+  if (e.key === 'Escape') {
+    if (viewer.classList.contains('show')) { closeImageViewer(); return; }
+    if (dp.classList.contains('show')) { closeDeliverPreview(); return; }
+    if (work.classList.contains('show')) { closeFinishedWork(); return; }
+    if (modal.classList.contains('show')) { closeOrderModal(); return; }
+  }
+  if (viewer.classList.contains('show')) {
+    if (e.key === 'ArrowLeft') viewerPrev();
+    if (e.key === 'ArrowRight') viewerNext();
+  }
+});
+
+/* ====== 标注开关 ====== */
+function toggleAnno() {
+  const wrap = document.getElementById('screensWrap');
+  wrap.classList.toggle('show-anno');
+  const btn = event.target;
+  btn.textContent = wrap.classList.contains('show-anno') ? '隐藏标注' : '显示标注';
+}
+
+/* ====== 状态更新 ====== */
+function updateStats() {
+  // 左侧说明面板已移除，状态统计不再渲染到 DOM；保留函数避免调用点报错
+}
+
+function resetAll() {
+  state = { screen: 'home', tab: 'single', point: '烟雨画桥', theme: null, orders: 0 };
+  document.getElementById('screensWrap').classList.remove('show-detail');
+  document.getElementById('orderOverlay').classList.remove('show');
+  document.getElementById('workOverlay').classList.remove('show');
+  document.querySelectorAll('.point-card').forEach((c, i) => c.classList.toggle('active', i === 0));
+  switchTab('single');
+  toast('已重置演示');
+}
+
+/* ================= 初始化 ================= */
+renderHome();
+updateStats();
+</script>
+
+</body>
+</html>

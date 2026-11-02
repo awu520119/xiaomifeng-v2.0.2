@@ -109,7 +109,7 @@ body,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--admin-color-background, var(--admin-color-background));
+  background: var(--admin-header-background, #fff);
 }
 
 .app-header h1.ant-typography {
@@ -125,7 +125,7 @@ body,
 }
 
 .app-content {
-  margin: 0 20px 20px;
+  margin: 0 var(--admin-content-padding) var(--admin-content-padding);
 }
 
 .coupon-page,
@@ -200,13 +200,13 @@ body,
 .admin-list-card .ant-table-thead > tr > th {
   height: 48px;
   background: var(--admin-color-table-header);
-  color: var(--admin-color-text-secondary);
-  font-weight: 600;
+  color: var(--admin-table-header-text);
+  font-weight: 400;
 }
 
 .admin-list-card .ant-table-tbody > tr > td {
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding-top: 13px;
+  padding-bottom: 13px;
 }
 
 .admin-list-card .ant-table-cell-fix-right,
@@ -758,7 +758,7 @@ body,
 .design-drawer .ant-drawer-header {
   min-height: 56px;
   padding: 16px 24px;
-  background: linear-gradient(90deg, #f3f7ff, #fff);
+  background: linear-gradient(90deg, #fff, #d8e6ff);
 }
 
 .design-drawer .ant-drawer-body {
@@ -995,11 +995,11 @@ html:has(.coupon-mini-page), body:has(.coupon-mini-page), #root:has(.coupon-mini
 
 .ant-drawer .ant-drawer-footer { display: flex; justify-content: flex-end; }
 .ant-drawer .ant-drawer-content-wrapper { max-width: 100vw; }
-.ant-drawer .ant-drawer-header { min-height: 56px; padding: 16px 24px; background: linear-gradient(90deg, #f3f7ff, #fff); }
+.ant-drawer .ant-drawer-header { min-height: 56px; padding: 16px 24px; background: linear-gradient(90deg, #fff, #d8e6ff); }
 .ant-drawer .ant-drawer-body { padding: 24px; }
 .ant-drawer.coupon-edit-drawer .ant-drawer-body { padding: 16px 24px 24px; }
 .ant-drawer .ant-drawer-footer { padding: 12px 24px; border-top: 1px solid var(--admin-color-split); }
-.ant-drawer .ant-form-vertical .ant-form-item { margin-bottom: 20px; }
+.ant-drawer .ant-form-vertical .ant-form-item { margin-bottom: var(--admin-form-gap); }
 .ant-drawer .ant-descriptions-item-label { color: var(--admin-color-text-secondary); min-width: 96px; vertical-align: top; }
 .ant-drawer .ant-descriptions-item-content { color: var(--admin-color-text); overflow-wrap: anywhere; vertical-align: top; }
 .coupon-fieldset-readonly .ant-input[disabled],
@@ -1705,3 +1705,18 @@ html[data-prototype-viewer] .mini-scan-overlay { background: rgba(0, 0, 0, 0.6) 
 
 .issuer-kind-special { color: #0958a8; border-color: #91caff; background: #e6f4ff; }
 .issuer-benefit-special { --offer-strong: #0958a8; --offer-light: #e6f4ff; --offer-border: #b3d8fa; --offer-glow: rgba(33, 125, 199, .13); }
+/* 详情抽屉主标题使用正文色，分节标题保留蓝色标识。 */
+.ant-drawer .ant-drawer-title { color: var(--admin-color-text); }
+
+/* 公共后台视觉基准 */
+.app-content { padding-top: var(--admin-content-padding); }
+.admin-filter-card, .admin-list-card { border-radius: var(--admin-card-radius); }
+.admin-list-page { gap: var(--admin-page-gap); }
+.ant-drawer .ant-drawer-title { font-size: 16px; font-weight: 700; }
+.ant-drawer .ant-drawer-footer { min-height: 56px; align-items: center; }
+.ant-drawer .ant-drawer-footer .ant-space { gap: 12px !important; }
+.ant-modal-confirm { max-width: calc(100vw - 32px); }
+.ant-modal-confirm .ant-modal-content { padding: 32px 32px 24px; }
+.ant-popconfirm .ant-popover-inner { min-width: min(300px, calc(100vw - 32px)); border-radius: 2px; }
+.ant-tabs .ant-tabs-tab + .ant-tabs-tab { margin-left: 32px; }
+.ant-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { font-weight: 500; }

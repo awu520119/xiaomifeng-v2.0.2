@@ -2,229 +2,80 @@
   "sourceId": "xiaomifeng-2-2",
   "tree": [
     {
-      "id": "xiaomifeng-2-2--marketing",
-      "title": "优惠券管理",
+      "id": "xiaomifeng-2-2--business",
+      "title": "运营中心",
+      "order": 1,
+      "children": [
+        {
+          "id": "xiaomifeng-2-2--themes",
+          "title": "主题管理",
+          "order": 1,
+          "templateType": "screen",
+          "routeHash": "#/business/themes",
+          "ready": {
+            "selector": ".app-content"
+          },
+          "htmlPath": ".published/xiaomifeng-2-2/pages/themes.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/主题管理原型说明.md",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "xiaomifeng-2-2--operations",
+      "title": "运维管理",
       "order": 2,
       "children": [
         {
-          "id": "xiaomifeng-2-2--coupon-management",
-          "title": "优惠券列表",
+          "id": "xiaomifeng-2-2--dashboard",
+          "title": "运维工作台",
           "order": 2,
           "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-list",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-management.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券列表PRD-20261022.md",
+          "routeHash": "#/ops/dashboard",
+          "ready": {
+            "selector": ".app-content"
+          },
+          "htmlPath": ".published/xiaomifeng-2-2/pages/dashboard.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/运维管理PRD-20261028.md",
           "children": []
         },
         {
-          "id": "xiaomifeng-2-2--coupon-create",
-          "title": "创建优惠券",
-          "order": 1,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/coupon-create",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-create.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/创建优惠券PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-authorization",
-          "title": "发券权限",
-          "order": 3,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/coupon-authorization",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-authorization.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/发券权限PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-directed",
-          "title": "定向发放",
-          "order": 4,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-directed",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-directed.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/定向发放PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-public",
-          "title": "公开发放",
-          "order": 5,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-public",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-public.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/公开发放PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-detail",
-          "title": "优惠券详情",
-          "order": 8,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/coupon-detail",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-detail.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券详情PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-codes",
-          "title": "查看券码",
-          "order": 6,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/coupon-codes",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-codes.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/查看券码PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-code-detail",
-          "title": "券码详情",
-          "order": 7,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-code-detail",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-code-detail.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/券码详情PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--coupon-records",
-          "title": "优惠券记录",
-          "order": 9,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/coupon-usage",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/coupon-records.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/优惠券记录PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--issuer-center",
-          "title": "发券",
-          "order": 10,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/issuer-coupons",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/issuer-center.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/发券PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--issuer-records",
-          "title": "发放记录",
-          "order": 11,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/issuer-records",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/issuer-records.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/发放记录PRD-20261022.md",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "xiaomifeng-2-2--orders",
-      "title": "订单管理",
-      "order": 2,
-      "children": [
-        {
-          "id": "xiaomifeng-2-2--order-list",
-          "title": "订单详情（优惠券）",
-          "order": 1,
-          "templateType": "drawer",
-          "routeHash": "#/demo/export/order-coupon-detail",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/order-list.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/订单详情（优惠券）PRD-20261022.md",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "xiaomifeng-2-2--system",
-      "title": "系统管理",
-      "order": 3,
-      "children": [
-        {
-          "id": "xiaomifeng-2-2--operation-logs",
-          "title": "操作日志",
-          "order": 1,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/operation-logs",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/operation-logs.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/操作日志PRD-20261022.md",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "xiaomifeng-2-2--mini",
-      "title": "用户端小程序",
-      "order": 4,
-      "children": [
-        {
-          "id": "xiaomifeng-2-2--mini-receive",
-          "title": "领取页",
-          "order": 1,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/mini-receive?phone=13800000002",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-receive.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序领取页PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--mini-redeem",
-          "title": "兑换页",
-          "order": 2,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/mini-redeem?phone=13800000001",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-redeem.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序兑换页PRD-20261022.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--mini-wallet",
-          "title": "我的券包",
+          "id": "xiaomifeng-2-2--alerts",
+          "title": "告警中心",
           "order": 3,
           "templateType": "screen",
-          "routeHash": "#/demo/export/mini-wallet?phone=13800000001",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-wallet.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券包PRD-20261022.md",
+          "routeHash": "#/ops/alerts",
+          "ready": {
+            "selector": ".app-content"
+          },
+          "htmlPath": ".published/xiaomifeng-2-2/pages/alerts.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/运维管理PRD-20261028.md",
           "children": []
         },
         {
-          "id": "xiaomifeng-2-2--mini-coupon-detail",
-          "title": "优惠券详情",
+          "id": "xiaomifeng-2-2--schedule",
+          "title": "值班排班",
           "order": 4,
           "templateType": "screen",
-          "routeHash": "#/demo/export/mini-coupon-detail?phone=13800000001&detail=first",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-coupon-detail.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序券详情PRD-20261022.md",
+          "routeHash": "#/ops/schedule",
+          "ready": {
+            "selector": ".app-content"
+          },
+          "htmlPath": ".published/xiaomifeng-2-2/pages/schedule.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/运维管理PRD-20261028.md",
           "children": []
         },
         {
-          "id": "xiaomifeng-2-2--mini-theme-list",
-          "title": "主题列表",
+          "id": "xiaomifeng-2-2--solutions",
+          "title": "处置方案库",
           "order": 5,
           "templateType": "screen",
-          "routeHash": "#/demo/export/mini-theme-list?phone=13800000001",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-theme-list.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序主题列表PRD-20261027.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--mini-checkout",
-          "title": "确认订单",
-          "order": 6,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/mini-checkout?phone=13800000001",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-checkout.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序下单选券PRD-20261026.md",
-          "children": []
-        },
-        {
-          "id": "xiaomifeng-2-2--mini-order",
-          "title": "订单详情",
-          "order": 7,
-          "templateType": "screen",
-          "routeHash": "#/demo/export/mini-order?phone=13800000001",
-          "htmlPath": ".published/xiaomifeng-2-2/pages/mini-order.html",
-          "mdPath": ".published/xiaomifeng-2-2/desc/小程序订单详情PRD-20261022.md",
+          "routeHash": "#/ops/solutions",
+          "ready": {
+            "selector": ".app-content"
+          },
+          "htmlPath": ".published/xiaomifeng-2-2/pages/solutions.html",
+          "mdPath": ".published/xiaomifeng-2-2/desc/运维管理PRD-20261028.md",
           "children": []
         }
       ]

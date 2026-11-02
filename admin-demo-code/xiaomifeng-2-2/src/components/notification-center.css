@@ -1,0 +1,23 @@
+.notification-center .ant-drawer-body { display: flex; flex-direction: column; overflow: hidden; }
+.notification-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex: none; }
+.notification-toolbar .ant-tabs { min-width: 0; }
+.notification-toolbar .ant-tabs-nav { margin: 0; }
+.notification-toolbar .ant-tabs-tab { padding: 12px 0; }
+.notification-count { display: inline-block; padding: 0 6px; margin-left: 4px; border: 1px solid #91d5ff; border-radius: 2px; color: var(--admin-color-primary); background: #e6f7ff; font-size: 12px; line-height: 20px; }
+.notification-read-all { margin-top: 6px; color: var(--admin-color-primary); border-color: var(--admin-color-primary); }
+.notification-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 20px; border-top: 1px solid var(--admin-color-split); }
+.notification-item { display: flex; gap: 14px; align-items: flex-start; width: 100%; padding: 22px 12px 22px 8px; border: 0; border-bottom: 1px solid var(--admin-color-split); background: #fff; text-align: left; font: inherit; color: var(--admin-color-text); cursor: pointer; }
+.notification-item:hover, .notification-item:focus-visible { background: #f0f5ff; }
+.notification-dot { flex: none; width: 5px; height: 5px; margin-top: 24px; border-radius: 50%; background: var(--admin-color-primary); }
+.notification-icon { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; color: var(--admin-color-error); background: #fff1f0; font-size: 23px; }
+.notification-content { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 8px; }
+.notification-heading { display: flex; gap: 8px; align-items: flex-start; }
+.notification-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.notification-heading .ant-tag { flex: none; margin: 0; }
+.notification-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; color: var(--admin-color-text-secondary); line-height: 22px; }
+.notification-meta { display: flex; gap: 12px; align-items: center; color: var(--admin-color-helper); font-size: 12px; }
+.notification-read-state { padding: 0 5px; border-radius: 2px; color: var(--admin-color-primary); background: #e6f4ff; }
+.notification-item.is-read .notification-dot { visibility: hidden; }
+.notification-item.is-read .notification-title { font-weight: 400; }
+.notification-item.is-read .notification-read-state { color: var(--admin-color-text-secondary); background: #f2f4f7; }
+.notification-list .ant-empty { margin-top: 80px; }

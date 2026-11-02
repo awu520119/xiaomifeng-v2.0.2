@@ -22,7 +22,9 @@ if hasattr(sys.stdout, "reconfigure"):
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from page_ops import find_node, load_manual_nav, load_nav, manual_file, save_manual_nav  # type: ignore
-from sync_nav import sync_nav  # type: ignore
+from page_ops import project_transaction, iter_nodes
+from page_references import plan_references, unresolved_references
+from sync_project import sync
 
 
 def detach(tree, node_id):
@@ -49,6 +51,10 @@ def attach(tree, parent_id, node):
     return False
 
 
+from project_lock import locked_cli
+
+
+@locked_cli
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("project_dir")
@@ -77,17 +83,9 @@ def main() -> int:
     except ValueError as error:
         print(f"❌ {error}", file=sys.stderr)
         return 1
+    if old_md and any(n.get("mdPath") == node.get("mdPath") and n["id"] != node["id"] for n in iter_nodes(data["tree"])):
+        old_md = None  # Shared source remains at its original path.
     old_desc_html = project / "desc" / f"{node['id']}.html"
-    old_desc_js = project / "desc" / f"{node['id']}.desc.js"  # 历史遗留
-
-    if args.dry_run:
-        print("DRY-RUN 计划：")
-        print(f"  id:    {node['id']} -> {new_id}")
-        if args.new_title:
-            print(f"  title: {node.get('title')} -> {args.new_title}")
-        if args.new_parent is not None:
-            print(f"  parent: -> {args.new_parent or '顶层'}")
-        return 0
 
     # ===== 前置校验：全部通过前不修改任何文件/数据，避免失败时项目处于损坏状态 =====
     if new_id != node["id"]:
@@ -99,7 +97,6 @@ def main() -> int:
             old_html.with_name(new_id + ".html") if old_html else None,
             old_md.with_name(new_id + ".md") if old_md else None,
             project / "desc" / f"{new_id}.html",
-            project / "desc" / f"{new_id}.desc.js",
         ):
             if t and t.exists():
                 print(f"❌ 目标文件已存在：{t}", file=sys.stderr)
@@ -117,41 +114,63 @@ def main() -> int:
             print(f"❌ 新父节点 {args.new_parent} 是该节点的后代，会造成循环引用", file=sys.stderr)
             return 1
 
-    # ===== 树结构变更（先移动成功，再动文件）=====
-    # new_parent 传空串表示移动到顶层（attach 支持 parent_id=""）
-    if args.new_parent is not None:
-        detached = detach(data["tree"], node["id"])
-        if not attach(data["tree"], args.new_parent, detached):
-            # 前置已校验 new_parent 存在，理论不会走到；回滚到根兜底
-            print(f"❌ 新父节点 {args.new_parent} 不存在", file=sys.stderr)
-            data["tree"].append(detached)
+    moves = {}
+    if new_id != node['id']:
+        for source in (old_html, old_md):
+            if source and source.exists():
+                moves[source] = source.with_name(new_id + source.suffix)
+    references = plan_references(project, node['id'], new_id, moves) if moves or new_id != node['id'] else {}
+    for warning in unresolved_references(project, node["id"], references) if new_id != node["id"] else []:
+        print(f"⚠ {warning}")
+    if args.dry_run:
+        print(f"DRY-RUN: {node['id']} -> {new_id}")
+        for source, target in moves.items():
+            print(f"  - 文件 {source.relative_to(project)} -> {target.relative_to(project)}")
+        for source in references:
+            print(f"  - 更新引用 {source.relative_to(project)}")
+        if args.new_title:
+            print(f"  - 标题 {node['title']} -> {args.new_title}")
+        if args.new_parent is not None:
+            print(f"  - 移至 {args.new_parent or '顶层'}")
+        return 0
+
+    try:
+        with project_transaction(project, manual=True, extra_files=references):
+            for source, content in references.items():
+                source.write_text(content, encoding="utf-8")
+            # ===== 树结构变更（先移动成功，再动文件）=====
+            # new_parent 传空串表示移动到顶层（attach 支持 parent_id=""）
+            if args.new_parent is not None:
+                detached = detach(data["tree"], node["id"])
+                if not attach(data["tree"], args.new_parent, detached):
+                    # 前置已校验 new_parent 存在，理论不会走到；回滚到根兜底
+                    print(f"❌ 新父节点 {args.new_parent} 不存在", file=sys.stderr)
+                    data["tree"].append(detached)
+                    save_manual_nav(project, data)
+                    raise ValueError("操作后的目录同步失败")
+            if args.new_title:
+                node["title"] = args.new_title
+            if args.new_order is not None:
+                node["order"] = args.new_order
+
+            # ===== 物理重命名（目标文件已校验不存在）=====
+            if new_id != node["id"]:
+                if old_html and old_html.exists():
+                    new_html = old_html.with_name(new_id + ".html")
+                    old_html.rename(new_html)
+                    node["htmlPath"] = new_html.relative_to(project).as_posix()
+                if old_md and old_md.exists():
+                    new_md = old_md.with_name(new_id + ".md")
+                    old_md.rename(new_md)
+                    node["mdPath"] = new_md.relative_to(project).as_posix()
+
+            node["id"] = new_id
             save_manual_nav(project, data)
-            return 1
-    if args.new_title:
-        node["title"] = args.new_title
-    if args.new_order is not None:
-        node["order"] = args.new_order
-
-    # ===== 物理重命名（目标文件已校验不存在）=====
-    if new_id != node["id"]:
-        if old_html and old_html.exists():
-            new_html = old_html.with_name(new_id + ".html")
-            old_html.rename(new_html)
-            node["htmlPath"] = new_html.relative_to(project).as_posix()
-        if old_md and old_md.exists():
-            new_md = old_md.with_name(new_id + ".md")
-            old_md.rename(new_md)
-            node["mdPath"] = new_md.relative_to(project).as_posix()
-        if old_desc_html.exists():
-            old_desc_html.rename(old_desc_html.with_name(new_id + ".html"))
-        if old_desc_js.exists():
-            old_desc_js.rename(old_desc_js.with_name(new_id + ".desc.js"))
-
-    node["id"] = new_id
-    save_manual_nav(project, data)
-    if sync_nav(project, verbose=True) != 0:
+            sync(project, verbose=True)
+            print(f"✅ 已重命名/移动 {args.id} -> {new_id}")
+    except (ValueError, OSError) as error:
+        print(f'❌ 操作已恢复：{error}', file=sys.stderr)
         return 1
-    print(f"✅ 已重命名/移动 {args.id} -> {new_id}")
     return 0
 
 

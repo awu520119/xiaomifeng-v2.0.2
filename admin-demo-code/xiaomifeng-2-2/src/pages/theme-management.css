@@ -1,0 +1,12 @@
+.theme-management { background: #fff; padding: 20px; }
+.theme-toolbar { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.theme-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.theme-filters .ant-space-compact { width: 220px; }
+.theme-filters > .ant-select { width: 150px; }
+.theme-management .ant-table-cell { vertical-align: middle; }
+.theme-management .ant-table-thead > tr > th { color: var(--admin-color-text-secondary); white-space: nowrap; }
+.theme-tags { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px; }
+.theme-tags .ant-tag { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+.theme-more-menu .ant-dropdown-menu .ant-dropdown-menu-item,
+.theme-more-menu .ant-dropdown-menu .ant-dropdown-menu-item-danger { color: var(--admin-color-primary); }

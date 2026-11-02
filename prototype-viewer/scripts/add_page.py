@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""新增一个原型页面并同步 nav.json / nav.js / desc/<id>.html。
-
-用法:
-    python add_page.py <project_dir> --id user-profile --title "用户画像" \
-        --parent user --order 3 \
-        [--create-parent]  # 父节点不存在时自动创建空分组
-"""
+"""新增最小 HTML 和 Markdown 页面，并同步目录与说明。"""
 from __future__ import annotations
 
 import argparse
-import html
+import os
+from html import escape
 import re
 import sys
 from pathlib import Path
@@ -24,9 +19,14 @@ if hasattr(sys.stdout, "reconfigure"):
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from page_ops import find_node, iter_nodes, load_manual_nav, load_nav, manual_file, save_manual_nav  # type: ignore
-from sync_nav import sync_nav  # type: ignore
+from page_ops import project_transaction
+from sync_project import sync
 
 
+from project_lock import locked_cli
+
+
+@locked_cli
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("project_dir")
@@ -66,7 +66,7 @@ def main() -> int:
     html_path = html_file.relative_to(project).as_posix()
     md_path = md_file.relative_to(project).as_posix()
     for node in [*iter_nodes(combined["tree"]), *iter_nodes(data["tree"])]:
-        if node.get("htmlPath") == html_path or node.get("mdPath") == md_path:
+        if node.get("htmlPath") == html_path:
             print(f"❌ 文件路径已被节点 {node['id']} 使用", file=sys.stderr)
             return 1
 
@@ -107,26 +107,31 @@ def main() -> int:
         print("DRY-RUN: 将新增节点：", new_node)
         return 0
 
-    # 创建最小独立 HTML/Markdown 源文件，不预设业务 UI 框架。
-    html_file.parent.mkdir(parents=True, exist_ok=True)
-    md_file.parent.mkdir(parents=True, exist_ok=True)
-    if not html_file.exists():
-        title = html.escape(args.title, quote=True)
-        html_file.write_text(
-            "<!doctype html>\n<html lang=\"zh-CN\">\n<head>\n"
-            "  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
-            f"  <title>{title}</title>\n</head>\n<body>\n  <main>\n    <h1>{title}</h1>\n"
-            "    <p>在此编写页面原型。</p>\n  </main>\n</body>\n</html>\n",
-            encoding="utf-8",
-        )
-    if not md_file.exists():
-        md_file.write_text(f"# {args.title}\n\n请补充此页面的原型说明。\n", encoding="utf-8")
+    try:
+        with project_transaction(project, manual=True):
+            # 创建空白 html/md 模板（若不存在）。
+            html_file.parent.mkdir(parents=True, exist_ok=True)
+            md_file.parent.mkdir(parents=True, exist_ok=True)
+            bridge = escape(Path(os.path.relpath(project / "assets/viewer-bridge.js", html_file.parent)).as_posix())
+            if not html_file.exists():
+                html_file.write_text(
+                    '<!doctype html>\n<html lang="zh-CN"><head><meta charset="UTF-8">'
+                    '<meta name="viewport" content="width=device-width, initial-scale=1">'
+                    '<meta name="device" content="pc">'
+                    f'<title>{escape(args.title)}</title>'
+                    f'<script src="{bridge}"></script>'
+                    '</head><body>'
+                    f'<main><h1>{escape(args.title)}</h1></main>'
+                    '</body></html>\n', encoding='utf-8')
+            if not md_file.exists():
+                md_file.write_text(f"# {args.title}\n\n请补充此页面的原型说明。\n", encoding="utf-8")
 
-    save_manual_nav(project, data)
-    # sync_nav 会自动调用 build_desc 渲染新节点的 desc/<id>.html
-    if sync_nav(project, verbose=True) != 0:
+            save_manual_nav(project, data)
+            sync(project, verbose=True)
+            print(f"✅ 新增节点 {args.id} 完成")
+    except (ValueError, OSError) as error:
+        print(f'❌ 操作已恢复：{error}', file=sys.stderr)
         return 1
-    print(f"✅ 新增节点 {args.id} 完成")
     return 0
 
 

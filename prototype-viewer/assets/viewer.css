@@ -1,13 +1,4 @@
-/* viewer.css — 三栏查看器样式
- *
- * 由 index.html 引入；用 `.viewer-` 前缀与业务页 / desc 页隔离。
- * 改动请只改这一个文件，避免污染业务页 element-plus.css / vant.css 的全局样式。
- *
- * CSS 变量定义在 :root 而不是 .viewer scope 内：startDrag 用
- * ``document.documentElement.style.setProperty('--left-width', ...)``
- * 写到 <html>，如果默认值定义在 .viewer 上，var(--left-width) 会就近
- * 取 .viewer 的 280px 而忽略 inline style，导致拖拽无效。
- */
+/* React viewer shell styles; iframe business pages and descriptions have separate documents. */
 :root {
   --left-width: 280px;
   --right-width: 600px;
@@ -23,8 +14,7 @@
   --viewer-accent: #409eff;
 }
 .viewer, .viewer * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; }
-#app { height: 100%; }
+html, body, #app { margin: 0; padding: 0; height: 100%; }
 .viewer {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
@@ -53,8 +43,8 @@ html, body { margin: 0; padding: 0; height: 100%; }
 .viewer .frame-inner { flex: 1; display: flex; min-height: 0; min-width: 0; }
 .viewer .frame-inner iframe { flex: 1; border: 0; background: #ffffff; min-height: 0; width: 100%; height: 100%; display: block; }
 
-/* ===== 三栏布局：grid-template-columns 由 inline style 注入（gridCols computed）。
-   fallback 仅供 setup() 加载前的极短窗口期使用，避免布局塌缩。 ===== */
+/* ===== 三栏布局：grid-template-columns 由 inline style 注入（React state）。
+   fallback 仅供 React mount 加载前的极短窗口期使用，避免布局塌缩。 ===== */
 .viewer .layout {
   display: grid;
   /* 外层永远等于视口大小：宽度 100vw + overflow hidden 裁掉任何不可压缩的溢出，
@@ -236,3 +226,8 @@ html, body { margin: 0; padding: 0; height: 100%; }
 .viewer .desc-body iframe { flex: 1; border: 0; background: #ffffff; min-height: 0; }
 .viewer .desc-empty { padding: 24px; color: #909399; font-size: 13px; text-align: center; }
 /* .badge 统一用 .topbar .badge，这里不再重复 */
+.viewer .tree-row .toggle, .viewer .node-label { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.viewer .node-label { display: flex; gap: 4px; align-items: center; text-align: left; flex: 1; min-width: 0; }
+.viewer .tree-row button:focus-visible { outline: 2px solid var(--viewer-accent); outline-offset: 2px; }
+.viewer .search-clear { border: 0; background: transparent; padding: 0; }
+.viewer .topbar .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
