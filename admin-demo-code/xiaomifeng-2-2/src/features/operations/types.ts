@@ -13,7 +13,7 @@ export type OpsAlert = {
   deviceId: string; faultType: string; errorCode?: string; firstAt: string; latestAt: string; description: string;
   assigned: string; recoveredAt?: string; closedAt?: string; closeMode?: 'auto' | 'manual'; responseAt?: string; workOrderId?: string; notification: string; timeline: Array<{ at: string; actor: string; action: string }>;
 };
-export type OpsSchedule = { id: string; date: string; shift: string; start: string; end: string; scope: string; person: string; feishu: string; phone: string };
+export type OpsSchedule = { id: string; date: string; shift: string; start: string; end: string; scope: string; person: string; personId?: string; feishu: string; phone: string };
 export type OpsPerson = {
   id: string; name: string; accountId?: string; account?: string; role: string; status: '在岗' | '停用'; feishu: string; phone: string;
   scope: string; notification: '已绑定' | '未绑定';

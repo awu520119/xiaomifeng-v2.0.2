@@ -3,6 +3,158 @@ html:has(.mini-root), body:has(.mini-root), #root:has(.mini-root) { min-width: 0
 .mini-root button, .mini-root input, .mini-root select { font: inherit; }
 .mini-root button { cursor: pointer; }
 .mini-screen { max-width: 460px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: #f6f7f9; }
+.nfc-screen { min-height: 100dvh; }
+.nfc-entry { display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.nfc-entry-art { position:relative; display:grid; place-items:center; width:164px; height:164px; margin:0 auto 28px; border-radius:50%; background:linear-gradient(145deg,#e8f1ff,#f8faff); color:#2776ff; font-size:62px; }
+.nfc-orbit { position:absolute; top:18px; right:4px; display:grid; place-items:center; width:42px; height:42px; border:1px solid #b7d0ff; border-radius:50%; background:#fff; font-size:11px; font-weight:700; }
+.nfc-entry h1,.nfc-welcome h1 { margin:8px 0; font-size:22px; line-height:30px; }
+.nfc-entry p,.nfc-welcome p { max-width:300px; margin:0 auto 25px; color:var(--mini-muted); font-size:14px; line-height:22px; }
+.nfc-entry .mini-main-button { max-width:300px; }
+.nfc-entry-note { margin-top:16px; color:var(--mini-muted); font-size:12px; }
+.nfc-welcome { margin:-4px -16px 20px; padding:24px 20px; background:linear-gradient(140deg,#e8f1ff,#f7f9fc 70%); }
+.nfc-welcome>span { color:var(--mini-blue); font-size:12px; font-weight:600; }
+.nfc-welcome h1 { font-size:20px; }
+.nfc-welcome p { margin:0; font-size:12px; }
+.nfc-list-heading { display:flex; justify-content:space-between; margin-bottom:12px; }
+.nfc-list-heading span { color:var(--mini-muted); font-size:12px; }
+.nfc-cards { display:grid; gap:12px; }
+.nfc-card { display:grid; grid-template-columns:104px minmax(0,1fr) 16px; align-items:center; gap:12px; width:100%; padding:10px; border:1px solid var(--mini-line); border-radius:12px; background:#fff; text-align:left; color:inherit; }
+.nfc-card-art { position:relative; display:grid; place-items:center; height:86px; overflow:hidden; border-radius:8px; color:#fff; }
+.nfc-card-art.sunrise,.nfc-video-player.sunrise { background:linear-gradient(150deg,#f6bd7c,#bc6571 52%,#354c78); }
+.nfc-card-art.bridge,.nfc-video-player.bridge { background:linear-gradient(150deg,#f4c58d,#9f5f61 52%,#343d5a); }
+.nfc-card-art.mountain,.nfc-video-player.mountain { background:linear-gradient(150deg,#a8d3dc,#567b87 50%,#36475b); }
+.nfc-card-art i { font-size:28px; font-style:normal; }
+.nfc-card-art small { position:absolute; right:6px; bottom:5px; padding:1px 5px; border-radius:4px; background:#0008; font-size:10px; }
+.nfc-card-info { display:grid; min-width:0; gap:5px; }
+.nfc-card-info strong { font-size:15px; }
+.nfc-card-info span,.nfc-card-info small { overflow:hidden; color:var(--mini-muted); text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.nfc-card-arrow { color:#9ba5b0; font-size:22px; }
+.nfc-detail { padding-top:16px; }
+.nfc-video-player { position:relative; display:grid; place-items:center; aspect-ratio:16/10; border-radius:12px; color:#fff; font-size:56px; }
+.nfc-video-player span { position:absolute; right:12px; bottom:10px; padding:3px 7px; border-radius:4px; background:#0008; font-size:12px; }
+.nfc-detail-title { padding:18px 2px 0; }
+.nfc-detail-title h1 { margin:8px 0 4px; font-size:21px; }
+.nfc-detail-title p { margin:0; color:var(--mini-muted); font-size:12px; }
+.nfc-collection-tag { color:var(--mini-blue); font-size:12px; }
+.nfc-detail>.mini-main-button { margin-top:18px; }
+/* 纪念藏品视觉：以旅程影像、收藏编号和实体触碰仪式构建记忆感。 */
+.nfc-screen { background:#f4f1eb; color:#2d302f; --nfc-paper:#f4f1eb; --nfc-ink:#29312f; --nfc-gold:#b68a4b; }
+.nfc-screen .mini-header { background:rgba(250,248,244,.96); border-bottom:1px solid #e6dfd3; }
+.nfc-screen .mini-header strong { letter-spacing:.04em; }
+.nfc-screen .mini-content { background:var(--nfc-paper); }
+.nfc-screen .nfc-entry { position:relative; min-height:calc(100dvh - 54px); overflow:hidden; background:radial-gradient(ellipse at 50% 32%,#fffdf7 0,#f4f1eb 55%,#e9e2d7 100%); }
+.nfc-screen .nfc-entry::before,.nfc-screen .nfc-entry::after { position:absolute; content:''; width:280px; height:280px; border:1px solid rgba(182,138,75,.19); border-radius:50%; pointer-events:none; }
+.nfc-screen .nfc-entry::before { top:13%; left:-190px; }
+.nfc-screen .nfc-entry::after { right:-190px; bottom:8%; width:360px; height:360px; }
+.nfc-screen .nfc-entry-art { position:relative; z-index:1; width:174px; height:174px; margin-bottom:28px; border:1px solid #e2d2b6; border-radius:50%; background:radial-gradient(circle,#fff 0,#f5ead6 68%,#e9d6b4 100%); color:#a77c3f; box-shadow:0 14px 36px #7b61301c,inset 0 0 0 8px #ffffff70; }
+.nfc-screen .nfc-entry-art::before { position:absolute; inset:12px; border:1px dashed #c9ae7c; border-radius:50%; content:''; }
+.nfc-screen .nfc-orbit { top:4px; right:-12px; width:44px; height:44px; border:0; border-radius:50%; background:#293c38; color:#f2ddb2; font-size:10px; letter-spacing:.08em; box-shadow:0 4px 12px #0002; }
+.nfc-screen .mini-eyebrow,.nfc-screen .nfc-collection-tag { color:#997343; letter-spacing:.12em; }
+.nfc-screen .nfc-entry h1 { margin:13px 0 8px; color:#28332f; font-family:serif; font-size:27px; letter-spacing:.12em; }
+.nfc-screen .nfc-entry p { max-width:280px; color:#77756e; }
+.nfc-screen .mini-main-button { border:0; border-radius:26px; background:linear-gradient(110deg,#334942,#253a34); color:#fff7e8; box-shadow:0 8px 20px #263b3430; letter-spacing:.08em; }
+.nfc-screen .nfc-entry-note { margin-top:17px; color:#8b857a; }
+.nfc-screen .nfc-welcome { position:relative; margin:-22px -16px 22px; padding:27px 20px 25px; border:0; border-radius:0 0 22px 22px; background:linear-gradient(145deg,#324943,#203832); color:#fff8ec; }
+.nfc-screen .nfc-welcome::after { position:absolute; right:-22px; bottom:-45px; width:180px; height:180px; border:1px solid #d6bd8a44; border-radius:50%; content:''; }
+.nfc-screen .nfc-welcome>span { color:#d6bd8a; letter-spacing:.16em; }
+.nfc-screen .nfc-welcome h1 { margin:9px 0; color:#fff8ec; font-family:serif; font-size:21px; letter-spacing:.06em; }
+.nfc-screen .nfc-welcome p { color:#d2d8d1; }
+.nfc-screen .nfc-list-heading { align-items:baseline; padding:0 2px 11px; border-bottom:1px solid #ded7cb; }
+.nfc-screen .nfc-list-heading strong { font-family:serif; font-size:18px; letter-spacing:.06em; }
+.nfc-screen .nfc-list-heading span { color:#8d877d; }
+.nfc-screen .nfc-card { grid-template-columns:112px minmax(0,1fr) 12px; gap:13px; padding:9px; border:1px solid #e8e0d4; border-radius:12px; background:#fffdf9; box-shadow:0 4px 14px #4a39200a; }
+.nfc-screen .nfc-card-art { height:92px; border-radius:8px; color:#fff; }
+.nfc-screen .nfc-card-art.sunrise,.nfc-screen .nfc-video-player.sunrise { background:linear-gradient(150deg,#f4cb8e,#b87769 52%,#3d5c69) !important; }
+.nfc-screen .nfc-card-art.bridge,.nfc-screen .nfc-video-player.bridge { background:linear-gradient(150deg,#f0c88e,#aa7663 52%,#354b53) !important; }
+.nfc-screen .nfc-card-art.mountain,.nfc-screen .nfc-video-player.mountain { background:linear-gradient(150deg,#c5d9c6,#65857a 50%,#344b49) !important; }
+.nfc-screen .nfc-card-art small,.nfc-screen .nfc-video-player span { border:0; border-radius:4px; background:#142521a6; color:#fff; }
+.nfc-screen .nfc-card-info strong { color:#333b36; font-family:serif; font-size:16px; }
+.nfc-screen .nfc-card-info span { color:#68736c; }
+.nfc-screen .nfc-card-info small { color:#a09685; }
+.nfc-screen .nfc-card-arrow { color:#b49a6c; }
+.nfc-screen .nfc-video-player { overflow:hidden; border-radius:14px; box-shadow:0 10px 24px #2c38262b; }
+.nfc-screen .nfc-video-player::after { position:absolute; inset:0; border:1px solid #ffffff40; border-radius:inherit; content:''; pointer-events:none; }
+.nfc-screen .nfc-video-player > .anticon { filter:drop-shadow(0 2px 6px #0005); }
+.nfc-screen .nfc-detail-title { padding:18px 2px 0; }
+.nfc-screen .nfc-detail-title h1 { color:#2c3832; font-family:serif; font-size:25px; letter-spacing:.04em; }
+.nfc-screen .nfc-detail-title p { color:#817c72; }
+.nfc-screen .mini-detail-section { border:1px solid #e7dfd2; border-radius:10px; background:#fffdf9; box-shadow:none; }
+.nfc-screen .mini-detail-section h3 { color:#39453e; font-family:serif; }
+.nfc-screen .mini-detail-section p { color:#6d7069; }
+.nfc-screen .nfc-deck { position:relative; padding:10px 8px 18px; perspective:1000px; }
+.nfc-screen .nfc-deck::before,.nfc-screen .nfc-deck::after { position:absolute; z-index:0; top:20px; right:0; bottom:9px; left:18px; border:1px solid #e0d5c2; border-radius:14px; background:#e9e0d1; content:''; transform:rotate(3deg); }
+.nfc-screen .nfc-deck::after { left:13px; background:#f0e9dc; transform:rotate(-2deg); }
+.nfc-screen .nfc-memory-card { position:relative; z-index:1; display:block; width:100%; padding:10px; border:1px solid #e1d5c0; border-radius:14px; background:#fffaf1; color:#313a34; text-align:left; box-shadow:0 14px 30px #44351e24; transform:rotate(-.5deg); animation:nfc-card-arrive .28s ease-out; }
+.nfc-screen .nfc-memory-image { position:relative; display:grid; height:245px; place-items:center; overflow:hidden; border-radius:8px; color:#fff; }
+.nfc-screen .nfc-memory-card.sunrise .nfc-memory-image { background:linear-gradient(155deg,#f6d399 0%,#c77f69 40%,#425f68 100%); }
+.nfc-screen .nfc-memory-card.bridge .nfc-memory-image { background:linear-gradient(150deg,#efc68d,#ac755f 47%,#314a50); }
+.nfc-screen .nfc-memory-card.mountain .nfc-memory-image { background:linear-gradient(150deg,#d4d8b9,#718b76 48%,#354d4b); }
+.nfc-screen .nfc-memory-image::after { position:absolute; inset:0; background:linear-gradient(180deg,#101c1710 40%,#101c1780); content:''; }
+.nfc-screen .nfc-memory-image i { z-index:1; display:grid; width:58px; height:58px; place-items:center; border:1px solid #fff9; border-radius:50%; background:#18241e4a; font-size:27px; font-style:normal; backdrop-filter:blur(3px); }
+.nfc-screen .nfc-memory-image small,.nfc-screen .nfc-memory-image em { position:absolute; z-index:1; left:13px; color:#fff; font-size:10px; font-style:normal; letter-spacing:.1em; }
+.nfc-screen .nfc-memory-image small { right:12px; bottom:12px; left:auto; padding:3px 7px; border-radius:12px; background:#16231f88; }
+.nfc-screen .nfc-memory-image em { top:13px; }
+.nfc-screen .nfc-memory-caption { display:grid; gap:4px; padding:13px 8px 8px; }
+.nfc-screen .nfc-memory-caption span { color:#92764c; font-size:11px; letter-spacing:.08em; }
+.nfc-screen .nfc-memory-caption strong { font-family:serif; font-size:21px; letter-spacing:.08em; }
+.nfc-screen .nfc-memory-caption small { color:#999081; font-size:11px; }
+.nfc-screen .nfc-memory-stamp { position:absolute; right:23px; bottom:28px; display:grid; width:42px; height:42px; place-content:center; border:1px solid #bd9d69; border-radius:50%; color:#aa8956; font-family:serif; font-size:10px; line-height:13px; text-align:center; transform:rotate(10deg); }
+.nfc-screen .nfc-page-turn { display:flex; align-items:center; justify-content:center; gap:24px; margin:3px 0 12px; }
+.nfc-screen .nfc-page-turn button { width:36px; height:36px; border:1px solid #d9c9aa; border-radius:50%; background:#fffaf1; color:#816b49; font-size:24px; line-height:1; }
+.nfc-screen .nfc-page-turn span { color:#46534a; font-size:13px; letter-spacing:.1em; }
+.nfc-screen .nfc-page-turn i { padding:0 5px; color:#b6aa96; font-style:normal; }
+.nfc-screen .nfc-open-card { display:block; width:100%; min-height:44px; border:1px solid #334940; border-radius:24px; background:#334940; color:#fff8eb; letter-spacing:.08em; }
+.nfc-screen .nfc-card-dots { display:flex; justify-content:center; gap:7px; margin-top:14px; }
+.nfc-screen .nfc-card-dots button { width:6px; height:6px; padding:0; border:0; border-radius:6px; background:#c9c0b2; transition:width .2s ease,background .2s ease; }
+.nfc-screen .nfc-card-dots button.active { width:20px; background:#a78652; }
+@keyframes nfc-card-arrive { from { opacity:.5; transform:translateX(12px) rotate(1deg) scale(.98); } to { opacity:1; transform:rotate(-.5deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .nfc-screen .nfc-memory-card { animation:none; } }
+.nfc-screen.has-immersive { position:relative; height:100dvh; overflow:hidden; background:#111; }
+.nfc-screen.has-immersive .mini-header { position:absolute; z-index:3; top:0; right:0; left:0; border:0; background:linear-gradient(#0007,transparent); color:#fff; }
+.nfc-screen.has-immersive .mini-header strong { color:#fff; }
+.nfc-screen.has-immersive .mini-back { color:#fff; }
+.nfc-screen.has-immersive .nfc-detail { display:flex; flex:1; flex-direction:column; justify-content:center; padding:0; background:#111; }
+.nfc-screen.has-immersive .nfc-video-player { position:relative; display:block; width:100%; height:100%; min-height:0; aspect-ratio:auto; overflow:hidden; border-radius:0; background:#111 !important; box-shadow:none; }
+.nfc-screen.has-immersive .nfc-video-player video { width:100%; height:100%; object-fit:cover; }
+.nfc-screen.has-immersive .nfc-video-player::after { border:0; border-radius:0; background:linear-gradient(180deg,#0005 0%,transparent 28%,transparent 52%,#0009 100%); }
+.nfc-video-overlay { position:absolute; z-index:2; right:20px; bottom:72px; left:20px; display:grid; gap:8px; color:#fff; pointer-events:none; }
+.nfc-video-overlay span { color:#f1d8a8; font-size:12px; letter-spacing:.1em; }
+.nfc-video-overlay strong { font-family:serif; font-size:28px; letter-spacing:.08em; }
+.nfc-video-overlay small { color:#ffffffc9; font-size:12px; }
+.nfc-screen.has-immersive .nfc-immersive-story { position:absolute; right:20px; bottom:18px; left:20px; z-index:2; color:#ffffffbd; }
+.nfc-immersive-story span { display:none; }
+.nfc-immersive-story p { margin:0; font-size:12px; }
+/* 用户端小程序统一为中性结构稿，品牌与氛围效果留给视觉设计阶段。 */
+.nfc-screen { background:#f5f5f5; color:#303338; --nfc-paper:#f5f5f5; --nfc-ink:#303338; --nfc-gold:#777; }
+.nfc-screen .mini-header { background:#fff; border-color:#e5e5e5; }
+.nfc-screen .mini-content,.nfc-screen .nfc-entry { background:#f5f5f5; }
+.nfc-screen .nfc-entry::before,.nfc-screen .nfc-entry::after,.nfc-screen .nfc-welcome::after { display:none; }
+.nfc-screen .nfc-entry-art { border:1px solid #d5d5d5; border-radius:8px; background:#e9e9e9; color:#777; box-shadow:none; }
+.nfc-screen .nfc-entry-art::before { border-color:#c4c4c4; border-radius:6px; }
+.nfc-screen .nfc-orbit { border:1px solid #c9c9c9; border-radius:50%; background:#fff; color:#666; box-shadow:none; }
+.nfc-screen .mini-eyebrow,.nfc-screen .nfc-collection-tag,.nfc-screen .nfc-welcome>span { color:#696c70; letter-spacing:normal; }
+.nfc-screen .nfc-entry h1,.nfc-screen .nfc-welcome h1,.nfc-screen .nfc-detail-title h1 { color:#303338; font-family:inherit; font-size:22px; font-weight:600; letter-spacing:normal; }
+.nfc-screen .nfc-entry p,.nfc-screen .nfc-welcome p { color:#696c70; }
+.nfc-screen .mini-main-button,.nfc-screen .nfc-open-card { border:1px solid #bfc3c8; border-radius:4px; background:#e8e9eb; color:#303338; box-shadow:none; letter-spacing:normal; }
+.nfc-screen .nfc-welcome { border:1px solid #dedede; border-radius:4px; background:#ececec; color:#303338; }
+.nfc-screen .nfc-welcome h1 { font-size:19px; }
+.nfc-screen .nfc-list-heading { border-color:#ddd; }
+.nfc-screen .nfc-list-heading strong { color:#303338; font-family:inherit; font-size:16px; letter-spacing:normal; }
+.nfc-screen .nfc-deck::before,.nfc-screen .nfc-deck::after { border-color:#ddd; border-radius:4px; background:#e8e8e8; box-shadow:none; }
+.nfc-screen .nfc-memory-card { border:1px solid #ccc; border-radius:4px; background:#fff; color:#303338; box-shadow:none; transform:none; animation:none; }
+.nfc-screen .nfc-memory-image { border-radius:2px; background:#dedede !important; color:#676b70; }
+.nfc-screen .nfc-memory-image::after { background:#00000016; }
+.nfc-screen .nfc-memory-image i { border:1px solid #aaa; border-radius:50%; background:#ffffffb8; color:#666; backdrop-filter:none; }
+.nfc-screen .nfc-memory-image small,.nfc-screen .nfc-memory-image em { color:#555; }
+.nfc-screen .nfc-memory-image small { border-radius:2px; background:#ffffffd9; }
+.nfc-screen .nfc-memory-caption span,.nfc-screen .nfc-memory-caption small { color:#696c70; }
+.nfc-screen .nfc-memory-caption strong { color:#303338; font-family:inherit; font-size:18px; letter-spacing:normal; }
+.nfc-screen .nfc-memory-stamp { border:1px solid #aaa; border-radius:50%; color:#696c70; font-family:inherit; transform:none; }
+.nfc-screen .nfc-page-turn button { border:1px solid #c9c9c9; border-radius:4px; background:#fff; color:#555; }
+.nfc-screen .nfc-page-turn span { color:#303338; }
+.nfc-screen .nfc-card-dots button.active { background:#696c70; }
+.nfc-screen .nfc-detail-title h1 { font-size:22px; }
+.nfc-screen .nfc-immersive-story { color:#fff; }
 .mini-header { flex: 0 0 54px; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; padding: 0 12px; background: #fff; border-bottom: 1px solid var(--mini-line); }
 .mini-header strong { text-align: center; font-size: 16px; line-height: 22px; font-weight: 600; }
 .mini-back { width: 44px; height: 44px; border: 0; background: transparent; color: var(--mini-ink); font-size: 30px !important; line-height: 1; text-align: left; }

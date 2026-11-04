@@ -1,12 +1,66 @@
-import source from '../../小程序_详情浏览.html?raw';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { couponStoreKey, effectiveCouponStatus, initialCouponStore, normalizeCouponStore, priceDiscount } from '../mock/coupons';
+import type { CouponStore } from '../mock/coupons';
+import { EnvironmentOutlined, PhoneOutlined, PlayCircleFilled, DownOutlined, LeftOutlined, CameraOutlined, NodeIndexOutlined } from '@ant-design/icons';
+import cover from '../assets/lotus-pond.jpg';
+import sampleVideo from '../assets/nfc-demo.mp4';
+import MiniOrderListPage from './MiniOrderListPage';
 import './ticket-mini.css';
+import './mini-order-list.css';
+import './scenic-mini.css';
 
-// 复用原有可交互线框图，以套票列表作为进入页面。
-const documentHtml = source
-  .replace("tab: 'single', point: '烟雨画桥', theme: null, orders: 0", "tab: 'multi', point: '烟雨画桥', theme: null, orders: 0")
-  .replace('/* ================= 初始化 ================= */\nrenderHome();', "/* ================= 初始化 ================= */\nswitchTab('multi');")
-  .replace('</head>', '<style>body{padding:0;min-height:0;background:#fff}.stage{display:block}.phone{width:100%;height:100vh}.screen{border:0}.anno-tag{display:none!important}</style></head>');
-
+type Theme = { id: string; name: string; cover?: string; points: string[]; price: number; delivery: string[]; videoFormat?: string; photoCount?: number; rawCount?: number; scenic?: string; intro?: string; duration?: number; distance?: number; pointInfo?: Record<string, { effect?: string; route?: string; files?: Array<{ uid?: string; name?: string; url?: string; thumbUrl?: string }> }> };
+const examplePointInfo = { 烟雨画桥: { effect: '桥边走拍，呈现人物与湖景同框', files: [{ uid: 'bridge', name: '画桥拍摄角度示例', url: cover }] }, 湖心栈道: { effect: '湖心环绕拍摄，记录人与湖面的开阔视角', files: [{ uid: 'lake', name: '栈道拍摄角度示例', url: cover }] }, 云顶观景台: { effect: '从人物拉升至景区全景', files: [{ uid: 'view', name: '观景台拍摄角度示例', url: cover }] } };
+const themes: Theme[] = [
+  { id: 'west-1', name: '烟雨画桥航拍三运镜', points: ['烟雨画桥'], price: 28, delivery: ['智能精剪', '精选照片'] },
+  { id: 'west-2', name: '湖心栈道环绕旅拍', points: ['湖心栈道'], price: 38, delivery: ['智能精剪', '原片素材'] },
+  { id: 'suite-1', name: '西湖双点联拍', points: ['烟雨画桥', '湖心栈道'], price: 68, duration: 15, distance: 1.8, pointInfo: examplePointInfo, intro: '走过画桥与湖畔，记录两处西湖风光', delivery: ['智能精剪', '精选照片', '原片素材'], videoFormat: '横屏、竖屏', photoCount: 3, rawCount: 2 },
+  { id: 'suite-2', name: '西湖三景旅拍套票', points: ['烟雨画桥', '湖心栈道', '云顶观景台'], price: 88, duration: 25, distance: 3.5, pointInfo: examplePointInfo, intro: '串联湖畔与观景台，留住旅途多重视角', delivery: ['智能精剪', '精选照片'], videoFormat: '横屏、竖屏', photoCount: 3 },
+];
+type ManagedTheme = { id: number; type: string; status: string; price: number; configuration?: { name?: string; cover?: Array<{ url?: string; thumbUrl?: string }>; scenic?: string; intro?: string; duration?: number; distance?: number; selectedPoints?: string[]; points?: Theme['pointInfo']; jointDelivery?: { enabled?: string[]; orientations?: string[] } } };
+const pointExamples: Record<string, { phone: string; hours: string; distance: string }> = { 烟雨画桥: { phone: '13098765001', hours: '09:00–18:00', distance: '182m' }, 湖心栈道: { phone: '13098765002', hours: '09:00–17:30', distance: '1.2km' }, 云顶观景台: { phone: '13098765003', hours: '08:30–17:00', distance: '2.5km' } };
+function managedThemes(): Theme[] {
+  try { const rows = JSON.parse(localStorage.getItem('suite-theme-configurations') || '[]') as ManagedTheme[]; return rows.filter((row) => row.type === '套票主题' && row.status === '已发布' && row.configuration?.selectedPoints?.length).map((row) => { const c = row.configuration!; return { id: `managed-${row.id}`, name: c.name || '套票主题', cover: c.cover?.[0]?.url || c.cover?.[0]?.thumbUrl, scenic: c.scenic, intro: c.intro, points: c.selectedPoints!, price: row.price, duration: c.duration, distance: c.distance, pointInfo: c.points, delivery: (c.jointDelivery?.enabled || []).map((item) => item === '高光照片' ? '精选照片' : item), videoFormat: c.jointDelivery?.orientations?.join('、') }; }); } catch { return []; }
+}
+function estimatedTicketPrice(theme: Theme, store: CouponStore, phone: string): number {
+  const discounts = store.tickets.filter((ticket) => {
+    if (ticket.phoneDigits !== phone || ticket.couponKind === '体验权益券' || ticket.lockedOrderId || effectiveCouponStatus(ticket) !== '待使用' || theme.price < ticket.minSpend) return false;
+    if (ticket.productIds.length && !ticket.productIds.includes(theme.id)) return false;
+    if (!ticket.shootingPoints.includes('全部拍摄点') && !theme.points.every((point) => ticket.shootingPoints.includes(point))) return false;
+    return ticket.availableRange.includes('全部可用') || ticket.availableRange.includes(theme.name);
+  }).map((ticket) => priceDiscount(ticket, theme.price)).filter((discount) => theme.price - discount > 0);
+  return Math.round((theme.price - Math.max(0, ...discounts)) * 100) / 100;
+}
+function loadEstimateStore(): CouponStore {
+  try { const saved = localStorage.getItem(couponStoreKey); return saved ? normalizeCouponStore(JSON.parse(saved) as CouponStore) : initialCouponStore; } catch { return initialCouponStore; }
+}
 export default function TicketMiniPage() {
-  return <div className="ticket-mini-page"><div className="ticket-mini-frame"><iframe title="景区套票小程序" srcDoc={documentHtml} sandbox="allow-scripts allow-modals" /></div></div>;
+  const [managed] = useState(managedThemes);
+  const [params] = useSearchParams();
+  const phone = params.get('phone') || '13800000001';
+  const couponStore = loadEstimateStore();
+  const [scenic, setScenic] = useState('西湖景区');
+  const [imageView, setImageView] = useState<string>();
+  const [point, setPoint] = useState('烟雨画桥');
+  const [mode, setMode] = useState<'单点旅拍' | '多点套票'>('单点旅拍');
+  const [theme, setTheme] = useState<Theme | null>(null);
+  const [orders, setOrders] = useState(false);
+  const [newOrder, setNewOrder] = useState<string>();
+  const [expanded, setExpanded] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [preview, setPreview] = useState(false);
+  const [packageOpen, setPackageOpen] = useState(false);
+  const create = () => {
+    if (!theme) return;
+    if (theme.points.length === 1) { setNotice('暂无法购买该套餐'); return; }
+    const id = `DEMO-${Date.now()}`;
+    const order = { id, type: '套票', name: theme.name, points: theme.points, pointPhones: Object.fromEntries(theme.points.flatMap((point) => theme.id.startsWith('suite-') && pointExamples[point]?.phone ? [[point, pointExamples[point].phone]] : [])), price: theme.price, status: '待使用', done: 0, pointStates: theme.points.map(() => '待拍摄'), versions: [], delivery: theme.delivery, photoCount: theme.photoCount, videoFormat: theme.videoFormat, rawCount: theme.rawCount, createdAt: new Date().toLocaleString('zh-CN', { hour12: false }) };
+    const saved = JSON.parse(localStorage.getItem('suite-mini-orders') || '[]');
+    localStorage.setItem('suite-mini-orders', JSON.stringify([order, ...saved]));
+    setNewOrder(id); setOrders(true);
+  };
+  if (orders) return <MiniOrderListPage initialOrderId={newOrder} onExit={() => { setOrders(false); setNewOrder(undefined); }} />;
+  const list = [...themes.filter(() => scenic === '西湖景区'), ...managed.filter((item) => item.scenic === scenic)].filter((item) => mode === '多点套票' ? item.points.length > 1 : item.points.length === 1 && item.points[0] === point);
+  return <div className="ticket-mini-page"><div className="ticket-mini-frame scenic-screen"><div className="scenic-scroll"><div className="scenic-cover" style={{ backgroundImage: `linear-gradient(#0002,#0002),url(${cover})` }}><div className="scenic-top">10:10 <span>▮▮▮ 4G ▰</span></div><div className="scenic-nav"><button aria-label="返回" onClick={() => theme ? setTheme(null) : setNotice('已在景区详情')}><LeftOutlined /></button><span>••• ◉</span></div></div>{theme ? <div className="scenic-detail"><div className="scenic-theme-head"><h1>{theme.name}</h1><span>♨ 224</span></div>{theme.points.length > 1 ? <p>{`多点套票　${theme.points.length} 个拍摄点`}</p> : <div className="scenic-creator"><img src={cover} alt="" /><div><strong>航拍创作者</strong><small>作品展示</small></div></div>}{theme.delivery.includes('智能精剪') && <section><h3>智能精剪视频</h3>{theme.videoFormat && <p>{theme.videoFormat}</p>}<div className="scenic-video-strip">{["横屏样片", "竖屏样片"].map((label) => <button key={label} className="scenic-sample" style={{ backgroundImage: `url(${cover})` }} onClick={() => setPreview(true)} aria-label={`播放${label}`}><small>00:06</small><PlayCircleFilled /></button>)}</div></section>}{theme.delivery.includes('精选照片') && <section><h3>精选照片</h3>{theme.photoCount && <p>{theme.photoCount} 张</p>}<div className="scenic-photos">{[1,2,3].map((i) => <img src={cover} alt="精选照片示例" key={i} />)}</div></section>}{theme.delivery.includes('原片素材') && <section><h3>原片素材</h3><p className="scenic-raw">完整航段原片，可自行创作{theme.rawCount ? `，${theme.rawCount} 段` : ''}</p></section>}<section><h3>拍摄路线</h3><div className="scenic-route-summary"><div><b>{theme.points.length}</b><span>拍摄点数</span></div><div><b>{theme.duration ?? '—'}<small>{theme.duration ? ' 分钟' : ''}</small></b><span>预计时长</span></div><div><b>{theme.distance ?? '—'}<small>{theme.distance ? ' km' : ''}</small></b><span>路线距离</span></div></div>{theme.points.map((name, i) => { const info = theme.pointInfo?.[name]; const images = (info?.files || []).map((file) => file.url || file.thumbUrl).filter((url): url is string => Boolean(url)); const example = theme.id.startsWith('suite-') ? pointExamples[name] : undefined; const phone = example?.phone; const now = new Date(); const minutes = now.getHours() * 60 + now.getMinutes(); const [opening, closing] = (example?.hours || '').split('–').map((time) => { const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; }); const isOpen = example ? minutes >= opening && minutes < closing : undefined; return <div className={`scenic-route-detail${i === theme.points.length - 1 ? ' scenic-route-last' : ''}`} key={name}><span className="scenic-route-number">{i + 1}</span><div className="scenic-route-content"><strong>{name}</strong>{info?.effect && <p className="scenic-route-effect">{info.effect}</p>}<div className="scenic-point-meta"><div className="scenic-point-meta-line"><span className={`scenic-business-status ${isOpen === undefined ? 'unknown' : isOpen ? 'open' : 'closed'}`}><i />{isOpen === undefined ? '营业状态待确认' : isOpen ? '营业中' : '未营业'}</span>{example && <span className="scenic-business-hours">{example.hours}</span>}{example && <span className="scenic-point-distance"><EnvironmentOutlined /> 距您 {example.distance}</span>}</div></div>{images.length > 0 && <div className="scenic-angle-list">{images.map((url, index) => <button key={`${url.slice(-24)}-${index}`} onClick={() => setImageView(url)} aria-label={`${name}拍摄角度示例 ${index + 1}`}><img src={url} alt="" /></button>)}</div>}<div className="scenic-route-actions"><button onClick={() => setNotice(`${name}暂无法打开导航`)}><EnvironmentOutlined /> 导航</button>{phone && <button onClick={() => setNotice(`${name}电话 ${phone}`)}><PhoneOutlined /> 电话</button>}</div></div></div>; })}</section></div> : <><div className="scenic-intro-new"><h1>{scenic}</h1>{managed.some((item) => item.scenic && item.scenic !== '西湖景区') && <label className="scenic-select">切换景区 <select value={scenic} onChange={(event) => { setScenic(event.target.value); setMode('多点套票'); }}>{['西湖景区', ...new Set(managed.map((item) => item.scenic).filter((value): value is string => Boolean(value && value !== '西湖景区')))].map((value) => <option key={value}>{value}</option>)}</select></label>}<p>{scenic === '西湖景区' ? '西湖位于浙江省杭州市，山水相映，拥有多个适合旅拍拍摄的景点。' : '发现景区的拍摄主题。'}{expanded && '景区内有多个拍摄点，可选择单点旅拍或多点套票。'}</p><button className="scenic-expand" onClick={() => setExpanded(!expanded)}>{expanded ? '收起' : '展开'} ▾</button><div className="scenic-banner-new" onClick={() => setNotice('暂无法查看玩法')}>玩法专区 <span>去看看 ›</span></div></div><div className="scenic-mode" role="tablist" aria-label="旅拍类型">{(['单点旅拍','多点套票'] as const).map((item) => <button role="tab" className={mode === item ? 'active' : ''} onClick={() => setMode(item)} key={item} aria-selected={mode === item}><span className="scenic-tab-label">{item === '单点旅拍' ? <CameraOutlined aria-hidden="true" /> : <NodeIndexOutlined aria-hidden="true" />}<span>{item}</span></span></button>)}</div>{mode === '单点旅拍' ? <><div className="scenic-switch-new">{['烟雨画桥','湖心栈道'].map((item) => <button className={item === point ? 'active' : ''} onClick={() => setPoint(item)} key={item}>{item}</button>)}</div><div className="scenic-hours-new">营业时间：09:00–18:00 <span>距您 182m</span><button onClick={() => setNotice('暂无法打开导航')}>导航 ➤</button></div></> : null}<div className="scenic-grid-new">{list.map((item) => <button key={item.id} onClick={() => { setTheme(item); setNotice(''); }}><div className="scenic-card-image"><img src={item.cover || cover} alt="" />{item.points.length > 1 && <span className="scenic-ticket-label">多点套票</span>}</div><div className="scenic-card-content"><strong>{item.name}</strong>{item.points.length > 1 ? <><small className="scenic-point-count">含 {item.points.length} 个拍摄点</small><small className="scenic-point-names">{item.points.slice(0, 2).join("、")}{item.points.length > 2 ? "等" : ""}</small></> : <small>正式运营</small>}<div className="scenic-card-price"><b>¥{item.price.toFixed(2)} <em>起</em></b><span>♨ 224</span></div><div className="scenic-estimate"><span>预估到手</span><b>¥{estimatedTicketPrice(item, couponStore, phone).toFixed(2)}</b></div></div></button>)}</div></>}{notice && <p className="scenic-notice" role="status">{notice}</p>}</div>{theme && <div className="scenic-bottom"><div className="scenic-bottom-price"><b>¥{theme.price.toFixed(2)}</b><div className="scenic-estimate"><span>预估到手</span><b>¥{estimatedTicketPrice(theme, couponStore, phone).toFixed(2)}</b></div></div><button onClick={() => theme.points.length > 1 ? create() : setPackageOpen(true)}>{theme.points.length > 1 ? '立即体验' : '选套餐'}</button></div>}{packageOpen && <div className="scenic-package-mask" onClick={() => setPackageOpen(false)}><div className="scenic-package-sheet" onClick={(event) => event.stopPropagation()}><button className="scenic-package-close" onClick={() => setPackageOpen(false)} aria-label="关闭">×</button><h3>选择套餐</h3><div><strong>{theme?.name}</strong><p>¥{theme?.price.toFixed(2)}</p><div className="scenic-estimate"><span>预估到手</span><b>{theme ? `¥${estimatedTicketPrice(theme, couponStore, phone).toFixed(2)}` : "—"}</b></div></div><button className="scenic-package-confirm" onClick={() => { setPackageOpen(false); setNotice('暂无法购买该套餐'); }}>确认选择</button></div></div>}{imageView && <div className="scenic-preview"><button onClick={() => setImageView(undefined)}>关闭</button><img src={imageView} alt="拍摄角度示例" /></div>}{preview && <div className="scenic-preview"><button onClick={() => setPreview(false)}>关闭</button><video src={sampleVideo} poster={cover} controls playsInline /><p>样片</p></div>}</div></div>;
 }

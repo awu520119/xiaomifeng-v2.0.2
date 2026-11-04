@@ -1,3 +1,5 @@
+import type { TicketMediaVersion } from '../../../mock/coupons';
+
 export type SplitMode = 'thirdParty' | 'system';
 export type CollectionMode = 'platform' | 'merchant';
 export type FundingMode = 'order_split' | 'offline_settlement';
@@ -47,6 +49,12 @@ export interface Order {
   couponDiscountAmount?: number;
   couponSerialNo?: string;
   shootInfo?: { themeName?: string; scenicName?: string; shootPoint?: string; route?: string; clipTemplate?: string; motionDesc?: string; peopleCount?: string; flightTaskId?: string; flightTaskIds?: string[]; droneSn?: string };
+  ticketPoints?: Array<{ name: string; route: string; effect: string; status: string; completedAt?: string; taskId?: string; taskIds?: string[] }>;
+  ticketDelivery?: string[];
+  ticketOrientations?: string[];
+  ticketMediaCounts?: { smartHorizontal?: number; smartVertical?: number; photos?: number; rawVideos?: number };
+  ticketMediaVersions?: TicketMediaVersion[];
+  ticketTemplate?: string;
   flowLogs?: Array<{ time: string; title: string }>;
   businessDate: string;
   createdAt: string;

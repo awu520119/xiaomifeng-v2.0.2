@@ -265,6 +265,10 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.order-detail-drawer .order-detail-section:first-child {
+  padding-top: 12px;
+}
+
 .order-detail-section h3 {
   display: flex;
   align-items: center;
@@ -747,4 +751,70 @@
   .order-list-page .order-table-actions { gap: 8px; }
   .order-list-page .order-table-actions .ant-select { width: 170px; }
   .order-list-page .order-table-actions .ant-input-affix-wrapper { width: 230px; }
+}
+.ticket-order-route {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ticket-media-version-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.ticket-media-version-switch > span {
+  color: #696c70;
+  margin-right: 4px;
+}
+
+.ticket-media-version-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  color: #696c70;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+.ticket-order-point {
+  padding: 12px 14px 4px;
+  border: 1px solid #e9ebf0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.ticket-order-point-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ticket-order-delivery {
+  display: grid;
+  gap: 8px;
+}
+
+.ticket-order-delivery-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  border: 1px solid #e9ebf0;
+  border-radius: 4px;
+}
+
+.ticket-order-delivery-row span:last-child,
+.ticket-order-template {
+  color: #8f9499;
+}
+
+.ticket-order-template {
+  margin-top: 10px;
 }

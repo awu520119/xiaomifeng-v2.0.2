@@ -4,6 +4,7 @@ import {
   MobileOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ProfileOutlined,
   ToolOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -17,22 +18,35 @@ import design from '../design/system.json';
 import ThemeManagement from './pages/ThemeManagement';
 import NotificationCenter from './components/NotificationCenter';
 import TicketMiniPage from './pages/TicketMiniPage';
+import MiniOrderListPage from './pages/MiniOrderListPage';
+import NfcCollectionMiniPage from './pages/NfcCollectionMiniPage';
+import OrderListPage from './pages/OrderListPage';
+import { initialCouponStore, normalizeCouponStore, couponStoreKey } from './mock/coupons';
+import { withOrderSamples } from './mock/orderSamples';
+import type { CouponStore } from './mock/coupons';
 
 const { Header, Sider, Content } = Layout;
 
 export default function App() {
+  const [couponStore, setCouponStore] = useState<CouponStore>(() => {
+    try {
+      const saved = localStorage.getItem(couponStoreKey);
+      return withOrderSamples(saved ? normalizeCouponStore(JSON.parse(saved) as CouponStore) : initialCouponStore);
+    } catch { return withOrderSamples(initialCouponStore); }
+  });
+  useEffect(() => { try { localStorage.setItem(couponStoreKey, JSON.stringify(couponStore)); } catch { /* 当前会话仍可继续演示 */ } }, [couponStore]);
   const [operationsStore, setOperationsStore] = useState<OperationsStore>(() => {
-    try { const data = JSON.parse(localStorage.getItem('xiaomifeng-operations-demo-v1') || 'null'); if (data?.devices && data?.alerts && data?.workOrders && data?.schedules && data?.solutions) { if (data.alertContentVersion !== 3) data.alerts = initialOperationsStore.alerts; else data.alerts = data.alerts.map((alert: OperationsStore['alerts'][number]) => alert.id === 'CSV-AL-5' && alert.status === '已关闭' && (!alert.closedAt || alert.closedAt === '2026-11-02 15:05:26') && alert.timeline.some(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26') ? { ...alert, closedAt: '2026-11-02 15:05:26', timeline: alert.timeline.map(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26' ? { ...entry, at: '2026-11-02 15:05:26' } : entry) } : alert); return { ...initialOperationsStore, ...data, alerts: [...data.alerts, ...initialOperationsStore.alerts.filter(alert => !data.alerts.some((item: OperationsStore['alerts'][number]) => item.id === alert.id))], people: data.people ? data.people.map((person: OperationsStore['people'][number]) => ({ ...person, account: person.account || initialOperationsStore.people.find(sample => sample.id === person.id)?.account })) : initialOperationsStore.people, devices: [...data.devices.map((device: OperationsStore['devices'][number]) => { const sample = initialOperationsStore.devices.find(item => item.id === device.id); return device.weather && !device.weather.flightStatus && !device.weather.unavailable && sample?.weather?.flightStatus ? { ...device, weather: sample.weather } : device; }), ...initialOperationsStore.devices.filter(item => item.id === 'DR-105' && !data.devices.some((device: OperationsStore['devices'][number]) => device.id === item.id))] }; } } catch { /* 恢复运维演示数据 */ }
+    try { const data = JSON.parse(localStorage.getItem('xiaomifeng-operations-demo-v1') || 'null'); if (data?.devices && data?.alerts && data?.workOrders && data?.schedules && data?.solutions) { if (data.alertContentVersion !== 3) data.alerts = initialOperationsStore.alerts; else data.alerts = data.alerts.map((alert: OperationsStore['alerts'][number]) => alert.id === 'CSV-AL-5' && alert.status === '已关闭' && (!alert.closedAt || alert.closedAt === '2026-11-02 15:05:26') && alert.timeline.some(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26') ? { ...alert, closedAt: '2026-11-02 15:05:26', timeline: alert.timeline.map(entry => entry.action === '完成处置：已更换电池并确认状态正常' && entry.at === '2026-11-02 14:35:26' ? { ...entry, at: '2026-11-02 15:05:26' } : entry) } : alert); return { ...initialOperationsStore, ...data, solutions: data.solutionAttachmentSampleVersion ? data.solutions : [...data.solutions, ...initialOperationsStore.solutions.filter(item => item.id === 'SOL-ATTACHMENT-DEMO' && !data.solutions.some((existing: OperationsStore['solutions'][number]) => existing.id === item.id))], alerts: [...data.alerts, ...initialOperationsStore.alerts.filter(alert => !data.alerts.some((item: OperationsStore['alerts'][number]) => item.id === alert.id))], people: data.people ? [...data.people.map((person: OperationsStore['people'][number]) => ({ ...person, account: person.account || initialOperationsStore.people.find(sample => sample.id === person.id)?.account })), ...initialOperationsStore.people.filter(sample => !data.peopleSampleVersion && sample.id === 'P-005' && !data.people.some((person: OperationsStore['people'][number]) => person.id === sample.id))] : initialOperationsStore.people, devices: [...data.devices.map((device: OperationsStore['devices'][number]) => { const sample = initialOperationsStore.devices.find(item => item.id === device.id); return device.weather && !device.weather.flightStatus && !device.weather.unavailable && sample?.weather?.flightStatus ? { ...device, weather: sample.weather } : device; }), ...initialOperationsStore.devices.filter(item => item.id === 'DR-105' && !data.devices.some((device: OperationsStore['devices'][number]) => device.id === item.id))] }; } } catch { /* 恢复运维演示数据 */ }
     return initialOperationsStore;
   });
-  useEffect(() => { try { localStorage.setItem('xiaomifeng-operations-demo-v1', JSON.stringify({ ...operationsStore, alertContentVersion: 3 })); } catch { /* 当前会话仍可继续演示 */ } }, [operationsStore]);
+  useEffect(() => { try { localStorage.setItem('xiaomifeng-operations-demo-v1', JSON.stringify({ ...operationsStore, alertContentVersion: 3, peopleSampleVersion: 1, solutionAttachmentSampleVersion: 1 })); } catch { /* 当前会话仍可继续演示 */ } }, [operationsStore]);
   const [collapsed, setCollapsed] = useState(false);
-  const [openKeys, setOpenKeys] = useState<string[]>(() => [window.location.hash.startsWith('#/business/') ? 'business' : 'operations']);
+  const [openKeys, setOpenKeys] = useState<string[]>(() => [window.location.hash.startsWith('#/business/') ? 'business' : window.location.hash.startsWith('#/order-management/') ? 'order-management' : window.location.hash.includes('mini-orders') || window.location.hash.includes('ticket-mini') || window.location.hash.includes('nfc-collection') ? 'user-mini' : 'operations']);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const selectedKey = location.pathname.startsWith('/ops/') || location.pathname.startsWith('/business/') || location.pathname.startsWith('/ticket-mini') ? location.pathname : '/ops/dashboard';
-  const pageTitles: Record<string, string> = { '/ticket-mini': '景区套票小程序端', '/business/themes': '主题管理', '/ops/dashboard': '运维工作台', '/ops/alerts': '告警中心', '/ops/schedule': '值班排班', '/ops/solutions': '处置方案库' };
+  const selectedKey = location.pathname.startsWith('/ops/') || location.pathname.startsWith('/business/') || location.pathname.startsWith('/order-management/') || location.pathname.startsWith('/mini-orders') || location.pathname.startsWith('/ticket-mini') || location.pathname.startsWith('/nfc-collection') ? location.pathname : '/ops/dashboard';
+  const pageTitles: Record<string, string> = { '/mini-orders': '我的订单', '/ticket-mini': '景区套票小程序端', '/nfc-collection': 'NFC藏品视频', '/business/themes': '主题管理', '/order-management/list': '订单列表', '/ops/dashboard': '运维工作台', '/ops/alerts': '告警中心', '/ops/schedule': '值班排班', '/ops/solutions': '处置方案库' };
   const pageTitle = pageTitles[location.pathname] || pageTitles[selectedKey];
 
   return (
@@ -55,8 +69,8 @@ export default function App() {
           openKeys={collapsed ? [] : openKeys}
           onOpenChange={setOpenKeys}
           items={[
-            { key: '/ticket-mini', icon: <MobileOutlined />, label: '景区套票小程序端' },
             { key: 'business', icon: <AppstoreOutlined />, label: '运营中心', children: [{ key: '/business/themes', label: '主题管理' }] },
+            { key: 'order-management', icon: <ProfileOutlined />, label: '订单管理', children: [{ key: '/order-management/list', label: '订单列表' }] },
             {
               key: 'operations',
               icon: <ToolOutlined />,
@@ -68,6 +82,11 @@ export default function App() {
                 { key: '/ops/solutions', label: '处置方案库' },
               ],
             },
+            { key: 'user-mini', icon: <MobileOutlined />, label: '用户端小程序', children: [
+              { key: '/ticket-mini', label: '景区套票' },
+              { key: '/mini-orders', label: '我的订单' },
+              { key: '/nfc-collection', label: 'NFC藏品视频' },
+            ] },
           ]}
           onClick={({ key }) => navigate(key)}
         />
@@ -93,8 +112,11 @@ export default function App() {
 
         <Content className="app-content">
           <Routes>
+            <Route path="/mini-orders" element={<MiniOrderListPage />} />
             <Route path="/ticket-mini" element={<TicketMiniPage />} />
+            <Route path="/nfc-collection" element={<NfcCollectionMiniPage />} />
             <Route path="/business/themes" element={<ThemeManagement />} />
+            <Route path="/order-management/list" element={<OrderListPage store={couponStore} />} />
             <Route path="/ops/dashboard" element={<OperationsWorkbench store={operationsStore} setStore={setOperationsStore} />} />
             <Route path="/ops/alerts" element={<AlertCenter store={operationsStore} setStore={setOperationsStore} />} />
             <Route path="/ops/schedule" element={<DutySchedule store={operationsStore} setStore={setOperationsStore} />} />

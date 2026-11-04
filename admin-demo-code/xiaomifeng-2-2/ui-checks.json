@@ -89,7 +89,7 @@
   },
   {
     "page": "schedule",
-    "name": "新增排班",
+    "name": "批量排班",
     "steps": [
       {
         "action": "click",
@@ -97,7 +97,7 @@
       },
       {
         "action": "visible",
-        "selector": ".ant-modal-body",
+        "selector": ".ops-batch-drawer .ant-drawer-body",
         "checkpoint": true
       }
     ]

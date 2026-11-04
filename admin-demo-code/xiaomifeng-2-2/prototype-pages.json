@@ -15,8 +15,8 @@
       "order": 2
     },
     {
-      "id": "ticket-mini",
-      "title": "景区套票小程序端",
+      "id": "user-mini",
+      "title": "用户端小程序",
       "order": 3
     }
   ],
@@ -83,12 +83,36 @@
     },
     {
       "id": "ticket-mini",
-      "title": "套票浏览与下单",
+      "title": "景区套票",
       "doc": "景区套票小程序端原型说明.md",
       "hash": "#/ticket-mini",
       "mode": "screen",
-      "parent": "ticket-mini",
+      "parent": "user-mini",
       "order": 1,
+      "ready": {
+        "selector": ".ticket-mini-frame iframe"
+      }
+    },
+    {
+      "id": "nfc-collection",
+      "title": "NFC藏品视频",
+      "doc": "NFC藏品视频原型说明.md",
+      "hash": "#/nfc-collection",
+      "mode": "screen",
+      "parent": "user-mini",
+      "order": 2,
+      "ready": {
+        "selector": ".nfc-screen"
+      }
+    },
+    {
+      "id": "mini-orders",
+      "title": "我的订单",
+      "doc": "套票订单列表与详情PRD-20261103.md",
+      "hash": "#/mini-orders",
+      "mode": "screen",
+      "parent": "user-mini",
+      "order": 3,
       "ready": {
         "selector": ".ticket-mini-frame iframe"
       }

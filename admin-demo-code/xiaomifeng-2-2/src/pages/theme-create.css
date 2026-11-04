@@ -32,3 +32,33 @@
 .combo-card .ant-card-head-title { white-space: normal; overflow-wrap: anywhere; }
 .combo-card .ant-card-body { padding: 16px; }
 .combo-card .ant-form-item:last-child { margin-bottom: 0; }
+
+.combo-example { margin:0 0 14px; color:var(--admin-color-text-secondary); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.combo-special { margin-top:16px; }
+
+.delivery-choice-group { display:flex; flex-direction:column; width:100%; gap:12px; }
+.delivery-choice-card { margin:0; width:100%; }
+.delivery-choice-card .ant-card-head-title { overflow:visible; }
+.delivery-choice-card .ant-card-body { padding:12px 16px; }
+.delivery-choice-card.is-selected { border-color:var(--admin-color-primaryBorder); }
+.delivery-choice-hint { color:var(--admin-color-text-secondary); font-size:12px; }
+.delivery-choice-body .combo-templates { margin-bottom:0; }
+
+.template-sample { margin: -4px 0 16px; }
+.template-sample-preview { max-width:280px; min-height:110px; background:#f2f4f7; border-radius:4px; overflow:hidden; }
+.template-sample-preview video, .template-sample-preview img { width:100%; max-height:180px; display:block; object-fit:contain; }
+.template-sample-placeholder { min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--admin-color-text-secondary); font-size:12px; }
+.template-sample-placeholder strong { color:var(--admin-color-text); font-size:14px; }
+.template-sample-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--admin-color-text-secondary); font-size:12px; }
+.raw-material-summary { color:var(--admin-color-text); }
+.raw-material-summary span { display:block; margin-top:4px; color:var(--admin-color-text-secondary); font-size:12px; }
+
+.raw-material-header { color:var(--admin-color-text-secondary); font-size:12px; }
+.combo-orientations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+@media (max-width: 520px) { .combo-orientations { grid-template-columns:1fr; } }
+
+.selected-photo-summary { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; color:var(--admin-color-text); }
+
+.route-point-card.is-unselected .ant-card-body { display:none; }
+.route-point-card.is-selected { border-color:var(--admin-color-primaryBorder); }
+.route-point-card .ant-card-head-title { overflow:visible; }

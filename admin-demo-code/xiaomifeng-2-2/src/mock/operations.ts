@@ -1,11 +1,13 @@
 import { notificationSamples } from './notifications';
-import type { OperationsStore } from '../features/operations/types';
+import dayjs from 'dayjs';
+import type { OperationsStore, OpsAlert } from '../features/operations/types';
 
 export const opsPeople = [
-  { id: 'P-001', name: '陈立', role: '值班主管', status: '在岗' as const, feishu: 'chenli', phone: '138****0216', scope: '全部拍摄点', notification: '已绑定' as const },
-  { id: 'P-002', name: '王珊', role: '运维专员', status: '在岗' as const, feishu: 'wangshan', phone: '139****3381', scope: '雁荡山', notification: '已绑定' as const },
+  { id: 'P-001', account: 'ops_chenli', name: '陈立', role: '值班主管', status: '在岗' as const, feishu: 'chenli', phone: '138****0216', scope: '全部拍摄点', notification: '已绑定' as const },
+  { id: 'P-002', account: 'ops_wangshan', name: '王珊', role: '运维专员', status: '在岗' as const, feishu: 'wangshan', phone: '139****3381', scope: '雁荡山', notification: '已绑定' as const },
   { id: 'P-003', account: 'ops_zhaoqiming', name: '赵启明', role: '运维专员', status: '在岗' as const, feishu: 'zhaoqiming', phone: '186****0709', scope: '南长街', notification: '已绑定' as const },
-  { id: 'P-004', name: '刘工', role: '设备工程师', status: '在岗' as const, feishu: '', phone: '137****6128', scope: '全部拍摄点', notification: '未绑定' as const },
+  { id: 'P-005', account: 'ops_lin', name: '林悦', role: '运维人员', status: '在岗' as const, feishu: '', phone: '—', scope: '全部拍摄点', notification: '未绑定' as const },
+  { id: 'P-004', account: 'ops_liugong', name: '刘工', role: '设备工程师', status: '在岗' as const, feishu: '', phone: '137****6128', scope: '全部拍摄点', notification: '未绑定' as const },
 ];
 
 export const initialOperationsStore: OperationsStore = {
@@ -49,6 +51,7 @@ export const initialOperationsStore: OperationsStore = {
     { id: 'WO-20261021-018', title: '恢复机场网络连接', source: '人工上报', scenic: '雁荡山', airport: '雁荡山北门机场', device: '雁荡山北门机场', deviceId: 'AP-001', description: '例行巡检发现网络设备配置需要复核。', priority: '低', assignee: '刘工', status: '已取消', createdAt: '2026-10-21 11:18:33', updatedAt: '2026-10-21 11:42:09', cancelReason: '现场复核后确认网络运行正常。', records: [{ at: '2026-10-21 11:42:09', actor: '刘工', action: '取消工单', description: '现场复核后确认无需处理。' }] },
   ],
   solutions: [
+    { id: 'SOL-ATTACHMENT-DEMO', name: '机场网络检查与恢复', faultType: '网络异常', deviceType: '机场', model: '', errorCode: '', phenomenon: '机场网络连接中断', causes: '现场网络异常', steps: ['检查网络连接', '确认设备状态恢复'], notes: '', status: '已启用', updatedAt: '2026-11-03 10:00:00', attachments: ['机场网络检查示意.png'] },
     { id: 'SOL-001', name: '机场网络连接异常排查', faultType: '网络异常', deviceType: '机场', model: 'XH-Station V2', errorCode: 'NET-021', phenomenon: '机场心跳延迟、频繁断连或状态长时间未更新。', causes: '网络设备供电异常、网线松动、现场网络波动或路由器配置变化。', steps: ['确认机场供电指示灯及网络设备状态。', '检查网线和接口是否松动，重新插拔并观察连接状态。', '重启网络设备，等待 3 分钟观察心跳恢复。', '仍未恢复时记录设备日志并联系网络维护人员。'], notes: '重启前确认机场当前没有执行中的飞行任务。', status: '已启用', updatedAt: '2026-10-20 16:20:00' },
     { id: 'SOL-002', name: '无人机电池健康度异常处置', faultType: '电池异常', deviceType: '无人机', model: 'DJI M350 RTK', errorCode: 'BAT-008', phenomenon: '电池健康度低于 70%，续航时间明显缩短或电压波动。', causes: '电池循环次数较高、长期满电存放、温度异常或电芯衰减。', steps: ['停止使用告警电池并标记编号。', '查看电池循环次数、温度和电芯电压差。', '检查电池外观是否鼓包、破损或渗液。', '符合更换条件时登记电池编号并替换，复测后更新设备状态。'], notes: '外观异常或电芯压差过大时禁止继续充电。', status: '已启用', updatedAt: '2026-10-22 11:05:00' },
     { id: 'SOL-003', name: '无人机定位信号弱检查', faultType: '定位异常', deviceType: '无人机', model: '通用', errorCode: 'GPS-003', phenomenon: '定位卫星数量少、定位精度降低或飞行器提示定位信号弱。', causes: '周边遮挡、天线连接异常、强电磁干扰或天气影响。', steps: ['确认飞行器已降落并停止自动任务。', '检查起降点周边遮挡和电磁干扰源。', '检查定位天线外观及连接。', '在开阔区域重新上电测试定位状态。'], notes: '定位状态未恢复前不得启动飞行任务。', status: '已停用', updatedAt: '2026-10-18 09:12:00' },
@@ -67,3 +70,28 @@ initialOperationsStore.alerts = notificationSamples.map((item, index) => {
     ...(status !== '待处理' && index !== 1 ? { responseAt: item.time } : {}),
     timeline: [...(index === 1 ? [{ at: '2026-11-02 15:10:26', actor: '系统', action: '已恢复，系统自行关闭' }] : status === '已关闭' ? [{ at: '2026-11-02 15:05:26', actor: '赵启明', action: '完成处置：已更换电池并确认状态正常' }] : []), ...(status !== '待处理' ? [{ at: item.time, actor: '赵启明', action: '开始处置' }] : []), { at: item.time, actor: '系统', action: '异常触发，生成告警并发送站内通知' }] };
 });
+
+// Fresh workbench queue samples make both within-SLA and overdue states visible.
+const recentPendingAlerts: OpsAlert[] = [
+  {
+    id: 'WB-AL-20261103-001', name: '机场网络心跳连续延迟', level: '严重', status: '待处理', scenic: '雁荡山', airport: '雁荡山灵峰机场', device: '雁荡山灵峰机场', deviceId: 'AP-002', faultType: '网络异常', errorCode: 'NET-031',
+    firstAt: dayjs().subtract(28, 'minute').format('YYYY-MM-DD HH:mm:ss'), latestAt: dayjs().subtract(2, 'minute').format('YYYY-MM-DD HH:mm:ss'), description: '机场最近多次心跳延迟，建议优先检查现场网络和供电。', assigned: '陈立', notification: '已发送给陈立',
+    timeline: [{ at: dayjs().subtract(2, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '飞控平台', action: '网络心跳再次延迟' }, { at: dayjs().subtract(28, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '系统', action: '首次发现网络心跳异常' }],
+  },
+  {
+    id: 'WB-AL-20261103-002', name: '无人机电池温度偏高', level: '严重', status: '待处理', scenic: '雁荡山', airport: '雁荡山灵峰机场', device: 'DJI M350 RTK', deviceId: 'DR-102', faultType: '电池异常', errorCode: 'BAT-014',
+    firstAt: dayjs().subtract(11, 'minute').format('YYYY-MM-DD HH:mm:ss'), latestAt: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), description: '电池温度接近运行阈值，请确认无人机已安全降落并检查电池状态。', assigned: '王珊', notification: '已发送给王珊',
+    timeline: [{ at: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '飞控平台', action: '电池温度告警仍在持续' }, { at: dayjs().subtract(11, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '系统', action: '检测到电池温度偏高' }],
+  },
+  {
+    id: 'WB-AL-20261103-003', name: '无人机定位精度下降', level: '一般', status: '待处理', scenic: '雁荡山', airport: '—', device: '独立巡检无人机', deviceId: 'DR-105', faultType: '定位异常', errorCode: 'GPS-006',
+    firstAt: dayjs().subtract(6, 'minute').format('YYYY-MM-DD HH:mm:ss'), latestAt: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), description: '定位精度短时下降，请确认起降区域遮挡及定位天线状态。', assigned: '王珊', notification: '已发送给王珊',
+    timeline: [{ at: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '飞控平台', action: '定位精度持续偏低' }, { at: dayjs().subtract(6, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '系统', action: '首次发现定位精度下降' }],
+  },
+  {
+    id: 'WB-AL-20261103-004', name: '机场运行数据上报延迟', level: '提示', status: '待处理', scenic: '南长街', airport: '南长街古码头机场', device: '南长街古码头机场', deviceId: 'AP-004', faultType: '数据异常', errorCode: 'DATA-004',
+    firstAt: dayjs().subtract(3, 'minute').format('YYYY-MM-DD HH:mm:ss'), latestAt: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), description: '机场运行数据上报延迟，请持续观察；若超过阈值将升级告警。', assigned: '', notification: '待发送',
+    timeline: [{ at: dayjs().subtract(1, 'minute').format('YYYY-MM-DD HH:mm:ss'), actor: '系统', action: '运行数据上报延迟' }],
+  },
+];
+initialOperationsStore.alerts = [...initialOperationsStore.alerts, ...recentPendingAlerts];

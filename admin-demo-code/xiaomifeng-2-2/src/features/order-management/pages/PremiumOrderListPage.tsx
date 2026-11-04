@@ -29,7 +29,7 @@ export default function PremiumOrderListPage({ orders, initialOrderId, lockDetai
   const [summaryExpanded, setSummaryExpanded] = useState(true);
 
   const options = (values: string[]) => Array.from(new Set(values.filter(Boolean))).map((value) => ({ value, label: value }));
-  const pointOptions = useMemo(() => options(orders.map((order) => order.point)), [orders]);
+  const pointOptions = useMemo(() => options(orders.flatMap((order) => order.ticketPoints?.map((item) => item.name) || [order.point])), [orders]);
   const accountOptions = useMemo(() => Array.from(new Map(orders.map((order) => [order.accountId, { value: order.accountId, label: `${order.accountId}（${order.accountName}）` }])).values()), [orders]);
   const orderTypeOptions = useMemo(() => options(orders.map((order) => order.orderType)), [orders]);
   const [tagFilter, setTagFilter] = useState('');
@@ -42,9 +42,9 @@ export default function PremiumOrderListPage({ orders, initialOrderId, lockDetai
   const filteredOrders = useMemo(() => {
     const query = keyword.trim().toLowerCase();
     return orders.filter((order) => {
-      const keywordMatch = !query || [order.orderNo, order.user, order.phone, order.theme, order.point].some((value) => value.toLowerCase().includes(query));
+      const keywordMatch = !query || [order.orderNo, order.user, order.phone, order.theme, order.point, ...(order.ticketPoints?.map((item) => item.name) || [])].some((value) => value.toLowerCase().includes(query));
       return inDateRange(order) && (!activeStatus || order.status === activeStatus)
-        && (!point || order.point === point)
+        && (!point || order.ticketPoints?.some((item) => item.name === point) || order.point === point)
         && (!orderType || order.orderType === orderType) && (!accountId || order.accountId === accountId)
         && (!tagFilter || order.orderType === tagFilter) && keywordMatch;
     });
@@ -68,6 +68,7 @@ export default function PremiumOrderListPage({ orders, initialOrderId, lockDetai
     { title: '订单用户', key: 'user', width: 120, dataIndex: 'user' },
     { title: '手机号', key: 'phone', width: 120, dataIndex: 'phone' },
     { title: '拍摄点', key: 'point', width: 150, dataIndex: 'point', ellipsis: true },
+    { title: '拍摄进度', key: 'ticketProgress', width: 110, align: 'center', render: (_: unknown, order: Order) => order.ticketPoints ? `${order.ticketPoints.filter((item) => item.status === '已完成').length}/${order.ticketPoints.length} 点` : '—' },
     { title: '应付金额（元）', key: 'expectedAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.expectedAmount)}</span> },
     { title: '优惠金额（元）', key: 'couponDiscountAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.couponDiscountAmount || 0)}</span> },
     { title: '实付金额（元）', key: 'paidAmount', width: 130, align: 'right', render: (_: unknown, order: Order) => <span className="money-text">￥{moneyText(order.paidAmount)}</span> },
@@ -102,7 +103,7 @@ export default function PremiumOrderListPage({ orders, initialOrderId, lockDetai
           <div className="order-summary-finance"><div className="order-summary-icon"><DollarCircleFilled /></div><div className="order-summary-stat order-summary-money"><Statistic title="月度净流水(元)" value={Math.max(0, paidAmount - refundAmount)} precision={2} prefix="￥" /></div><span className="order-summary-equals">=</span><div className="order-summary-stat order-summary-money"><Statistic title="总支付金额(元)" value={paidAmount} precision={2} prefix="￥" /></div><span className="order-summary-equals">−</span><div className="order-summary-stat order-summary-money order-summary-stat-danger"><Statistic title="总退款金额(元)" value={refundAmount} precision={2} prefix="￥" /></div></div>
         </div> : null}
       </section>
-      <section className="white-card order-table-card"><div className="order-table-toolbar order-reference-toolbar"><Tabs activeKey={activeStatus} onChange={(key) => setActiveStatus(key as OrderTab)} items={ORDER_STATUS_TABS.map((status) => ({ key: status, label: status || '全部订单' }))} /><div className="order-table-actions"><Select allowClear placeholder="标签筛选" value={tagFilter || undefined} onChange={(value) => setTagFilter(value || '')} options={orderTypeOptions} /><Input allowClear placeholder="搜索订单号、手机号、主题名称" value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Button type="primary" icon={<SearchOutlined />} aria-label="搜索订单" /></div></div><Table className="order-list-table" rowKey="id" columns={columns} dataSource={filteredOrders} scroll={{ x: 2140, y: 'calc(100vh - 500px)' }} pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'], showQuickJumper: true, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无订单数据' }} /></section>
+      <section className="white-card order-table-card"><div className="order-table-toolbar order-reference-toolbar"><Tabs activeKey={activeStatus} onChange={(key) => setActiveStatus(key as OrderTab)} items={ORDER_STATUS_TABS.map((status) => ({ key: status, label: status || '全部订单' }))} /><div className="order-table-actions"><Select allowClear placeholder="标签筛选" value={tagFilter || undefined} onChange={(value) => setTagFilter(value || '')} options={orderTypeOptions} /><Input allowClear placeholder="搜索订单号、手机号、主题名称" value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Button type="primary" icon={<SearchOutlined />} aria-label="搜索订单" /></div></div><Table className="order-list-table" rowKey="id" columns={columns} dataSource={filteredOrders} scroll={{ x: 2250, y: 'calc(100vh - 500px)' }} pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'], showQuickJumper: true, showTotal: (total) => `共 ${total} 条` }} locale={{ emptyText: '暂无订单数据' }} /></section>
       <Drawer className="order-detail-drawer" title="订单详情" open={Boolean(detail)} onClose={closeOrderDetail} closable={!lockDetail} maskClosable={!lockDetail} keyboard={!lockDetail} width={800} destroyOnClose footer={detail ? <div className="order-drawer-footer"><Button type="primary" danger disabled={!canRefund(detail)} onClick={() => message.info('退款流程属订单售后模块，本演示仅保留入口')}>退款</Button></div> : null}>
         {detail ? <OrderDetailSections order={detail} onOpenFlightTask={openFlightTask} /> : null}
       </Drawer>

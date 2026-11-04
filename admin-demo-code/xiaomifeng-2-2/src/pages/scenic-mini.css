@@ -1,0 +1,139 @@
+.scenic-screen{color:#1e2126;background:#f5f6fa;flex-direction:column;display:flex;position:relative}
+.scenic-scroll{flex:1;min-height:0;overflow:auto}
+.scenic-cover{color:#fff;background-position:50%;background-size:cover;height:180px}
+.scenic-top,.scenic-nav{justify-content:space-between;padding:12px 16px;display:flex}
+.scenic-nav button{color:#fff;background:#0004;border:1px solid #fff8;border-radius:50%;width:34px;height:34px;font-size:26px;line-height:24px}
+.scenic-intro-new{background:#fff;border-radius:14px 14px 0 0;margin-top:-12px;padding:16px 12px;position:relative}
+.scenic-intro-new h1,.scenic-detail h1{margin:0 0 8px;font-size:20px}
+.scenic-intro-new p,.scenic-detail p{color:#8b93a3;font-size:13px;line-height:1.5}
+.scenic-intro-new>button:first-child{float:right;background:#fff;border:1px solid #e1e4eb;border-radius:18px;padding:6px 10px}
+.scenic-expand{color:#525866;background:0 0;border:0;padding:0}
+.scenic-banner-new{color:#287a90;background:#d5f1f9;border-radius:8px;margin-top:14px;padding:14px;font-weight:600}
+.scenic-banner-new span{float:right}
+.scenic-switch-new{gap:8px;padding:14px 12px;display:flex;overflow:auto}
+.scenic-switch-new button{white-space:nowrap;background:#eaecf2;border:0;border-radius:20px;padding:8px 14px}
+.scenic-switch-new button.active{color:#fff;background:#ff7b00}
+.scenic-hours-new{color:#8b93a3;background:#fff;margin:0 12px;padding:12px;font-size:12px}
+.scenic-hours-new button{float:right;color:#2779e8;background:0 0;border:0}
+.scenic-grid-new{grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 20px;display:grid}
+.scenic-grid-new>button{text-align:left;background:#fff;border:0;border-radius:8px;padding:0;overflow:hidden}
+.scenic-grid-new img{object-fit:cover;width:100%;height:135px}
+.scenic-grid-new button div{padding:10px}
+.scenic-grid-new strong,.scenic-grid-new small,.scenic-grid-new b{display:block}
+.scenic-grid-new small{color:#8b93a3;margin:6px 0}
+.scenic-grid-new b{color:#ff7b00}
+.scenic-detail{background:#fff;padding:16px 15px}
+.scenic-detail section{margin-top:24px}
+.scenic-detail h3{font-size:16px;font-weight:500}
+.scenic-sample{color:#fff;background-position:50%;background-size:cover;border:0;border-radius:8px;width:100%;height:150px;font-size:28px}
+.scenic-photos{grid-template-columns:repeat(3,1fr);gap:8px;display:grid}
+.scenic-photos img{object-fit:cover;border-radius:8px;width:100%;height:95px}
+.scenic-route{border-bottom:1px solid #eee;gap:8px;padding:12px 0;display:flex}
+.scenic-route span{flex:1}
+.scenic-route button{color:#2779e8;background:#f7f9fc;border:0;border-radius:18px;padding:8px}
+.scenic-bottom{background:#fff;align-items:center;gap:14px;padding:12px 15px 18px;display:flex}
+.scenic-bottom b{color:#ff7b00;white-space:nowrap}
+.scenic-bottom button{color:#fff;background:#ff7b00;border:0;border-radius:24px;flex:1;padding:12px}
+.scenic-notice{color:#777;padding:10px}
+.scenic-preview{color:#fff;background:#111e;flex-direction:column;justify-content:center;align-items:center;display:flex;position:absolute;inset:0}
+.scenic-preview img{width:100%}
+.scenic-preview button{color:#111;background:#fff;border:0;align-self:flex-end;margin:16px;padding:8px}
+.scenic-preview video{background:#000;width:100%;max-height:65%}
+.scenic-rules{color:#9d5a00;background:#fff7ed;border-radius:8px;margin:18px 0;padding:12px;font-size:13px}
+.scenic-rules summary{cursor:pointer;justify-content:space-between;gap:8px;display:flex}
+.scenic-grid-new strong,.scenic-grid-new small{overflow-wrap:anywhere;line-height:1.4}
+.scenic-route span{overflow-wrap:anywhere;min-width:0}
+.scenic-bottom{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.scenic-nav button{font-size:16px}
+.scenic-mode{gap:8px;padding:12px 12px 0;display:flex}
+.scenic-mode button{color:#525866;background:#e9ebf1;border:0;border-radius:20px;flex:1;padding:10px}
+.scenic-mode button.active{color:#fff;background:#ff7b00}
+.scenic-mode-note{color:#8b93a3;margin:14px 12px;font-size:13px;line-height:1.5}
+.scenic-route-detail{border-bottom:1px solid #edf0f4;gap:12px;padding:12px 0;display:flex}
+.scenic-route-number{color:#fff;background:#ff8500;border-radius:50%;flex:none;place-items:center;width:24px;height:24px;font-size:12px;display:grid}
+.scenic-route-detail strong{font-size:15px}
+.scenic-route-detail p{color:#8b93a3;margin:6px 0}
+.scenic-route-actions{gap:8px;display:flex}
+.scenic-route-actions button{color:#2779e8;background:#f7f9fc;border:0;border-radius:18px;padding:8px 12px}
+.scenic-route-summary{display:grid;grid-template-columns:repeat(3,1fr);background:#f7f9fc;border-radius:8px;padding:14px 0;margin:12px 0}.scenic-route-summary div{text-align:center;border-right:1px solid #e1e4eb}.scenic-route-summary div:last-child{border:0}.scenic-route-summary b,.scenic-route-summary span{display:block}.scenic-route-summary b{font-size:18px}.scenic-route-summary small{font-size:12px;font-weight:400}.scenic-route-summary span{color:#8b93a3;font-size:12px;margin-top:4px}.scenic-route-content{min-width:0;flex:1}.scenic-angle-list{display:flex;gap:8px;overflow:auto;margin:10px 0}.scenic-angle-list button{flex:0 0 88px;height:66px;padding:0;border:0;background:#f5f6fa;border-radius:6px;overflow:hidden}.scenic-angle-list img{width:100%;height:100%;object-fit:cover}.scenic-route-actions button:disabled{opacity:.45}.scenic-select{font-size:12px;color:#8b93a3}.scenic-select select{border:0;background:#f5f6fa;border-radius:6px;padding:5px;color:#525866}
+
+.scenic-cover{height:180px}.scenic-intro-new{padding:18px 12px 16px}.scenic-intro-new h1{font-size:20px}.scenic-banner-new{min-height:58px;display:flex;align-items:center;justify-content:space-between;font-size:16px;background:linear-gradient(110deg,#c3f0f1,#b9dffa)}.scenic-hours-new{display:flex;align-items:center;gap:10px}.scenic-hours-new span{margin-left:auto}.scenic-hours-new button{float:none}.scenic-grid-new{align-items:start}.scenic-grid-new img{height:155px}.scenic-grid-new strong{font-size:15px;font-weight:600}.scenic-grid-new small{font-size:12px}.scenic-grid-new .scenic-card-price{padding:0;display:flex;align-items:baseline;justify-content:space-between}.scenic-card-price b{font-size:18px}.scenic-card-price em{font-style:normal;color:#8b93a3;font-size:12px;font-weight:400}.scenic-card-price span{color:#8b93a3;font-size:12px}.scenic-detail{border-radius:14px 14px 0 0;margin-top:-12px;position:relative}.scenic-theme-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.scenic-theme-head h1{margin:0}.scenic-theme-head span{font-size:13px;color:#8b93a3;white-space:nowrap}.scenic-creator{display:flex;gap:10px;align-items:center;margin:18px 0 24px}.scenic-creator img{width:44px;height:44px;object-fit:cover;border-radius:50%}.scenic-creator strong,.scenic-creator small{display:block}.scenic-creator strong{font-size:15px}.scenic-creator small{color:#8b93a3;margin-top:4px}.scenic-video-strip{display:flex;gap:8px;overflow:auto}.scenic-video-strip .scenic-sample{flex:0 0 72%;position:relative}.scenic-sample small{position:absolute;top:6px;left:6px;border-radius:4px;background:#0008;padding:3px 5px;font-size:11px}.scenic-raw{background:#f5f6fa;border-radius:6px;padding:12px}.scenic-package-mask{position:absolute;inset:0;background:#0008;display:flex;align-items:flex-end;z-index:20}.scenic-package-sheet{position:relative;width:100%;background:#fff;border-radius:16px 16px 0 0;padding:20px 16px;box-sizing:border-box}.scenic-package-sheet h3{margin:0 0 18px}.scenic-package-sheet p{color:#ff7b00;font-size:18px}.scenic-package-close{position:absolute;right:16px;top:12px;background:none;border:0;font-size:24px}.scenic-package-confirm{width:100%;border:0;border-radius:24px;padding:12px;color:#fff;background:#ff7b00}
+
+/* 景区和主题详情：按移动端内容节奏统一间距 */
+.scenic-cover{height:176px}
+.scenic-intro-new{padding:16px 12px 12px}
+.scenic-intro-new h1{margin:0 0 8px;line-height:26px}
+.scenic-intro-new p{display:inline;margin:0;line-height:20px}
+.scenic-expand{display:inline;margin-left:6px;line-height:20px;float:none!important}
+.scenic-banner-new{box-sizing:border-box;min-height:60px;margin-top:16px;padding:12px 14px}
+.scenic-mode{padding:12px 12px 0}
+.scenic-switch-new{padding:12px;gap:8px}
+.scenic-hours-new{box-sizing:border-box;min-height:38px;padding:8px 12px}
+.scenic-grid-new{padding:0 12px 20px;gap:8px}
+.scenic-grid-new img{display:block;height:155px}
+.scenic-grid-new>button>div{padding:10px 10px 12px}
+.scenic-grid-new strong{line-height:20px}
+.scenic-grid-new small{margin:4px 0 0;line-height:18px}
+.scenic-grid-new .scenic-card-price{margin-top:8px;padding:0}
+.scenic-detail{padding:16px 12px 24px}
+.scenic-theme-head h1{line-height:26px}
+.scenic-creator{margin:18px 0 20px}
+.scenic-detail section{margin-top:20px}
+.scenic-detail section h3{margin:0 0 8px;line-height:24px}
+.scenic-detail section>p{margin:0 0 8px;line-height:18px}
+.scenic-video-strip{gap:8px}
+.scenic-video-strip .scenic-sample{height:160px}
+.scenic-photos{gap:8px}
+.scenic-photos img{height:105px}
+.scenic-detail section>.scenic-raw{margin:0;padding:10px 12px}
+.scenic-route-summary{margin:8px 0 12px}
+.scenic-bottom{box-sizing:border-box;min-height:66px;padding:10px 12px max(12px,env(safe-area-inset-bottom));gap:12px}
+.scenic-bottom button{min-height:44px;padding:10px 12px}
+/* 景区内容分类与套票卡片 */
+.scenic-mode{gap:10px;padding:12px 12px 0}.scenic-mode button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;font-size:14px;font-weight:600}.scenic-mode-icon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#fff9;font-size:15px}.scenic-mode button.active .scenic-mode-icon{background:#ffffff38}.scenic-mode-note{margin:12px 12px 8px;color:#596273;font-size:13px}.scenic-grid-new>button>.scenic-card-image{position:relative;padding:0}.scenic-card-image img{display:block;width:100%;height:155px;object-fit:cover}.scenic-ticket-label{position:absolute;top:8px;left:8px;padding:4px 8px;color:#fff;background:#245bd7;border-radius:5px;font-size:12px;font-weight:600;line-height:16px}.scenic-grid-new>button>.scenic-card-content{min-height:112px;box-sizing:border-box;display:flex;flex-direction:column;padding:10px 10px 12px}.scenic-card-content strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.scenic-card-content .scenic-point-count{color:#586274}.scenic-card-content .scenic-point-names{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.scenic-grid-new .scenic-card-content .scenic-card-price{margin-top:auto;padding-top:8px}
+/* 套票路线：节点连线与拍摄点信息 */
+.scenic-route-detail{position:relative;border-bottom:0;align-items:flex-start;padding:0 0 24px;gap:12px}
+.scenic-route-detail:not(.scenic-route-last)::before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:#e5e8ee}
+.scenic-route-detail.scenic-route-last{padding-bottom:0}
+.scenic-route-number{position:relative;z-index:1}
+.scenic-route-content{padding-top:1px}
+.scenic-route-content strong{display:block;line-height:22px}
+.scenic-route-content .scenic-route-effect{margin:4px 0 8px;line-height:20px}
+.scenic-point-meta{display:grid;gap:6px;margin:8px 0;color:#8b93a3;font-size:12px;line-height:18px}
+.scenic-point-meta-line{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.scenic-business-status{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-weight:500}
+.scenic-business-status i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.scenic-business-status.open{color:#1c9a62}.scenic-business-status.closed{color:#e24d43}.scenic-business-status.unknown{color:#8b93a3}
+.scenic-business-hours,.scenic-point-distance{white-space:nowrap}.scenic-point-distance,.scenic-point-phone{display:inline-flex;align-items:center;gap:4px}.scenic-point-phone{width:max-content}
+.scenic-grid-new .scenic-card-content .scenic-estimate,.scenic-estimate{display:flex;align-items:center;gap:5px;margin-top:4px;padding:0;color:#d96d00;font-size:11px;line-height:16px}.scenic-estimate span{padding:0 4px;border:1px solid #ffc388;border-radius:3px;white-space:nowrap}.scenic-estimate b{color:#8b93a3;font-size:11px;font-weight:400}.scenic-bottom-price{flex:none}.scenic-bottom-price>b{display:block}.scenic-bottom .scenic-estimate{white-space:nowrap}.scenic-package-sheet .scenic-estimate{margin:0 0 12px}
+/* 景区分类入口 */
+.scenic-mode{gap:10px;padding:12px 12px 0}.scenic-mode button{position:relative;justify-content:flex-start;gap:10px;min-width:0;min-height:68px;padding:10px;border:1px solid #e7e9ee;border-radius:12px;background:#fff;color:#29303b;text-align:left;box-shadow:0 2px 8px #1f293708}.scenic-mode button.active{border-color:#ffba77;background:#fff4e8;color:#d96700;box-shadow:0 3px 10px #f67e0012}.scenic-mode button.active:after{content:"";position:absolute;right:10px;top:10px;width:7px;height:7px;border-radius:50%;background:#ff8500}.scenic-mode-icon{width:36px;height:36px;flex:none;background:#f3f5f8;color:#8893a2;font-size:18px}.scenic-mode button.active .scenic-mode-icon{background:#ff8500;color:#fff}.scenic-mode-copy{display:flex;min-width:0;flex-direction:column;gap:4px}.scenic-mode-copy strong{font-size:15px;line-height:20px}.scenic-mode-copy small{font-size:11px;font-weight:400;line-height:15px;color:#9299a6;white-space:nowrap}.scenic-mode button.active .scenic-mode-copy small{color:#bd783d}.scenic-mode-note{margin:14px 12px 10px;color:#596273;font-size:13px}
+/* 景区旅拍分类页签 */
+.scenic-mode{position:relative;display:flex;gap:0;margin:12px 12px 0;padding:5px 5px 0;background:#eceef3;border-radius:14px 14px 0 0;overflow:hidden}
+.scenic-mode button{position:relative;z-index:0;display:grid;place-items:center;flex:1;min-height:48px;padding:0 10px;border:0;border-radius:0;background:transparent;color:#8b93a3;text-align:center;box-shadow:none}
+.scenic-mode button span{position:relative;z-index:1;font-size:15px;font-weight:500}
+.scenic-mode button.active{z-index:1;border:0;background:transparent;color:#e77700;box-shadow:none}
+.scenic-mode button.active:before{content:"";position:absolute;inset:0 -5px -1px;transform:skewX(9deg);border:1px solid #fff;border-bottom:0;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#fff0dd 0%,#fff 100%);box-shadow:2px -2px 8px #dd8b3a1c}
+.scenic-mode button.active:last-child:before{transform:skewX(-9deg)}
+.scenic-mode button.active:after{display:none}
+.scenic-mode + .scenic-grid-new{padding-top:12px}
+/* 旅拍类型页签：柔和弧面与内容衔接 */
+.scenic-mode{margin:14px 12px 0;padding:4px 5px 0;border-radius:16px 16px 0 0;background:linear-gradient(180deg,#e8ebf1,#f0f1f5);box-shadow:inset 0 1px 2px #aab2c326}
+.scenic-mode button{min-height:46px;isolation:isolate;color:#858d9a;transition:color .18s ease}
+.scenic-mode button span{font-size:15px;letter-spacing:.02em}
+.scenic-mode button.active{color:#d96a00}
+.scenic-mode button.active span{font-weight:600}
+.scenic-mode button.active:before{inset:0 -3px -1px;transform:none;border:1px solid #ffffffd9;border-bottom:0;border-radius:15px 24px 0 0;background:linear-gradient(180deg,#fff1df 0%,#fffaf5 58%,#fff 100%);box-shadow:2px -1px 7px #d9822a18}
+.scenic-mode button.active:last-child:before{transform:none;border-radius:24px 15px 0 0;box-shadow:-2px -1px 7px #d9822a18}
+.scenic-mode button:focus-visible{outline:2px solid #e98322;outline-offset:-4px;border-radius:10px}
+/* 景区旅拍页签：图标与文字作为一组居中 */
+.scenic-mode{margin:14px 12px 0;padding:4px 5px 0;background:#eef0f4;box-shadow:none}
+.scenic-mode button{min-height:48px;color:#858d9a}
+.scenic-mode button .scenic-tab-label{display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:20px}
+.scenic-mode button .scenic-tab-label>.anticon{font-size:16px;line-height:1}
+.scenic-mode button .scenic-tab-label>span:not(.anticon){font-size:15px;font-weight:400}
+.scenic-mode button.active{color:#db7000}
+.scenic-mode button.active .scenic-tab-label>span:not(.anticon){font-weight:600}
+.scenic-mode button.active:before{inset:0 -3px -1px;border:0;border-radius:13px 23px 0 0;background:linear-gradient(180deg,#fff1e1 0%,#fffaf6 65%,#fff 100%);box-shadow:1px -1px 5px #c8701712}
+.scenic-mode button.active:last-child:before{border-radius:23px 13px 0 0;box-shadow:-1px -1px 5px #c8701712}
+.scenic-mode + .scenic-grid-new{padding-top:12px}
